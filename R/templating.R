@@ -99,13 +99,14 @@ template <- function(..., .envir = parent.frame()) {
 
     f_body <- substitute(
         {
+            x <- body_expr
             if (!is.null(fragment)) {
                 x <- walk_nodes(x, fragment)
                 stopifnot("Could not find fragment" = !is.null(x))
             }
             x
         },
-        list(x = body_expr)
+        list(body_expr = body_expr)
     )
 
     e <- new.env(parent = .envir)
