@@ -1,4 +1,131 @@
+#' Create a reusable HTML template
+#'
+#' @description
+#' Evaluates code under the `htmltools::withTags()` environment,
+#' creating a closure that outputs either the template or
+#' specified fragment.
+#'
+#' The closure can also accept slots, specified as named or bare symbols prior
+#' to the template expression. This allows for passing in other templates or HTML
+#' tags after template creation.
+#'
+#' @examples
+#' # Example Fragment Usage
+#' page_main <- template(
+#'     {
+#'         div(
+#'             h1("Dashboard"),
+#'             fragment(p("Welcome back"), name = "content"),
+#'             small("2026")
+#'         )
+#'     }
+#' )
+#'
+#' page_main(fragment="content")
+#'
+#' # Template slots
+#'
+#' details <- template(name, age, {
+#'     nm <- sprintf("Hello, my name is: %s", name)
+#'     old <- sprintf("I am %s years old.", age)
+#'     div(
+#'         p(nm),
+#'         p(old)
+#'     )
+#' })
+#'
+#' details("Jim", 30)
+#'
+#' # Templates and fragments can also be combined
+#'
+#' card <- template(
+#'     ttl, foot = NULL, {
+#'         div(
+#'             h2(ttl),
+#'             fragment(div("Card body"), name="body"),
+#'             if (!is.null(foot)) {
+#'                 fragment(
+#'                     div(foot),
+#'                     name = "footer"
+#'                 )
+#'             }
+#'         )
+#'     }
+#' )
+#' card("Card Title")
+#' card("Card Title", fragment="body")
+#' card("Card Title", "Footer text", fragment = "footer")
+#'
+#' @param ... content
+#' @param .envir the environment in which to evaluate the template
+#' @rdname templating
+#' @export
+template <- function(..., .envir = parent.frame()) {
+    dots <- as.list(substitute(list(...)))[-1]
 
+    body_idx <- which(unlist(lapply(dots, \(x) inherits(x, "{"))))
+
+    if (length(body_idx) != 1L) {
+        stop()
+    }
+
+    body_expr <- dots[body_idx][[1L]]
+
+    param_exprs <- dots[-body_idx]
+    param_names <- names(param_exprs) %||% character(length(param_exprs))
+
+
+    for (i in seq_along(param_exprs)) {
+        if (identical(param_names[i], "") || is.null(param_names[i])) {
+            if (!is.symbol(param_exprs[[i]])) {
+                stop(
+                    sprintf(
+                        "Unnamed parameters must be bare symbols: %s",
+                        deparse(param_exprs[[i]])
+                    )
+                )
+            }
+            param_names[[i]] <- as.character(param_exprs[[i]])
+            param_exprs[[i]] <- quote(expr=)
+        }
+    }
+
+    names(param_exprs) <- param_names
+
+    check_formals_no_collide(param_exprs)
+
+    formals_pl <- as.pairlist(c(param_exprs, list(fragment = NULL)))
+
+
+    f_body <- substitute(
+        {
+            x <- htmltools::withTags(body_expr)
+            if (!is.null(fragment)) {
+                x <- htmltools::tagQuery(x)$find("*")$selectedTags()
+                x <- Filter(x, f = \(x) isTRUE(x$fragment == fragment))
+                x <- htmltools::as.tags(x)
+                stopifnot("Could not find fragment" = length(x) == 1L)
+            }
+            x
+        },
+        list(body_expr = body_expr)
+    )
+
+    fn <- eval(call("function", formals_pl, f_body), .envir)
+    class(fn) <- c("freshwater_template", class(fn))
+    attr(fn, "template_body") <- body_expr
+    attr(fn, "template_params") <- param_exprs
+    attr(fn, "template_env") <- .envir
+
+    if (length(formals_pl) == 1L) {
+        memoise::memoise(fn)
+    } else {
+        fn
+    }
+}
+
+#' @rdname templating
+#' @param name the name of the fragment
 #' @export
 fragment <- function(..., name = NULL) {
     stopifnot(!is.null(name))
@@ -7,35 +134,50 @@ fragment <- function(..., name = NULL) {
     x
 }
 
-#' Create a reusable HTML template with optional fragments
-#'
-#' @description
-#' Evaluates code under the `htmltools::withTags()` environment,
-#' creating a closure that outputs either the template or
-#' specified fragment.
-#'
-#' @examples
-#' page_main <- template(
-#'     div(
-#'         h1("Dashboard"),
-#'         fragment(p("Welcome back"), name="content"),
-#'         small("2026")
-#'     )
-#' )
-#' page_main(fragment="content")
-#'
-#' @param ... content
-#' @export
-template <- function(...) {
-    args <- substitute(...)
-    x <- do.call(htmltools::withTags, args = list(args))
-    function(fragment = NULL) {
-        if (!is.null(fragment)) {
-            x <- htmltools::tagQuery(x)$find("*")$selectedTags()
-            x <- Filter(x, f = \(x) x$fragment == fragment)
-            x <- htmltools::as.tags(x)
-            stopifnot(length(x) == 1L)
+#' @exportS3Method
+print.freshwater_template <- function(x, ...) {
+    params <- attr(x, "template_params")
+    body <- attr(x, "template_body")
+    e <- attr(x, "template_env")
+
+    params_string <- character(0)
+
+    if (length(params)) {
+        nms <- names(params)
+        for (i in seq_along(params)) {
+            nm <- nms[[i]]
+            param <- params[[i]]
+
+            if (inherits(params[[nm]], "name")) {
+                params_string <- c(params_string, nm)
+            } else {
+                params_string <- c(params_string, paste0(nm, " = ", deparse(param)))
+            }
         }
-        x
+    }
+
+    out <- "template(%s)\n%s\n%s"
+
+    out <- sprintf(
+        out,
+        paste0(
+            c(params_string, "fragment = NULL"), collapse=", "),
+        paste0(deparse(body), collapse="\n"),
+        format(e)
+    )
+
+    cat(out)
+}
+
+check_formals_no_collide <- function(fmls) {
+    collision <- names(fmls) %in% names(htmltools::tags)
+    if (any(collision)) {
+        nms <- which(collision)
+        stop(
+            sprintf(
+                "template parameters must not collide with HTML tag names: '%s'",
+                paste0(names(fmls)[nms], collapse=", ")
+            )
+        )
     }
 }
