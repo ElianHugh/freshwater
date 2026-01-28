@@ -62,7 +62,6 @@
 #' @export
 template <- function(..., .envir = parent.frame()) {
     dots <- as.list(substitute(list(...)))[-1]
-
     body_idx <- which(unlist(lapply(dots, \(x) inherits(x, "{"))))
 
     if (length(body_idx) != 1L) {
@@ -74,7 +73,6 @@ template <- function(..., .envir = parent.frame()) {
     param_exprs <- dots[-body_idx]
     param_names <- names(param_exprs) %||% character(length(param_exprs))
 
-
     for (i in seq_along(param_exprs)) {
         if (identical(param_names[i], "") || is.null(param_names[i])) {
             if (!is.symbol(param_exprs[[i]])) {
@@ -85,8 +83,9 @@ template <- function(..., .envir = parent.frame()) {
                     )
                 )
             }
+
             param_names[[i]] <- as.character(param_exprs[[i]])
-            param_exprs[[i]] <- quote(expr=)
+            param_exprs[[i]] <- quote(expr = )
         }
     }
 
@@ -94,7 +93,7 @@ template <- function(..., .envir = parent.frame()) {
 
     check_formals_no_collide(param_exprs)
 
-    formals_pl <- as.pairlist(c(param_exprs, list(fragment = NULL)))
+    formals_pl <- as.pairlist(c(param_exprs, alist(...=), list(fragment = NULL)))
 
 
     f_body <- substitute(
@@ -117,11 +116,7 @@ template <- function(..., .envir = parent.frame()) {
     attr(fn, "template_params") <- param_exprs
     attr(fn, "template_env") <- .envir
 
-    if (length(formals_pl) == 1L) {
-        memoise::memoise(fn)
-    } else {
-        fn
-    }
+    fn
 }
 
 #' @rdname templating
@@ -161,7 +156,7 @@ print.freshwater_template <- function(x, ...) {
     out <- sprintf(
         out,
         paste0(
-            c(params_string, "fragment = NULL"), collapse=", "),
+            c(params_string, "...", "fragment = NULL"), collapse=", "),
         paste0(deparse(body), collapse="\n"),
         format(e)
     )
