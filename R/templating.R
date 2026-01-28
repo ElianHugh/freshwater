@@ -91,26 +91,27 @@ template <- function(..., .envir = parent.frame()) {
 
     names(param_exprs) <- param_names
 
-    check_formals_no_collide(param_exprs)
+    if ("fragment" %in% names(param_exprs)) {
+        stop("Duplicate `fragment` parameter found. `fragment` is a reserved template argument.")
+    }
 
     formals_pl <- as.pairlist(c(param_exprs, alist(...=), list(fragment = NULL)))
 
-
     f_body <- substitute(
         {
-            x <- htmltools::withTags(body_expr)
             if (!is.null(fragment)) {
-                x <- htmltools::tagQuery(x)$find("*")$selectedTags()
-                x <- Filter(x, f = \(x) isTRUE(x$fragment == fragment))
-                x <- htmltools::as.tags(x)
-                stopifnot("Could not find fragment" = length(x) == 1L)
+                x <- walk_nodes(x, fragment)
+                stopifnot("Could not find fragment" = !is.null(x))
             }
             x
         },
-        list(body_expr = body_expr)
+        list(x = body_expr)
     )
 
-    fn <- eval(call("function", formals_pl, f_body), .envir)
+    e <- new.env(parent = .envir)
+    list2env(as.list(htmltools::tags), envir = e)
+
+    fn <- eval(call("function", formals_pl, f_body), e)
     class(fn) <- c("freshwater_template", class(fn))
     attr(fn, "template_body") <- body_expr
     attr(fn, "template_params") <- param_exprs
@@ -164,15 +165,29 @@ print.freshwater_template <- function(x, ...) {
     cat(out)
 }
 
-check_formals_no_collide <- function(fmls) {
-    collision <- names(fmls) %in% names(htmltools::tags)
-    if (any(collision)) {
-        nms <- which(collision)
-        stop(
-            sprintf(
-                "template parameters must not collide with HTML tag names: '%s'",
-                paste0(names(fmls)[nms], collapse=", ")
-            )
-        )
+walk_nodes <- function(tag, name) {
+    found <- NULL
+    walk <- function(x) {
+        if (!is.null(found)) return()
+
+        if (inherits(x, "shiny.tag")) {
+            if (!is.null(x$fragment) && identical(x$fragment, name)) {
+                found <<- x
+                return()
+            }
+
+            for (i in seq_along(x$children)) {
+                walk(x$children[[i]])
+                if (!is.null(found)) return()
+            }
+        } else if (inherits(x, "shiny.tag.list")) {
+            for (child in x) {
+                walk(child)
+                if (!is.null(found)) return()
+            }
+        }
     }
+
+    walk(tag)
+    found
 }

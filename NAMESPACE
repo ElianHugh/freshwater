@@ -2,4 +2,5 @@
 
 S3method(print,freshwater_template)
 export(fragment)
+export(register_html_serialiser)
 export(template)
