@@ -3,7 +3,9 @@
 <url><loc>/LICENSE.html</loc></url>
 <url><loc>/authors.html</loc></url>
 <url><loc>/index.html</loc></url>
+<url><loc>/reference/api_cget.html</loc></url>
 <url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/register_html_serialiser.html</loc></url>
 <url><loc>/reference/templating.html</loc></url>
 </urlset>
 
