@@ -61,7 +61,7 @@
 <!-- badges: start -->
 
 <!-- badges: end -->
-<p>The goal of freshwater is to …</p>
+<p>freshwater provides server-side rendering utilities for plumber2 backends.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -73,10 +73,34 @@
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
-<p>This is a basic example which shows you how to solve a common problem:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">freshwater</span><span class="op">)</span></span>
-<span><span class="co">## basic example code</span></span></code></pre></div>
+<span></span>
+<span><span class="va">page_main</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/templating.html">template</a></span><span class="op">(</span></span>
+<span>    <span class="op">{</span></span>
+<span>        <span class="fu">div</span><span class="op">(</span></span>
+<span>            <span class="fu">h1</span><span class="op">(</span><span class="st">"Dashboard"</span><span class="op">)</span>,</span>
+<span>            <span class="fu"><a href="reference/templating.html">fragment</a></span><span class="op">(</span><span class="fu">p</span><span class="op">(</span><span class="st">"Welcome back"</span><span class="op">)</span>, name <span class="op">=</span> <span class="st">"content"</span><span class="op">)</span>,</span>
+<span>            <span class="fu">small</span><span class="op">(</span><span class="st">"2026"</span><span class="op">)</span></span>
+<span>        <span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Render templates by calling them</span></span>
+<span></span>
+<span><span class="fu">page_main</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#&gt; &lt;div&gt;</span></span>
+<span><span class="co">#&gt;  &lt;h1&gt;Dashboard&lt;/h1&gt;</span></span>
+<span><span class="co">#&gt;  &lt;p&gt;Welcome back&lt;/p&gt;</span></span>
+<span><span class="co">#&gt;   &lt;small&gt;2026&lt;/small&gt;</span></span>
+<span><span class="co">#&gt; &lt;/div&gt;</span></span>
+<span></span>
+<span><span class="co"># Extract fragments from templates</span></span>
+<span></span>
+<span><span class="fu">page_main</span><span class="op">(</span>fragment<span class="op">=</span><span class="st">"content"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#&gt; &lt;p&gt;Welcome back&lt;/p&gt;</span></span></code></pre></div>
 </div>
 </div>
   </div>
