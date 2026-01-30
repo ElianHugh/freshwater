@@ -10,7 +10,7 @@
 
 <!-- badges: end -->
 
-The goal of freshwater is to ...
+freshwater provides server-side rendering utilities for plumber2 backends.
 
 ## Installation
 
@@ -23,10 +23,32 @@ pak::pak("ElianHugh/freshwater")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
-
 ``` r
 library(freshwater)
-## basic example code
-```
 
+page_main <- template(
+    {
+        div(
+            h1("Dashboard"),
+            fragment(p("Welcome back"), name = "content"),
+            small("2026")
+        )
+    }
+)
+
+# Render templates by calling them
+
+page_main()
+
+#> <div>
+#>  <h1>Dashboard</h1>
+#>  <p>Welcome back</p>
+#>   <small>2026</small>
+#> </div>
+
+# Extract fragments from templates
+
+page_main(fragment="content")
+
+#> <p>Welcome back</p>
+```
