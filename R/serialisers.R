@@ -20,3 +20,5 @@ register_html_serialiser <- function() {
         list(old_serialiser = plumber2::get_serializers("html")[[1L]])
     ))
 }
+
+
