@@ -14,6 +14,38 @@ inm_match <- function(inm, etag) {
     etag %in% candidates
 }
 
+#' Conditional GET
+#'
+#' Creates a conditional GET handler for a specific
+#' HTTP path, using a supplied etag function
+#' for the current representation. If the server's ETag and
+#' client's 'If-None-Match' headers match, a `304 Not Modified` response
+#' is sent, short-circuiting downstream handlers. This reduces
+#' the need to recompute responses for paths where the data
+#' has not changed since the last client request.
+#'
+#' See <https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Conditional_requests> for more information.
+#'
+#' @details
+#' # Annotation Reference
+#'
+#' The etag function is specified by `@etag fn` where `fn` is the function name.
+#' Functions can also be defined in-line
+#' like `@etag \() x + 1`.
+#'
+#' ```rThat
+#' x <- 1L
+#' #* @get /
+#' #* @etag Sys.Date
+#' function() {
+#'  x <<- x + 1L
+#'  x
+#' }
+#' ```
+#'
+#' @param api a [plumber2] api object.
+#' @param path the path to short circuit.
+#' @param etag_fn a function that takes no arguments and returns a single value used to derive the ETag.
 #' @export
 api_cget <- function(api, path, etag_fn) {
     handler <- function(request, response) {

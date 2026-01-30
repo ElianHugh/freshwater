@@ -1,14 +1,14 @@
 Package: freshwater
-Title: What the Package Does (One Line, Title Case)
+Title: Server-side rendering utilities for Plumber2 APIs
 Version: 0.0.0.9000
-Authors@R: 
+Authors@R:
     person("Elian", "Thiele-Evans", , "elianhte@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-8008-3165"))
-Description: What the package does (one paragraph).
+Description: Provides various utility functions for improving server-side rendered HTML applications, such as enhanced HTML templating, response caching, and HTML tag serialisation.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3.9000
-Imports: 
+Imports:
     htmltools,
     plumber2

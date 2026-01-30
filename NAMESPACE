@@ -2,6 +2,7 @@
 
 S3method(apply_plumber2_block,etag)
 S3method(print,freshwater_template)
+export(api_cget)
 export(fragment)
 export(register_html_serialiser)
 export(template)
