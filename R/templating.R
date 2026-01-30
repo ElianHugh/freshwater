@@ -106,7 +106,7 @@ template <- function(..., .envir = parent.frame()) {
             }
             x
         },
-        list(body_expr = body_expr)
+        list(body_expr = body_expr, walk_nodes = walk_nodes)
     )
 
     e <- new.env(parent = .envir)
