@@ -36,20 +36,6 @@ api_cget <- function(api, path, etag_fn) {
     api
 }
 
-plumber2::add_plumber2_tag("etag", function(block, call, tags, values, env) {
-    class(block) <- c("etag", class(block))
-    stopifnot("get" %in% tags)
-
-    tag_idx <- which(tags == "etag")
-    # tag function should be a function that is called without any arguments
-    # and returns a single value that can be interpreted as a string
-    tag_fn <- eval(parse(text=values[[tag_idx]] %||% ""), envir = env)
-
-    stopifnot(is.function(tag_fn))
-    block$etag_fn <- tag_fn
-    block
-})
-
 #' @importFrom plumber2 apply_plumber2_block
 #' @export
 apply_plumber2_block.etag <- function(
@@ -70,4 +56,18 @@ apply_plumber2_block.etag <- function(
         }
     }
     api
+}
+
+tag_handler <- function(block, call, tags, values, env) {
+    class(block) <- c("etag", class(block))
+    stopifnot("get" %in% tags)
+
+    tag_idx <- which(tags == "etag")
+    # tag function should be a function that is called without any arguments
+    # and returns a single value that can be interpreted as a string
+    tag_fn <- eval(parse(text = values[[tag_idx]] %||% ""), envir = env)
+
+    stopifnot(is.function(tag_fn))
+    block$etag_fn <- tag_fn
+    block
 }
