@@ -55,13 +55,25 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
+
 <div class="section level1">
 <div class="page-header"><h1 id="id_-freshwater">🌿💧 freshwater<a class="anchor" aria-label="anchor" href="#id_-freshwater"></a>
 </h1></div>
 <!-- badges: start -->
 
 <!-- badges: end -->
-<p>freshwater provides server-side rendering utilities for plumber2 backends.</p>
+<blockquote>
+<p>[!NOTE] This package is under active development and its functionality may change over time.</p>
+</blockquote>
+<p>freshwater provides server-side rendering utilities for plumber2 backends:</p>
+<ul>
+<li>composable HTML templates</li>
+<li>template caching<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>
+</li>
+<li>weak ETag caching</li>
+<li>shiny tag serialisation<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>
+</li>
+</ul>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -77,11 +89,11 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">freshwater</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">page_main</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/templating.html">template</a></span><span class="op">(</span></span>
-<span>    <span class="op">{</span></span>
+<span>    year <span class="op">=</span> <span class="fl">2026</span>, <span class="op">{</span></span>
 <span>        <span class="fu">div</span><span class="op">(</span></span>
 <span>            <span class="fu">h1</span><span class="op">(</span><span class="st">"Dashboard"</span><span class="op">)</span>,</span>
 <span>            <span class="fu"><a href="reference/templating.html">fragment</a></span><span class="op">(</span><span class="fu">p</span><span class="op">(</span><span class="st">"Welcome back"</span><span class="op">)</span>, name <span class="op">=</span> <span class="st">"content"</span><span class="op">)</span>,</span>
-<span>            <span class="fu">small</span><span class="op">(</span><span class="st">"2026"</span><span class="op">)</span></span>
+<span>            <span class="fu">small</span><span class="op">(</span><span class="va">year</span><span class="op">)</span></span>
 <span>        <span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span><span class="op">)</span></span>
@@ -103,6 +115,14 @@
 <span><span class="co">#&gt; &lt;p&gt;Welcome back&lt;/p&gt;</span></span></code></pre></div>
 </div>
 </div>
+<div class="footnotes footnotes-end-of-document">
+<hr>
+<ol>
+<li id="fn1"><p>not yet implemented<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+<li id="fn2"><p>differs to base plumber2 implementation in that we render the entire tag tree, allowing for emitting head tags amongst others.<a href="#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
