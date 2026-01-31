@@ -10,7 +10,18 @@
 
 <!-- badges: end -->
 
-freshwater provides server-side rendering utilities for plumber2 backends.
+> [!NOTE]
+> This package is under active development and its functionality may change over time.
+
+freshwater provides server-side rendering utilities for plumber2 backends:
+
+- composable HTML templates
+- template caching[^1]
+- weak ETag caching
+- shiny tag serialisation[^2]
+
+[^1]: not yet implemented
+[^2]: differs to base plumber2 implementation in that we render the entire tag tree, allowing for emitting head tags amongst others.
 
 ## Installation
 
@@ -27,11 +38,11 @@ pak::pak("ElianHugh/freshwater")
 library(freshwater)
 
 page_main <- template(
-    {
+    year = 2026, {
         div(
             h1("Dashboard"),
             fragment(p("Welcome back"), name = "content"),
-            small("2026")
+            small(year)
         )
     }
 )
