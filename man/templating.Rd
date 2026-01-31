@@ -10,20 +10,33 @@ template(..., .envir = parent.frame())
 fragment(..., name = NULL)
 }
 \arguments{
-\item{...}{content}
+\item{...}{template definition. Provide zero or more parameters, followed by a
+single braced expression.}
 
 \item{.envir}{the environment in which to evaluate the template}
 
 \item{name}{the name of the fragment}
 }
+\value{
+function of class \code{template} with interface \verb{fn(<declared params>, ..., fragment = NULL)}
+}
 \description{
-Evaluates code under the \code{htmltools::withTags()} environment,
-creating a closure that outputs either the template or
-specified fragment.
+\code{template()} is a function factory that captures a template expression and
+returns a callable HTML renderer. The expression is evaluated
+under the \code{\link[htmltools:withTags]{htmltools::withTags()}} environment, so tag functions such as
+\code{div()} or \code{p()} are available.
 
-The closure can also accept slots, specified as named or bare symbols prior
-to the template expression. This allows for passing in other templates or HTML
-tags after template creation.
+Templates may define:
+\itemize{
+\item \strong{parameters}: symbols or named defaults which are used as arguments
+to the renderer
+\item \strong{content injection}: if the template uses \code{...}, the renderer
+\code{...}  passes them to the containing HTML nodes
+defined in the template.
+\item \strong{fragments}: named subtemplates that can be optionally extracted from
+the template upon rendering by supplying \code{fragment = "name"}. Fragment names
+are required.
+}
 }
 \examples{
 # Example Fragment Usage
@@ -71,5 +84,15 @@ card <- template(
 card("Card Title")
 card("Card Title", fragment="body")
 card("Card Title", "Footer text", fragment = "footer")
+
+# Dots (content injection)
+layout <- template({
+    htmltools::tagList(
+        head(meta(title = "foo")),
+        body(...)
+    )
+})
+
+layout(htmltools::div("content"))
 
 }

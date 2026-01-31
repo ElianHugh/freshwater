@@ -1,13 +1,20 @@
 #' Create a reusable HTML template
 #'
 #' @description
-#' Evaluates code under the `htmltools::withTags()` environment,
-#' creating a closure that outputs either the template or
-#' specified fragment.
+#' `template()` is a function factory that captures a template expression and
+#' returns a callable HTML renderer. The expression is evaluated
+#' under the [htmltools::withTags()] environment, so tag functions such as
+#' `div()` or `p()` are available.
 #'
-#' The closure can also accept slots, specified as named or bare symbols prior
-#' to the template expression. This allows for passing in other templates or HTML
-#' tags after template creation.
+#' Templates may define:
+#' - **parameters**: symbols or named defaults which are used as arguments
+#' to the renderer
+#' - **content injection**: if the template uses `...`, the renderer
+#'  `...`  passes them to the containing HTML nodes
+#' defined in the template.
+#' - **fragments**: named subtemplates that can be optionally extracted from
+#' the template upon rendering by supplying `fragment = "name"`. Fragment names
+#' are required.
 #'
 #' @examples
 #' # Example Fragment Usage
@@ -56,8 +63,20 @@
 #' card("Card Title", fragment="body")
 #' card("Card Title", "Footer text", fragment = "footer")
 #'
-#' @param ... content
+#' # Dots (content injection)
+#' layout <- template({
+#'     htmltools::tagList(
+#'         head(meta(title = "foo")),
+#'         body(...)
+#'     )
+#' })
+#'
+#' layout(htmltools::div("content"))
+#'
+#' @param ... template definition. Provide zero or more parameters, followed by a
+#' single braced expression.
 #' @param .envir the environment in which to evaluate the template
+#' @return function of class `template` with interface `fn(<declared params>, ..., fragment = NULL)`
 #' @rdname templating
 #' @export
 template <- function(..., .envir = parent.frame()) {
@@ -65,7 +84,7 @@ template <- function(..., .envir = parent.frame()) {
     body_idx <- which(unlist(lapply(dots, \(x) inherits(x, "{"))))
 
     if (length(body_idx) != 1L) {
-        stop()
+        stop(sprintf("Templates can define one body only. Found %s expressions.", length(body_idx)))
     }
 
     body_expr <- dots[body_idx][[1L]]
@@ -102,7 +121,7 @@ template <- function(..., .envir = parent.frame()) {
             x <- body_expr
             if (!is.null(fragment)) {
                 x <- walk_nodes(x, fragment)
-                stopifnot("Could not find fragment" = !is.null(x))
+                !is.null(x) || stop(sprintf("Could not find fragment '%s'", fragment))
             }
             x
         },
@@ -125,11 +144,12 @@ template <- function(..., .envir = parent.frame()) {
 #' @param name the name of the fragment
 #' @export
 fragment <- function(..., name = NULL) {
-    stopifnot(!is.null(name))
+    !is.null(name) || stop("A fragment cannot be defined without a name.")
     x <- htmltools::as.tags(...)
     x$fragment <- name
     x
 }
+
 
 #' @exportS3Method
 print.freshwater_template <- function(x, ...) {
