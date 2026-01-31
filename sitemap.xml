@@ -1,11 +1,11 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
-<url><loc>/404.html</loc></url>
-<url><loc>/LICENSE.html</loc></url>
-<url><loc>/authors.html</loc></url>
-<url><loc>/index.html</loc></url>
-<url><loc>/reference/api_cget.html</loc></url>
-<url><loc>/reference/index.html</loc></url>
-<url><loc>/reference/register_html_serialiser.html</loc></url>
-<url><loc>/reference/templating.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/404.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/LICENSE.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/authors.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/index.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/reference/api_cget.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/reference/index.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/reference/register_html_serialiser.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/reference/templating.html</loc></url>
 </urlset>
 
