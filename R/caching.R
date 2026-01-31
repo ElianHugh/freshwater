@@ -1,19 +1,3 @@
-
-new_etag <- function(x) {
-    stopifnot(length(x) == 1L, !is.null(x), !is.na(x))
-    sprintf('W/"%s"', as.character(x))
-}
-
-inm_match <- function(inm, etag) {
-    inm <- trimws(inm %||% "")
-
-    if (identical(inm, "")) return(FALSE)
-    if (identical(inm, "*")) return(TRUE)
-
-    candidates <- trimws(strsplit(inm, ",", fixed = TRUE)[[1L]])
-    etag %in% candidates
-}
-
 #' Conditional GET
 #'
 #' Creates a conditional GET handler for a specific
@@ -33,12 +17,16 @@ inm_match <- function(inm, etag) {
 #' Functions can also be defined in-line
 #' like `@etag \() x + 1`.
 #'
-#' ```rThat
+#' ```r
+#' increment_x <- \() {
+#'     x <<- x + 1L
+#'     later::later(increment_x, delay = 10L)
+#' }
 #' x <- 1L
+#' increment_x()
 #' #* @get /
-#' #* @etag Sys.Date
+#' #* @etag \() x
 #' function() {
-#'  x <<- x + 1L
 #'  x
 #' }
 #' ```
@@ -102,4 +90,33 @@ tag_handler <- function(block, call, tags, values, env) {
     stopifnot(is.function(tag_fn))
     block$etag_fn <- tag_fn
     block
+}
+
+
+new_etag <- function(x) {
+    stopifnot(length(x) == 1L, !is.null(x), !is.na(x))
+    sprintf('W/"%s"', as.character(x))
+}
+
+strip_weak_prefix <- function(x) {
+    reg <- regexec('^(?:W/)?(".*")$', x)
+    res <- regmatches(x, reg)[[1]]
+    if (length(res) == 0) return(NA_character_)
+    res[[2]]
+}
+
+inm_match <- function(inm, etag) {
+    inm <- trimws(inm %||% "")
+
+    etag <- strip_weak_prefix(etag)
+
+    if (is.na(etag)) return(FALSE)
+    if (identical(inm, "")) return(FALSE)
+    if (identical(inm, "*")) return(TRUE)
+
+    candidates <- trimws(strsplit(inm, ",", fixed = TRUE)[[1L]])
+    candidates <- candidates[nzchar(candidates)]
+    candidates <- vapply(candidates, strip_weak_prefix, character(1L))
+
+    any(!is.na(candidates) & candidates == etag)
 }

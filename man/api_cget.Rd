@@ -30,11 +30,15 @@ The etag function is specified by \verb{@etag fn} where \code{fn} is the functio
 Functions can also be defined in-line
 like \verb{@etag \\() x + 1}.
 
-\if{html}{\out{<div class="sourceCode rThat">}}\preformatted{x <- 1L
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{increment_x <- \\() \{
+    x <<- x + 1L
+    later::later(increment_x, delay = 10L)
+\}
+x <- 1L
+increment_x()
 #* @get /
-#* @etag Sys.Date
+#* @etag \\() x
 function() \{
- x <<- x + 1L
  x
 \}
 }\if{html}{\out{</div>}}
