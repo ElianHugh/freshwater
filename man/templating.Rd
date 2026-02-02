@@ -31,7 +31,7 @@ Templates may define:
 \item \strong{parameters}: symbols or named defaults which are used as arguments
 to the renderer
 \item \strong{content injection}: if the template uses \code{...}, the renderer
-\code{...}  passes them to the containing HTML nodes
+passes \code{...}  to the containing HTML nodes
 defined in the template.
 \item \strong{fragments}: named subtemplates that can be optionally extracted from
 the template upon rendering by supplying \code{fragment = "name"}. Fragment names

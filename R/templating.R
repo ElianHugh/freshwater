@@ -10,7 +10,7 @@
 #' - **parameters**: symbols or named defaults which are used as arguments
 #' to the renderer
 #' - **content injection**: if the template uses `...`, the renderer
-#'  `...`  passes them to the containing HTML nodes
+#'  passes `...`  to the containing HTML nodes
 #' defined in the template.
 #' - **fragments**: named subtemplates that can be optionally extracted from
 #' the template upon rendering by supplying `fragment = "name"`. Fragment names
@@ -118,10 +118,22 @@ template <- function(..., .envir = parent.frame()) {
 
     f_body <- substitute(
         {
-            x <- body_expr
+            # todo, put behind a dev/debug flag
+            if (TRUE) {
+                cl <- sys.call()
+                nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
+            }
+
+            x <- tryCatch({
+                body_expr
+            }, error = \(e) new_template_error(nm, e, cl))
+
             if (!is.null(fragment)) {
                 x <- walk_nodes(x, fragment)
-                !is.null(x) || stop(sprintf("Could not find fragment '%s'", fragment))
+                if (is.null(x)) {
+                    msg <- sprintf("Could not find fragment '%s' (template: `%s`)", fragment, nm)
+                    base::stop(msg, call.=FALSE)
+                }
             }
             x
         },
@@ -149,7 +161,6 @@ fragment <- function(..., name = NULL) {
     x$fragment <- name
     x
 }
-
 
 #' @exportS3Method
 print.freshwater_template <- function(x, ...) {
@@ -211,4 +222,49 @@ walk_nodes <- function(tag, name) {
 
     walk(tag)
     found
+}
+
+format_template_tree <- function(stack) {
+    if (!length(stack)) return(character())
+
+    els <<- paste0(
+        "`",
+        stack,
+        "`",
+        c("", rep("", length(stack) - 1L))
+    ) |>
+        paste0(collapse = "\n  └─>")
+
+    # lapply(seq_along(els), \(i) {
+    #     el <- els[[i]]
+
+    #     el_last <- if (i > 1) {
+    #         el_last <- els[[i - 1]]
+    #     } else {
+    #         ""
+    #     }
+    #     indent <- strrep(" ", nchar(el) + nchar(el_last))
+    #     branch <- if (i == length(els)) "" else "└─>"
+    #     paste0(el, "\n", indent, branch)
+    # }) |>
+    #     paste0(collapse="")
+}
+
+new_template_error <- function(template_name, error, call = rlang::caller_env()) {
+    stack <- c(template_name, error$template_stack)
+    tree <- format_template_tree(stack)
+    cause <- error$cause %||% error
+    trace <- cause$trace %||% error$trace
+    rlang::abort(
+        message = c(
+            "Error while rendering template(s):",
+            tree
+        ),
+        class = "freshwater_template_error",
+        parent = cause,
+        call = call,
+        template_stack = stack,
+        trace = trace,
+        cause = cause
+    )
 }
