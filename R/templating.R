@@ -84,7 +84,7 @@ template <- function(..., .envir = parent.frame()) {
     body_idx <- which(unlist(lapply(dots, \(x) inherits(x, "{"))))
 
     if (length(body_idx) != 1L) {
-        stop(sprintf("Templates can define one body only. Found %s expressions.", length(body_idx)))
+        error_template_single_body(body_idx)
     }
 
     body_expr <- dots[body_idx][[1L]]
@@ -95,12 +95,7 @@ template <- function(..., .envir = parent.frame()) {
     for (i in seq_along(param_exprs)) {
         if (identical(param_names[i], "") || is.null(param_names[i])) {
             if (!is.symbol(param_exprs[[i]])) {
-                stop(
-                    sprintf(
-                        "Unnamed parameters must be bare symbols: %s",
-                        deparse(param_exprs[[i]])
-                    )
-                )
+                error_template_bare_symbols(deparse(param_exprs[[i]]))
             }
 
             param_names[[i]] <- as.character(param_exprs[[i]])
@@ -111,7 +106,7 @@ template <- function(..., .envir = parent.frame()) {
     names(param_exprs) <- param_names
 
     if ("fragment" %in% names(param_exprs)) {
-        stop("Duplicate `fragment` parameter found. `fragment` is a reserved template argument.")
+        error_reserved_argument()
     }
 
     formals_pl <- as.pairlist(c(param_exprs, alist(...=), list(fragment = NULL)))
@@ -122,26 +117,28 @@ template <- function(..., .envir = parent.frame()) {
 
     f_body <- substitute(
         {
-            # todo, put behind a dev/debug flag
-            if (TRUE) {
-                call_ <- sys.call()
-                bottom <- rlang::current_env()
-                nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
-            }
+            withCallingHandlers(
+                {
+                    call_ <- sys.call()
+                    bottom <- rlang::current_env()
+                    nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
 
-            # todo, maybe just use withCallingHandlers
-            x <- rlang::try_fetch({
-                body_expr
-            }, error = \(e) new_template_error(nm, e, call = call_, bottom = bottom))
+                    x <- body_expr
 
-            if (!is.null(fragment)) {
-                x <- walk_nodes(x, fragment)
-                if (is.null(x)) {
-                    msg <- sprintf("Could not find fragment '%s' (template: `%s`)", fragment, nm)
-                    base::stop(msg, call.=FALSE)
+                    if (!is.null(fragment)) {
+                        x <- walk_nodes(x, fragment)
+                        if (is.null(x)) {
+                            error_missing_fragment(fragment, nm)
+                        }
+                    }
+
+                    x
+
+                },
+                error = function(e) {
+                    new_template_error(nm, e, call = call_, bottom = bottom)
                 }
-            }
-            x
+            )
         },
         list(
             body_expr = body_expr,
@@ -150,22 +147,20 @@ template <- function(..., .envir = parent.frame()) {
         )
     )
 
-
-
-    fn <- eval(call("function", formals_pl, f_body), e)
-    class(fn) <- c("freshwater_template", class(fn))
-    attr(fn, "template_body") <- body_expr
-    attr(fn, "template_params") <- param_exprs
-    attr(fn, "template_env") <- .envir
-
-    fn
+    structure(
+        eval(call("function", formals_pl, f_body), e),
+        "template_body" = body_expr,
+        "template_params" = param_exprs,
+        "template_env" = .envir,
+        class = c("freshwater_template", "function")
+    )
 }
 
 #' @rdname templating
 #' @param name the name of the fragment
 #' @export
 fragment <- function(..., name = NULL) {
-    !is.null(name) || stop("A fragment cannot be defined without a name.")
+    !is.null(name) || error_fragment_definition()
     x <- htmltools::as.tags(...)
     x$fragment <- name
     x
@@ -236,27 +231,22 @@ walk_nodes <- function(tag, name) {
 format_template_tree <- function(stack) {
     if (!length(stack)) return(character())
 
-    els <<- paste0(
-        "`",
-        stack,
-        "`",
-        c("", rep("", length(stack) - 1L))
-    ) |>
-        paste0(collapse = "\n  └─>")
+    els <- paste0(stack, "()")
 
-    # lapply(seq_along(els), \(i) {
-    #     el <- els[[i]]
+    lapply(seq_along(els), \(i) {
+        el <- els[[i]]
 
-    #     el_last <- if (i > 1) {
-    #         el_last <- els[[i - 1]]
-    #     } else {
-    #         ""
-    #     }
-    #     indent <- strrep(" ", nchar(el) + nchar(el_last))
-    #     branch <- if (i == length(els)) "" else "└─>"
-    #     paste0(el, "\n", indent, branch)
-    # }) |>
-    #     paste0(collapse="")
+        el_last <- if (i > 1) {
+            el_last <- els[[i - 1]]
+        } else {
+            ""
+        }
+
+        indent <- strrep(" ", i * 3L)
+        branch <- if (i == length(els)) "" else "└─>"
+        paste0(el, "\n", indent, branch)
+    }) |>
+        paste0(collapse="")
 }
 
 new_template_error <- function(template_name, error, call, bottom) {
@@ -281,3 +271,45 @@ new_template_error <- function(template_name, error, call, bottom) {
     )
 }
 
+error_template_single_body <- function(indices, call = rlang::caller_env()) {
+    msg <- sprintf(
+        "Templates can define one body only. Found %s expressions.",
+        length(indices)
+    )
+    rlang::abort(msg, call = call)
+}
+
+error_template_bare_symbols <- function(sym, call = rlang::caller_env()) {
+    msg <- sprintf(
+        "Unnamed parameters must be bare symbols: %s",
+        sym
+    )
+    rlang::abort(msg, call = call)
+}
+
+error_reserved_argument <- function(call = rlang::caller_env()) {
+    rlang::abort(
+        "Duplicate `fragment` parameter found. `fragment` is a reserved template argument.",
+        call = call
+    )
+}
+
+error_missing_fragment <- function(fragment, nm, call = rlang::caller_env()) {
+    msg <- sprintf(
+        "Could not find fragment '%s' in template `%s`",
+        fragment,
+        nm
+    )
+    rlang::abort(
+        msg,
+        class = "freshwater_template_error",
+        call = call
+    )
+}
+
+error_fragment_definition <- function(call = rlang::caller_env()) {
+    rlang::abort(
+        "A fragment cannot be defined without a name.",
+        call = call
+    )
+}
