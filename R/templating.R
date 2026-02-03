@@ -116,17 +116,23 @@ template <- function(..., .envir = parent.frame()) {
 
     formals_pl <- as.pairlist(c(param_exprs, alist(...=), list(fragment = NULL)))
 
+
+    e <- new.env(parent = .envir)
+    list2env(as.list(htmltools::tags), envir = e)
+
     f_body <- substitute(
         {
             # todo, put behind a dev/debug flag
             if (TRUE) {
-                cl <- sys.call()
+                call_ <- sys.call()
+                bottom <- rlang::current_env()
                 nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
             }
 
-            x <- tryCatch({
+            # todo, maybe just use withCallingHandlers
+            x <- rlang::try_fetch({
                 body_expr
-            }, error = \(e) new_template_error(nm, e, cl))
+            }, error = \(e) new_template_error(nm, e, call = call_, bottom = bottom))
 
             if (!is.null(fragment)) {
                 x <- walk_nodes(x, fragment)
@@ -137,11 +143,14 @@ template <- function(..., .envir = parent.frame()) {
             }
             x
         },
-        list(body_expr = body_expr, walk_nodes = walk_nodes)
+        list(
+            body_expr = body_expr,
+            walk_nodes = walk_nodes,
+            env = e
+        )
     )
 
-    e <- new.env(parent = .envir)
-    list2env(as.list(htmltools::tags), envir = e)
+
 
     fn <- eval(call("function", formals_pl, f_body), e)
     class(fn) <- c("freshwater_template", class(fn))
@@ -250,11 +259,12 @@ format_template_tree <- function(stack) {
     #     paste0(collapse="")
 }
 
-new_template_error <- function(template_name, error, call = rlang::caller_env()) {
+new_template_error <- function(template_name, error, call, bottom) {
     stack <- c(template_name, error$template_stack)
     tree <- format_template_tree(stack)
     cause <- error$cause %||% error
-    trace <- cause$trace %||% error$trace
+    trace_bottom <- error$trace_bottom %||% bottom
+
     rlang::abort(
         message = c(
             "Error while rendering template(s):",
@@ -264,7 +274,10 @@ new_template_error <- function(template_name, error, call = rlang::caller_env())
         parent = cause,
         call = call,
         template_stack = stack,
-        trace = trace,
-        cause = cause
+        cause = cause,
+        trace_bottom = trace_bottom,
+        .frame = bottom,
+        .trace_bottom = trace_bottom
     )
 }
+
