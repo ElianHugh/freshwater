@@ -161,6 +161,7 @@ template <- function(..., .envir = parent.frame()) {
 #' @export
 fragment <- function(..., name = NULL) {
     !is.null(name) || error_fragment_definition()
+
     x <- htmltools::as.tags(...)
     x$fragment <- name
     x
@@ -234,32 +235,31 @@ format_template_tree <- function(stack) {
     els <- paste0(stack, "()")
 
     lapply(seq_along(els), \(i) {
-        el <- els[[i]]
-
-        el_last <- if (i > 1) {
-            el_last <- els[[i - 1]]
-        } else {
-            ""
-        }
-
         indent <- strrep(" ", i * 3L)
         branch <- if (i == length(els)) "" else "└─>"
-        paste0(el, "\n", indent, branch)
+        paste0(els[[i]], "\n", indent, branch)
     }) |>
         paste0(collapse="")
 }
 
 new_template_error <- function(template_name, error, call, bottom) {
     stack <- c(template_name, error$template_stack)
-    tree <- format_template_tree(stack)
+
     cause <- error$cause %||% error
     trace_bottom <- error$trace_bottom %||% bottom
 
-    rlang::abort(
-        message = c(
+    if (length(stack) <= 1L) {
+        msg <- "Error while rendering template:"
+    } else {
+        tree <- format_template_tree(stack)
+        msg <- c(
             "Error while rendering template(s):",
             tree
-        ),
+        )
+    }
+
+    rlang::abort(
+        message = msg,
         class = "freshwater_template_error",
         parent = cause,
         call = call,
