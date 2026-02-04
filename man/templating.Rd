@@ -3,11 +3,17 @@
 \name{template}
 \alias{template}
 \alias{fragment}
+\alias{cache}
+\alias{clear_cache}
 \title{Create a reusable HTML template}
 \usage{
 template(..., .envir = parent.frame())
 
 fragment(..., name = NULL)
+
+cache(name, vary = NULL, ...)
+
+clear_cache()
 }
 \arguments{
 \item{...}{template definition. Provide zero or more parameters, followed by a
@@ -94,5 +100,18 @@ layout <- template({
 })
 
 layout(htmltools::div("content"))
+
+Caching
+nav <- template(user, {
+  cache(
+    "nav",
+    vary = user$id,
+    ul(
+      li("Home"),
+      li("Profile"),
+      if (user$is_admin) li("Admin")
+    )
+  )
+})
 
 }

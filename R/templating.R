@@ -1,3 +1,22 @@
+freshwater <- new.env(parent = emptyenv())
+freshwater$template_stack <- list()
+
+push_template <- function(nm, fragment, id) {
+    freshwater$template_stack <- c(freshwater$template_stack, list(list(template = nm, fragment = fragment, id = id)))
+}
+
+pop_template <- function() {
+    st <- freshwater$template_stack
+    if (length(st)) freshwater$template_stack <- st[-length(st)]
+}
+
+current_template <- function(
+    default=list(template="anonymous_template", fragment=NULL, id = NULL)
+) {
+    st <- freshwater$template_stack
+    if (length(st)) st[[length(st)]] else default
+}
+
 #' Create a reusable HTML template
 #'
 #' @description
@@ -73,6 +92,19 @@
 #'
 #' layout(htmltools::div("content"))
 #'
+#' Caching
+#' nav <- template(user, {
+#'   cache(
+#'     "nav",
+#'     vary = user$id,
+#'     ul(
+#'       li("Home"),
+#'       li("Profile"),
+#'       if (user$is_admin) li("Admin")
+#'     )
+#'   )
+#' })
+#'
 #' @param ... template definition. Provide zero or more parameters, followed by a
 #' single braced expression.
 #' @param .envir the environment in which to evaluate the template
@@ -114,6 +146,7 @@ template <- function(..., .envir = parent.frame()) {
 
     e <- new.env(parent = .envir)
     list2env(as.list(htmltools::tags), envir = e)
+    id <- paste0("tpl_", sprintf("%08x", sample.int(2^31 - 1L, 1L)))
 
     f_body <- substitute(
         {
@@ -122,6 +155,9 @@ template <- function(..., .envir = parent.frame()) {
                     call_ <- sys.call()
                     bottom <- rlang::current_env()
                     nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
+
+                    push_template(nm, fragment, id)
+                    on.exit(pop_template(), add = TRUE)
 
                     x <- body_expr
 
@@ -143,7 +179,10 @@ template <- function(..., .envir = parent.frame()) {
         list(
             body_expr = body_expr,
             walk_nodes = walk_nodes,
-            env = e
+            push_template = push_template,
+            pop_template = pop_template,
+            env = e,
+            id = id
         )
     )
 
@@ -312,4 +351,43 @@ error_fragment_definition <- function(call = rlang::caller_env()) {
         "A fragment cannot be defined without a name.",
         call = call
     )
+}
+
+store <- memoise::memoise(
+    function(key, fn) fn(),
+    hash = function(args) args$key
+)
+
+#' @export
+#' @rdname templating
+cache <- function(name, vary = NULL, ...) {
+    context <- current_template()
+    vary <- force(vary)
+
+    env <- parent.frame()
+
+    expr <- substitute(
+        htmltools::tagList(...)
+    )
+
+    fn <- function() eval(expr, env)
+
+    key <- digest::digest(
+        list(name, vary, context$name, context$fragment, context$id),
+        algo = "xxhash32"
+    )
+
+    res <- store(key, fn)
+
+    structure(
+        res,
+        class = c(class(res), "freshwater_template_cache")
+    )
+}
+
+#' @export
+#' @rdname templating
+clear_cache <- function() {
+    memoise::drop_cache(store)
+    invisible(NULL)
 }
