@@ -1,21 +1,9 @@
-freshwater <- new.env(parent = emptyenv())
-freshwater$template_stack <- list()
-
-push_template <- function(nm, fragment, id) {
-    freshwater$template_stack <- c(freshwater$template_stack, list(list(template = nm, fragment = fragment, id = id)))
-}
-
-pop_template <- function() {
-    st <- freshwater$template_stack
-    if (length(st)) freshwater$template_stack <- st[-length(st)]
-    invisible(NULL)
-}
-
 current_template <- function(
-    default=list(template="anonymous_template", fragment=NULL, id = NULL)
+    env = parent.frame(),
+    default = list(template = "anonymous_template", fragment = NULL, id = NULL)
 ) {
-    st <- freshwater$template_stack
-    if (length(st)) st[[length(st)]] else default
+    ctx <- get0(".freshwater_ctx", envir = env, inherits = TRUE)
+    if (is.null(ctx)) default else ctx
 }
 
 #' Create a reusable HTML template
@@ -129,8 +117,11 @@ template <- function(..., .envir = parent.frame()) {
         error_reserved_argument()
     }
 
-    formals_pl <- as.pairlist(c(param_exprs, alist(...=), list(fragment = NULL)))
-
+    formals_pl <- as.pairlist(c(
+        param_exprs,
+        alist(... = ),
+        list(fragment = NULL)
+    ))
 
     e <- new.env(parent = .envir)
     list2env(as.list(htmltools::tags), envir = e)
@@ -144,10 +135,15 @@ template <- function(..., .envir = parent.frame()) {
                     bottom <- rlang::current_env()
                     nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
 
-                    push_template(nm, fragment, id)
-                    on.exit(pop_template(), add = TRUE)
+                    assign(
+                        ".freshwater_ctx",
+                        list(template = nm, fragment = fragment, id = id),
+                        envir = env
+                    )
+                    on.exit(rm(".freshwater_ctx", envir = env), add = TRUE)
 
                     x <- body_expr
+                    x <- local({body_expr})
 
                     if (!is.null(fragment)) {
                         x <- walk_nodes(x, fragment)
@@ -157,16 +153,15 @@ template <- function(..., .envir = parent.frame()) {
                     }
 
                     x
-
                 },
-                error = function(e) new_template_error(nm, e, call = call_, bottom = bottom)
+                error = function(e) {
+                    new_template_error(nm, e, call = call_, bottom = bottom)
+                }
             )
         },
         list(
             body_expr = body_expr,
             walk_nodes = walk_nodes,
-            push_template = push_template,
-            pop_template = pop_template,
             env = e,
             id = id
         )
@@ -209,7 +204,10 @@ print.freshwater_template <- function(x, ...) {
             if (inherits(params[[nm]], "name")) {
                 params_string <- c(params_string, nm)
             } else {
-                params_string <- c(params_string, paste0(nm, " = ", deparse(param)))
+                params_string <- c(
+                    params_string,
+                    paste0(nm, " = ", deparse(param))
+                )
             }
         }
     }
@@ -219,8 +217,10 @@ print.freshwater_template <- function(x, ...) {
     out <- sprintf(
         out,
         paste0(
-            c(params_string, "...", "fragment = NULL"), collapse=", "),
-        paste0(deparse(body), collapse="\n"),
+            c(params_string, "...", "fragment = NULL"),
+            collapse = ", "
+        ),
+        paste0(deparse(body), collapse = "\n"),
         format(e)
     )
 
@@ -236,7 +236,9 @@ print.freshwater_cached_partial <- function(x, ...) {
 walk_nodes <- function(tag, name) {
     found <- NULL
     walk <- function(x) {
-        if (!is.null(found)) return()
+        if (!is.null(found)) {
+            return()
+        }
 
         if (inherits(x, "shiny.tag")) {
             if (!is.null(x$fragment) && identical(x$fragment, name)) {
@@ -261,7 +263,9 @@ walk_nodes <- function(tag, name) {
 }
 
 format_template_tree <- function(stack) {
-    if (!length(stack)) return(character())
+    if (!length(stack)) {
+        return(character())
+    }
 
     els <- paste0(stack, "()")
 
@@ -270,7 +274,7 @@ format_template_tree <- function(stack) {
         branch <- if (i == length(els)) "" else "└─>"
         paste0(els[[i]], "\n", indent, branch)
     }) |>
-        paste0(collapse="")
+        paste0(collapse = "")
 }
 
 new_template_error <- function(template_name, error, call, bottom) {
@@ -391,7 +395,7 @@ store <- memoise::memoise(
 #'
 #' @rdname templating
 cache <- function(name, vary = NULL, ...) {
-    context <- current_template()
+    context <- current_template(parent.frame())
     vary <- force(vary)
 
     env <- parent.frame()
@@ -417,7 +421,6 @@ cache <- function(name, vary = NULL, ...) {
         class(res) <- c("freshwater_cached_partial", class(res))
     }
 
-
     structure(
         res,
         class = c(
@@ -433,7 +436,3 @@ clear_cache <- function() {
     memoise::drop_cache(store)
     invisible(NULL)
 }
-
-
-
-
