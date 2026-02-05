@@ -8,6 +8,7 @@ push_template <- function(nm, fragment, id) {
 pop_template <- function() {
     st <- freshwater$template_stack
     if (length(st)) freshwater$template_stack <- st[-length(st)]
+    invisible(NULL)
 }
 
 current_template <- function(
@@ -92,19 +93,6 @@ current_template <- function(
 #'
 #' layout(htmltools::div("content"))
 #'
-#' Caching
-#' nav <- template(user, {
-#'   cache(
-#'     "nav",
-#'     vary = user$id,
-#'     ul(
-#'       li("Home"),
-#'       li("Profile"),
-#'       if (user$is_admin) li("Admin")
-#'     )
-#'   )
-#' })
-#'
 #' @param ... template definition. Provide zero or more parameters, followed by a
 #' single braced expression.
 #' @param .envir the environment in which to evaluate the template
@@ -171,9 +159,7 @@ template <- function(..., .envir = parent.frame()) {
                     x
 
                 },
-                error = function(e) {
-                    new_template_error(nm, e, call = call_, bottom = bottom)
-                }
+                error = function(e) new_template_error(nm, e, call = call_, bottom = bottom)
             )
         },
         list(
@@ -239,6 +225,12 @@ print.freshwater_template <- function(x, ...) {
     )
 
     cat(out)
+}
+
+#' @exportS3Method
+print.freshwater_cached_partial <- function(x, ...) {
+    cat("[cached partial]\n")
+    NextMethod()
 }
 
 walk_nodes <- function(tag, name) {
@@ -359,6 +351,44 @@ store <- memoise::memoise(
 )
 
 #' @export
+#' @param name unique name for the cached partial template
+#' @param vary values that should change when the cached output should change. This is used to construct the cache key.
+#' @param ... tag content to render and cache
+#' @examples
+#' # Caching
+#' nav <- template(user, {
+#'   cache(
+#'     "nav",
+#'     vary = user$id,
+#'     ul(
+#'       li("Home"),
+#'       li("Profile"),
+#'       if (user$is_admin) li("Admin")
+#'     )
+#'   )
+#' })
+#'
+#' # Nested Caches
+#' dashboard <- template(page = list(), stats = list(), recent = list(), {
+#'     cache(
+#'         name = "page",
+#'         vary = page$updated_at,
+#'         div(
+#'             h1("Dashboard"),
+#'             cache(
+#'                 name = "stats",
+#'                  vary = stats$updated_at,
+#'                 div(p(stats$count))
+#'             ),
+#'             cache(
+#'                 name = "recent",
+#'                 vary = recent$updated_at,
+#'                 div(recent)
+#'             )
+#'         )
+#'     )
+#' })
+#'
 #' @rdname templating
 cache <- function(name, vary = NULL, ...) {
     context <- current_template()
@@ -370,18 +400,30 @@ cache <- function(name, vary = NULL, ...) {
         htmltools::tagList(...)
     )
 
-    fn <- function() eval(expr, env)
+    fn <- function() {
+        eval(expr, env) |>
+            htmltools::doRenderTags()
+    }
 
     key <- digest::digest(
-        list(name, vary, context$name, context$fragment, context$id),
+        list(name, vary, context$template, context$fragment, context$id),
         algo = "xxhash32"
     )
 
+    hit <- memoise::has_cache(store)(key)
     res <- store(key, fn)
+
+    if (hit) {
+        class(res) <- c("freshwater_cached_partial", class(res))
+    }
+
 
     structure(
         res,
-        class = c(class(res), "freshwater_template_cache")
+        class = c(
+            class(res),
+            "freshwater_template_cache"
+        )
     )
 }
 
@@ -391,3 +433,7 @@ clear_cache <- function() {
     memoise::drop_cache(store)
     invisible(NULL)
 }
+
+
+
+
