@@ -1,3 +1,11 @@
+current_template <- function(
+    env = parent.frame(),
+    default = list(template = "anonymous_template", fragment = NULL, id = NULL)
+) {
+    ctx <- get0(".freshwater_ctx", envir = env, inherits = TRUE)
+    if (is.null(ctx)) default else ctx
+}
+
 #' Create a reusable HTML template
 #'
 #' @description
@@ -10,7 +18,7 @@
 #' - **parameters**: symbols or named defaults which are used as arguments
 #' to the renderer
 #' - **content injection**: if the template uses `...`, the renderer
-#'  `...`  passes them to the containing HTML nodes
+#'  passes `...`  to the containing HTML nodes
 #' defined in the template.
 #' - **fragments**: named subtemplates that can be optionally extracted from
 #' the template upon rendering by supplying `fragment = "name"`. Fragment names
@@ -84,7 +92,7 @@ template <- function(..., .envir = parent.frame()) {
     body_idx <- which(unlist(lapply(dots, \(x) inherits(x, "{"))))
 
     if (length(body_idx) != 1L) {
-        stop(sprintf("Templates can define one body only. Found %s expressions.", length(body_idx)))
+        error_template_single_body(body_idx)
     }
 
     body_expr <- dots[body_idx][[1L]]
@@ -95,12 +103,7 @@ template <- function(..., .envir = parent.frame()) {
     for (i in seq_along(param_exprs)) {
         if (identical(param_names[i], "") || is.null(param_names[i])) {
             if (!is.symbol(param_exprs[[i]])) {
-                stop(
-                    sprintf(
-                        "Unnamed parameters must be bare symbols: %s",
-                        deparse(param_exprs[[i]])
-                    )
-                )
+                error_template_bare_symbols(deparse(param_exprs[[i]]))
             }
 
             param_names[[i]] <- as.character(param_exprs[[i]])
@@ -111,45 +114,78 @@ template <- function(..., .envir = parent.frame()) {
     names(param_exprs) <- param_names
 
     if ("fragment" %in% names(param_exprs)) {
-        stop("Duplicate `fragment` parameter found. `fragment` is a reserved template argument.")
+        error_reserved_argument()
     }
 
-    formals_pl <- as.pairlist(c(param_exprs, alist(...=), list(fragment = NULL)))
-
-    f_body <- substitute(
-        {
-            x <- body_expr
-            if (!is.null(fragment)) {
-                x <- walk_nodes(x, fragment)
-                !is.null(x) || stop(sprintf("Could not find fragment '%s'", fragment))
-            }
-            x
-        },
-        list(body_expr = body_expr, walk_nodes = walk_nodes)
-    )
+    formals_pl <- as.pairlist(c(
+        param_exprs,
+        alist(... = ),
+        list(fragment = NULL)
+    ))
 
     e <- new.env(parent = .envir)
     list2env(as.list(htmltools::tags), envir = e)
+    id <- paste0("tpl_", sprintf("%08x", sample.int(2^31 - 1L, 1L)))
 
-    fn <- eval(call("function", formals_pl, f_body), e)
-    class(fn) <- c("freshwater_template", class(fn))
-    attr(fn, "template_body") <- body_expr
-    attr(fn, "template_params") <- param_exprs
-    attr(fn, "template_env") <- .envir
+    f_body <- substitute(
+        {
+            withCallingHandlers(
+                {
+                    call_ <- sys.call()
+                    bottom <- rlang::current_env()
+                    nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
 
-    fn
+                    assign(
+                        ".freshwater_ctx",
+                        list(template = nm, fragment = fragment, id = id),
+                        envir = env
+                    )
+                    on.exit(rm(".freshwater_ctx", envir = env), add = TRUE)
+
+                    x <- body_expr
+                    x <- local({body_expr})
+
+                    if (!is.null(fragment)) {
+                        x <- walk_nodes(x, fragment)
+                        if (is.null(x)) {
+                            error_missing_fragment(fragment, nm)
+                        }
+                    }
+
+                    x
+                },
+                error = function(e) {
+                    new_template_error(nm, e, call = call_, bottom = bottom)
+                }
+            )
+        },
+        list(
+            body_expr = body_expr,
+            walk_nodes = walk_nodes,
+            env = e,
+            id = id
+        )
+    )
+
+    structure(
+        eval(call("function", formals_pl, f_body), e),
+        "template_body" = body_expr,
+        "template_params" = param_exprs,
+        "template_env" = .envir,
+        class = c("freshwater_template", "function")
+    )
 }
 
 #' @rdname templating
 #' @param name the name of the fragment
 #' @export
 fragment <- function(..., name = NULL) {
-    !is.null(name) || stop("A fragment cannot be defined without a name.")
+    !is.null(name) || error_fragment_definition()
+
     x <- htmltools::as.tags(...)
     x$fragment <- name
     x
 }
-
 
 #' @exportS3Method
 print.freshwater_template <- function(x, ...) {
@@ -168,7 +204,10 @@ print.freshwater_template <- function(x, ...) {
             if (inherits(params[[nm]], "name")) {
                 params_string <- c(params_string, nm)
             } else {
-                params_string <- c(params_string, paste0(nm, " = ", deparse(param)))
+                params_string <- c(
+                    params_string,
+                    paste0(nm, " = ", deparse(param))
+                )
             }
         }
     }
@@ -178,18 +217,28 @@ print.freshwater_template <- function(x, ...) {
     out <- sprintf(
         out,
         paste0(
-            c(params_string, "...", "fragment = NULL"), collapse=", "),
-        paste0(deparse(body), collapse="\n"),
+            c(params_string, "...", "fragment = NULL"),
+            collapse = ", "
+        ),
+        paste0(deparse(body), collapse = "\n"),
         format(e)
     )
 
     cat(out)
 }
 
+#' @exportS3Method
+print.freshwater_cached_partial <- function(x, ...) {
+    cat("[cached partial]\n")
+    NextMethod()
+}
+
 walk_nodes <- function(tag, name) {
     found <- NULL
     walk <- function(x) {
-        if (!is.null(found)) return()
+        if (!is.null(found)) {
+            return()
+        }
 
         if (inherits(x, "shiny.tag")) {
             if (!is.null(x$fragment) && identical(x$fragment, name)) {
@@ -211,4 +260,179 @@ walk_nodes <- function(tag, name) {
 
     walk(tag)
     found
+}
+
+format_template_tree <- function(stack) {
+    if (!length(stack)) {
+        return(character())
+    }
+
+    els <- paste0(stack, "()")
+
+    lapply(seq_along(els), \(i) {
+        indent <- strrep(" ", i * 3L)
+        branch <- if (i == length(els)) "" else "└─>"
+        paste0(els[[i]], "\n", indent, branch)
+    }) |>
+        paste0(collapse = "")
+}
+
+new_template_error <- function(template_name, error, call, bottom) {
+    stack <- c(template_name, error$template_stack)
+
+    cause <- error$cause %||% error
+    trace_bottom <- error$trace_bottom %||% bottom
+
+    if (length(stack) <= 1L) {
+        msg <- "Error while rendering template:"
+    } else {
+        tree <- format_template_tree(stack)
+        msg <- c(
+            "Error while rendering template(s):",
+            tree
+        )
+    }
+
+    rlang::abort(
+        message = msg,
+        class = "freshwater_template_error",
+        parent = cause,
+        call = call,
+        template_stack = stack,
+        cause = cause,
+        trace_bottom = trace_bottom,
+        .frame = bottom,
+        .trace_bottom = trace_bottom
+    )
+}
+
+error_template_single_body <- function(indices, call = rlang::caller_env()) {
+    msg <- sprintf(
+        "Templates can define one body only. Found %s expressions.",
+        length(indices)
+    )
+    rlang::abort(msg, call = call)
+}
+
+error_template_bare_symbols <- function(sym, call = rlang::caller_env()) {
+    msg <- sprintf(
+        "Unnamed parameters must be bare symbols: %s",
+        sym
+    )
+    rlang::abort(msg, call = call)
+}
+
+error_reserved_argument <- function(call = rlang::caller_env()) {
+    rlang::abort(
+        "Duplicate `fragment` parameter found. `fragment` is a reserved template argument.",
+        call = call
+    )
+}
+
+error_missing_fragment <- function(fragment, nm, call = rlang::caller_env()) {
+    msg <- sprintf(
+        "Could not find fragment '%s' in template `%s`",
+        fragment,
+        nm
+    )
+    rlang::abort(
+        msg,
+        class = "freshwater_template_error",
+        call = call
+    )
+}
+
+error_fragment_definition <- function(call = rlang::caller_env()) {
+    rlang::abort(
+        "A fragment cannot be defined without a name.",
+        call = call
+    )
+}
+
+store <- memoise::memoise(
+    function(key, fn) fn(),
+    hash = function(args) args$key
+)
+
+#' @export
+#' @param name unique name for the cached partial template
+#' @param vary values that should change when the cached output should change. This is used to construct the cache key.
+#' @param ... tag content to render and cache
+#' @examples
+#' # Caching
+#' nav <- template(user, {
+#'   cache(
+#'     "nav",
+#'     vary = user$id,
+#'     ul(
+#'       li("Home"),
+#'       li("Profile"),
+#'       if (user$is_admin) li("Admin")
+#'     )
+#'   )
+#' })
+#'
+#' # Nested Caches
+#' dashboard <- template(page = list(), stats = list(), recent = list(), {
+#'     cache(
+#'         name = "page",
+#'         vary = page$updated_at,
+#'         div(
+#'             h1("Dashboard"),
+#'             cache(
+#'                 name = "stats",
+#'                  vary = stats$updated_at,
+#'                 div(p(stats$count))
+#'             ),
+#'             cache(
+#'                 name = "recent",
+#'                 vary = recent$updated_at,
+#'                 div(recent)
+#'             )
+#'         )
+#'     )
+#' })
+#'
+#' @rdname templating
+cache <- function(name, vary = NULL, ...) {
+    context <- current_template(parent.frame())
+    vary <- force(vary)
+
+    env <- parent.frame()
+
+    expr <- substitute(
+        htmltools::tagList(...)
+    )
+
+    fn <- function() {
+        eval(expr, env) |>
+            htmltools::doRenderTags()
+    }
+
+    key <- digest::digest(
+        list(name, vary, context$template, context$fragment, context$id),
+        algo = "xxhash32"
+    )
+
+    hit <- memoise::has_cache(store)(key)
+    res <- store(key, fn)
+
+    if (hit) {
+        class(res) <- c("freshwater_cached_partial", class(res))
+    }
+
+    structure(
+        res,
+        class = c(
+            class(res),
+            "freshwater_template_cache"
+        )
+    )
+}
+
+#' @export
+#' @rdname templating
+clear_cache <- function() {
+    memoise::drop_cache(store)
+    invisible(NULL)
 }
