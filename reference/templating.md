@@ -11,8 +11,8 @@ Templates may define:
 - **parameters**: symbols or named defaults which are used as arguments
   to the renderer
 
-- **content injection**: if the template uses `...`, the renderer `...`
-  passes them to the containing HTML nodes defined in the template.
+- **content injection**: if the template uses `...`, the renderer passes
+  `...` to the containing HTML nodes defined in the template.
 
 - **fragments**: named subtemplates that can be optionally extracted
   from the template upon rendering by supplying `fragment = "name"`.
@@ -24,14 +24,17 @@ Templates may define:
 template(..., .envir = parent.frame())
 
 fragment(..., name = NULL)
+
+cache(name, vary = NULL, ...)
+
+clear_cache()
 ```
 
 ## Arguments
 
 - ...:
 
-  template definition. Provide zero or more parameters, followed by a
-  single braced expression.
+  tag content to render and cache
 
 - .envir:
 
@@ -39,7 +42,12 @@ fragment(..., name = NULL)
 
 - name:
 
-  the name of the fragment
+  unique name for the cached partial template
+
+- vary:
+
+  values that should change when the cached output should change. This
+  is used to construct the cache key.
 
 ## Value
 
@@ -118,4 +126,38 @@ layout(htmltools::div("content"))
 #> <body>
 #>   <div>content</div>
 #> </body>
+
+# Caching
+nav <- template(user, {
+  cache(
+    "nav",
+    vary = user$id,
+    ul(
+      li("Home"),
+      li("Profile"),
+      if (user$is_admin) li("Admin")
+    )
+  )
+})
+
+# Nested Caches
+dashboard <- template(page = list(), stats = list(), recent = list(), {
+    cache(
+        name = "page",
+        vary = page$updated_at,
+        div(
+            h1("Dashboard"),
+            cache(
+                name = "stats",
+                vary = stats$updated_at,
+                div(p(stats$count))
+            ),
+            cache(
+                name = "recent",
+                vary = recent$updated_at,
+                div(recent)
+            )
+        )
+    )
+})
 ```

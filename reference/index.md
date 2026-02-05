@@ -8,4 +8,6 @@
   : Register HTML Serialiser
 - [`template()`](https://elianhugh.github.io/freshwater/reference/templating.md)
   [`fragment()`](https://elianhugh.github.io/freshwater/reference/templating.md)
+  [`cache()`](https://elianhugh.github.io/freshwater/reference/templating.md)
+  [`clear_cache()`](https://elianhugh.github.io/freshwater/reference/templating.md)
   : Create a reusable HTML template
