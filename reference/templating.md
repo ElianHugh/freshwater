@@ -49,6 +49,10 @@ clear_cache(reset = TRUE)
   values that should change when the cached output should change. This
   is used to construct the cache key.
 
+- reset:
+
+  clear the cache of all memoised templates
+
 ## Value
 
 function of class `template` with interface
@@ -84,7 +88,7 @@ page_main <- template(
 )
 
 page_main(fragment="content")
-#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
+#> <p>Welcome back</p>
 
 # Template slots
 
@@ -98,7 +102,10 @@ details <- template(name, age, {
 })
 
 details("Jim", 30)
-#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
+#> <div>
+#>   <p>Hello, my name is: Jim</p>
+#>   <p>I am 30 years old.</p>
+#> </div>
 
 # Templates and fragments can also be combined
 
@@ -117,11 +124,14 @@ card <- template(
     }
 )
 card("Card Title")
-#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
+#> <div>
+#>   <h2>Card Title</h2>
+#>   <div>Card body</div>
+#> </div>
 card("Card Title", fragment="body")
-#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
+#> <div>Card body</div>
 card("Card Title", "Footer text", fragment = "footer")
-#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
+#> <div>Footer text</div>
 
 # Dots (content injection)
 layout <- template({
@@ -132,7 +142,9 @@ layout <- template({
 })
 
 layout(htmltools::div("content"))
-#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
+#> <body>
+#>   <div>content</div>
+#> </body>
 
 # Caching
 nav <- template(user, {
@@ -149,7 +161,11 @@ nav <- template(user, {
   )
 })
 nav(list(id = 1, is_admin = TRUE))
-#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
+#> <div><ul>
+#>   <li>Home</li>
+#>   <li>Profile</li>
+#>   <li>Admin</li>
+#> </ul></div>
 
 # Nested Caches
 dashboard <- template(page = list(), stats = list(), recent = list(), {
@@ -172,5 +188,11 @@ dashboard <- template(page = list(), stats = list(), recent = list(), {
     )
 })
 dashboard()
-#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
+#> <div>
+#>   <h1>Dashboard</h1>
+#>   <div>
+#>   <p></p>
+#> </div>
+#>   <div></div>
+#> </div>
 ```

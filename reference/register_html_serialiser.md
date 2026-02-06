@@ -16,6 +16,12 @@ attempts to hide for shiny usecases.
 register_html_serialiser(force = FALSE)
 ```
 
+## Arguments
+
+- force:
+
+  bypass checks and re-register the freshwater serialiser
+
 ## Details
 
 The freshwater serialiser safely falls back to the default plumber2
