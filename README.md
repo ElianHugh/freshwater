@@ -31,34 +31,199 @@ You can install the development version of freshwater from [GitHub](https://gith
 pak::pak("ElianHugh/freshwater")
 ```
 
-## Basic Example
+## Reusable templates
 
-``` r
+```r
 library(freshwater)
 
-page_main <- template(
-    year = 2026, {
-        div(
-            h1("Dashboard"),
-            fragment(p("Welcome back"), name = "content"),
-            small(year)
-        )
-    }
+details <- template(name, age, {
+  div(
+    p(sprintf("Name: %s", name)),
+    p(sprintf("Age: %s", age))
+  )
+})
+
+details("Jim", 30)
+```
+
+```html
+<div>
+    <p>Name: Jim</p>
+    <p>Age: 30</p>
+</div>
+```
+
+## Fragments
+
+``` r
+card <- template(title, {
+  div(
+    h2(title),
+    fragment(
+        div("Card body"),
+        name = "body")
+    ,
+    fragment(
+        div("Footer"),
+        name = "footer"
+    )
+  )
+})
+
+card("Hello")
+```
+
+```html
+<div>
+  <h2>Hello</h2>
+  <div>Card body</div>
+  <div>Footer</div>
+</div>
+```
+
+```r
+card("Hello", fragment = "body")
+```
+
+```html
+<div>Card body</div>
+```
+
+## Layouts & content injection
+
+```r
+layout <- template({
+    div(
+    head(title("App")),
+    body(...)
+  )
+})
+
+layout(
+  htmltools::div(
+    htmltools::h1("Dashboard"),
+    htmltools::p("Welcome back")
+  )
+)
+```
+
+```html
+<div>
+  <body>
+    <div>
+      <h1>Dashboard</h1>
+      <p>Welcome back</p>
+    </div>
+  </body>
+</div>
+
+```
+
+## Attribute name normalisation
+
+> Attribute names with non-leading underscores are rewritten to hyphenated HTML attributes
+> Double underscores (__) act as an escape hatch for literal underscores
+
+```r
+template({
+  div(
+    hx_get = "/items",
+    hx_target = "#main",
+    data_user_id = 42,
+    `data__raw__name` = "keep_underscore",
+    "Load"
+  )
+})()
+```
+
+```html
+<div
+    hx-get="/items"
+    hx-target="#main"
+    data-user-id="42"
+    data_raw_name="keep_underscore"
+>
+    Load
+</div>
+```
+
+## Cached partials
+
+> Cached partials are keyed by template, fragment, cache name, and vary.
+
+```r
+nav <- template(user, {
+  ul(
+    cache(
+      name = "nav",
+      vary = user$id,
+      li("Home"),
+      li("Profile"),
+      if (user$is_admin) li("Admin")
+    )
+  )
+})
+
+nav(list(id = 1, is_admin = TRUE))
+```
+
+```html
+<ul><li>Home</li>
+<li>Profile</li>
+<li>Admin</li></ul>
+```
+
+## Nested Caches
+
+```r
+dashboard <- template(page, stats, {
+  cache(
+    "page",
+    vary = page$updated_at,
+    div(
+      h1("Dashboard"),
+      cache(
+        "stats",
+        vary = stats$updated_at,
+        p(stats$count)
+      )
+    )
+  )
+})
+
+dashboard(
+  page  = list(updated_at = 1),
+  stats = list(updated_at = 2, count = 42)
 )
 
-# Render templates by calling them
+dashboard(
+  page  = list(updated_at = 1),
+  stats = list(updated_at = 2, count = 42)
+)
+```
 
-page_main()
+```html
+<div>
+  <h1>Dashboard</h1>
+  <p>42</p>
+</div>
 
-#> <div>
-#>  <h1>Dashboard</h1>
-#>  <p>Welcome back</p>
-#>   <small>2026</small>
-#> </div>
+[cached partial]
+<div>
+  <h1>Dashboard</h1>
+  <p>42</p>
+</div>
 
-# Extract fragments from templates
+```
 
-page_main(fragment="content")
+## Conditional GETs
 
-#> <p>Welcome back</p>
+> If the client’s If-None-Match header matches the current ETag, freshwater returns 304 Not Modified and skips rendering.
+
+```r
+#* @get /dashboard
+#* @etag \() as.integer(Sys.Date())
+function() {
+  page_main()
+}
 ```

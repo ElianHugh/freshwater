@@ -37,7 +37,10 @@
 #'     {
 #'         div(
 #'             h1("Dashboard"),
-#'             fragment(p("Welcome back"), name = "content"),
+#'             fragment(
+#'                  p("Welcome back"),
+#'                  name = "content"
+#'             ),
 #'             small("2026")
 #'         )
 #'     }
@@ -150,10 +153,19 @@ template <- function(..., .envir = parent.frame()) {
                     on.exit(rm(".freshwater_ctx", envir = env), add = TRUE)
 
                     x <- local({
-                        body_expr |>
-                            htmltools::tagAddRenderHook(function(tag) {
-                                rewrite_attrs(tag)
-                            }, FALSE)
+                        x <- body_expr
+                        if (inherits(x, "shiny.tag") || inherits(x, "shiny.tag.list")) {
+                            htmltools::tagAddRenderHook(
+                                x,
+                                function(tag) {
+                                    rewrite_attrs(tag)
+                                },
+                                FALSE
+                            )
+                        } else {
+                            x
+                        }
+
                     })
 
                     if (!is.null(fragment)) {
@@ -189,6 +201,10 @@ template <- function(..., .envir = parent.frame()) {
 
 
 rewrite_attrs <- function(tag) {
+    if (inherits(tag, "html")) {
+        return(tag)
+    }
+
     if (inherits(tag, "shiny.tag")) {
         if (length(tag$attribs)) {
             attribs <- tag$attribs
@@ -459,8 +475,10 @@ cache <- function(name, vary = NULL, ...) {
     )
 
     fn <- function() {
-        eval(expr, env) |>
+        htmltools::HTML(
+            eval(expr, env) |>
             htmltools::doRenderTags()
+        )
     }
 
     key <- rlang::hash(
