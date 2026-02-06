@@ -45,6 +45,22 @@ the template upon rendering by supplying \code{fragment = "name"}. Fragment name
 are required.
 }
 }
+\section{Attributes}{
+Attributes with non-leading underscores are
+rewritten as hyphenated versions instead.
+This means you can write
+\code{htmltools::div(data_foo="bar")} which is converted to
+\verb{htmltools::div(data-foo="bar")}.
+
+An escape hatch exists If you explicitly want
+underscores in your attributes.
+You may use double underscores, which
+will be converted to single underscores
+e.g.
+\code{htmltools::div(data__foo="bar")} which is
+converted to \code{htmltools::div(data_foo="bar")}.
+}
+
 \examples{
 # Example Fragment Usage
 page_main <- template(

@@ -16,6 +16,21 @@
 #' the template upon rendering by supplying `fragment = "name"`. Fragment names
 #' are required.
 #'
+#' # Attributes
+#' Attributes with non-leading underscores are
+#' rewritten as hyphenated versions instead.
+#' This means you can write
+#' `htmltools::div(data_foo="bar")` which is converted to
+#' `htmltools::div(data-foo="bar")`.
+#'
+#' An escape hatch exists If you explicitly want
+#' underscores in your attributes.
+#' You may use double underscores, which
+#' will be converted to single underscores
+#' e.g.
+#' `htmltools::div(data__foo="bar")` which is
+#' converted to `htmltools::div(data_foo="bar")`.
+#'
 #' @examples
 #' # Example Fragment Usage
 #' page_main <- template(
@@ -135,7 +150,10 @@ template <- function(..., .envir = parent.frame()) {
                     on.exit(rm(".freshwater_ctx", envir = env), add = TRUE)
 
                     x <- local({
-                        body_expr
+                        body_expr |>
+                            htmltools::tagAddRenderHook(function(tag) {
+                                rewrite_attrs(tag)
+                            }, FALSE)
                     })
 
                     if (!is.null(fragment)) {
@@ -167,6 +185,34 @@ template <- function(..., .envir = parent.frame()) {
         "template_env" = .envir,
         class = c("freshwater_template", "function")
     )
+}
+
+
+rewrite_attrs <- function(tag) {
+    if (inherits(tag, "shiny.tag")) {
+        if (length(tag$attribs)) {
+            attribs <- tag$attribs
+            nms <- names(attribs)
+
+            nms <- gsub("(?<!^)(?<!_)_(?!_)", "-", nms, perl = TRUE)
+            nms <- gsub("_{2,}", "_", nms, perl = TRUE)
+
+            names(attribs) <- nms
+            tag$attribs <- attribs
+        }
+
+        if (length(tag$children)) {
+            tag$children <- lapply(tag$children, rewrite_attrs)
+        }
+
+        return(tag)
+    }
+
+    if (inherits(tag, "shiny.tag.list")) {
+        return(htmltools::tagList(lapply(as.list(tag), rewrite_attrs)))
+    }
+
+    tag
 }
 
 #' @rdname templating
@@ -444,6 +490,3 @@ clear_cache <- function(reset=TRUE) {
     }
     invisible(NULL)
 }
-
-
-
