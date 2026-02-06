@@ -54,6 +54,18 @@ clear_cache(reset = TRUE)
 function of class `template` with interface
 `fn(<declared params>, ..., fragment = NULL)`
 
+## Attributes
+
+Attributes with non-leading underscores are rewritten as hyphenated
+versions instead. This means you can write
+`htmltools::div(data_foo="bar")` which is converted to
+`htmltools::div(data-foo="bar")`.
+
+An escape hatch exists If you explicitly want underscores in your
+attributes. You may use double underscores, which will be converted to
+single underscores e.g. `htmltools::div(data__foo="bar")` which is
+converted to `htmltools::div(data_foo="bar")`.
+
 ## Examples
 
 ``` r
@@ -83,10 +95,7 @@ details <- template(name, age, {
 })
 
 details("Jim", 30)
-#> <div>
-#>   <p>Hello, my name is: Jim</p>
-#>   <p>I am 30 years old.</p>
-#> </div>
+#> Error in rewrite_attrs(tag): could not find function "rewrite_attrs"
 
 # Templates and fragments can also be combined
 
@@ -105,10 +114,7 @@ card <- template(
     }
 )
 card("Card Title")
-#> <div>
-#>   <h2>Card Title</h2>
-#>   <div>Card body</div>
-#> </div>
+#> Error in rewrite_attrs(tag): could not find function "rewrite_attrs"
 card("Card Title", fragment="body")
 #> <div>Card body</div>
 card("Card Title", "Footer text", fragment = "footer")
@@ -123,9 +129,7 @@ layout <- template({
 })
 
 layout(htmltools::div("content"))
-#> <body>
-#>   <div>content</div>
-#> </body>
+#> Error in as.character(x): cannot coerce type 'closure' to vector of type 'character'
 
 # Caching
 nav <- template(user, {
@@ -142,11 +146,7 @@ nav <- template(user, {
   )
 })
 nav(list(id = 1, is_admin = TRUE))
-#> <div><ul>
-#>   <li>Home</li>
-#>   <li>Profile</li>
-#>   <li>Admin</li>
-#> </ul></div>
+#> Error in rewrite_attrs(tag): could not find function "rewrite_attrs"
 
 # Nested Caches
 dashboard <- template(page = list(), stats = list(), recent = list(), {
@@ -169,11 +169,5 @@ dashboard <- template(page = list(), stats = list(), recent = list(), {
     )
 })
 dashboard()
-#> <div>
-#>   <h1>Dashboard</h1>
-#>   <div>
-#>   <p></p>
-#> </div>
-#>   <div></div>
-#> </div>
+#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
 ```
