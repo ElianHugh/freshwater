@@ -67,7 +67,10 @@ page_main <- template(
     {
         div(
             h1("Dashboard"),
-            fragment(p("Welcome back"), name = "content"),
+            fragment(
+                 p("Welcome back"),
+                 name = "content"
+            ),
             small("2026")
         )
     }

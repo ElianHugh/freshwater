@@ -153,19 +153,7 @@ template <- function(..., .envir = parent.frame()) {
                     on.exit(rm(".freshwater_ctx", envir = env), add = TRUE)
 
                     x <- local({
-                        x <- body_expr
-                        if (inherits(x, "shiny.tag") || inherits(x, "shiny.tag.list")) {
-                            htmltools::tagAddRenderHook(
-                                x,
-                                function(tag) {
-                                    rewrite_attrs(tag)
-                                },
-                                FALSE
-                            )
-                        } else {
-                            x
-                        }
-
+                        body_expr
                     })
 
                     if (!is.null(fragment)) {
@@ -175,7 +163,7 @@ template <- function(..., .envir = parent.frame()) {
                         }
                     }
 
-                    x
+                    rewrite_attrs(x)
                 },
                 error = function(e) {
                     new_template_error(nm, e, call = call_, bottom = bottom)
@@ -203,6 +191,12 @@ template <- function(..., .envir = parent.frame()) {
 rewrite_attrs <- function(tag) {
     if (inherits(tag, "html")) {
         return(tag)
+    }
+
+    if (inherits(tag, "shiny.tag.list")) {
+        out <- lapply(tag, rewrite_attrs)
+        class(out) <- "shiny.tag.list"
+        return(out)
     }
 
     if (inherits(tag, "shiny.tag")) {
