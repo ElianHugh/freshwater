@@ -169,5 +169,11 @@ dashboard <- template(page = list(), stats = list(), recent = list(), {
     )
 })
 dashboard()
-#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
+#> <div>
+#>   <h1>Dashboard</h1>
+#>   <div>
+#>   <p></p>
+#> </div>
+#>   <div></div>
+#> </div>
 ```
