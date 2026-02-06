@@ -101,7 +101,9 @@ new_etag <- function(x) {
 strip_weak_prefix <- function(x) {
     reg <- regexec('^(?:W/)?(".*")$', x)
     res <- regmatches(x, reg)[[1]]
-    if (length(res) == 0) return(NA_character_)
+    if (length(res) == 0) {
+        return(NA_character_)
+    }
     res[[2]]
 }
 
@@ -110,9 +112,15 @@ inm_match <- function(inm, etag) {
 
     etag <- strip_weak_prefix(etag)
 
-    if (is.na(etag)) return(FALSE)
-    if (identical(inm, "")) return(FALSE)
-    if (identical(inm, "*")) return(TRUE)
+    if (is.na(etag)) {
+        return(FALSE)
+    }
+    if (identical(inm, "")) {
+        return(FALSE)
+    }
+    if (identical(inm, "*")) {
+        return(TRUE)
+    }
 
     candidates <- trimws(strsplit(inm, ",", fixed = TRUE)[[1L]])
     candidates <- candidates[nzchar(candidates)]

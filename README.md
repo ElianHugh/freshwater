@@ -15,13 +15,12 @@
 
 freshwater provides server-side rendering utilities for plumber2 backends:
 
-- composable HTML templates
-- template caching[^1]
+- composable HTML templates (slots, parameters, and fragments)
+- template caching
 - weak ETag caching
-- shiny tag serialisation[^2]
+- shiny tag serialisation[^1]
 
-[^1]: not yet implemented
-[^2]: differs to base plumber2 implementation in that we render the entire tag tree, allowing for emitting head tags amongst others.
+[^1]: differs to base plumber2 implementation in that we render the entire tag tree, allowing for emitting head tags amongst others.
 
 ## Installation
 
@@ -32,7 +31,7 @@ You can install the development version of freshwater from [GitHub](https://gith
 pak::pak("ElianHugh/freshwater")
 ```
 
-## Example
+## Basic Example
 
 ``` r
 library(freshwater)

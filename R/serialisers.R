@@ -12,26 +12,40 @@
 #' classes of inputs.
 #'
 #' @export
-register_html_serialiser <- function() {
-    eval(substitute(
-        {
-            plumber2::register_serializer(
-                "html",
-                function(...) {
-                    function(x) {
-                        if (inherits(x, c("shiny.tag", "shiny.tag.list"))) {
-                            htmltools::doRenderTags(x) |>
-                                as.character()
-                        } else {
-                            old_serialiser(x)
-                        }
-                    }
-                },
-                mime_type = "text/html"
-            )
+register_html_serialiser <- function(force = FALSE) {
+    if (!force && isTRUE(freshwater$serialiser_registered)) {
+        rlang::warn(
+            "freshwater html serialiser has already been registered. Skipping re-registration. Use `force=TRUE` to bypass checks."
+        )
+        return(invisible(NULL))
+    }
+
+    if (is.null(freshwater$old_html_serialiser)) {
+        serialisers <- plumber2::get_serializers("html")
+        if (!(length(serialisers))) {
+            rlang::abort("No existing html serialisers found to wrap.")
+        }
+        freshwater$old_html_serialiser <- serialisers[[1L]]
+    }
+
+    plumber2::register_serializer(
+        "html",
+        function(...) {
+            function(x) {
+                if (inherits(x, c("shiny.tag", "shiny.tag.list"))) {
+                    htmltools::doRenderTags(x) |>
+                        as.character()
+                } else if (is.function(freshwater$old_html_serialiser)) {
+                    freshwater$old_html_serialiser(x)
+                } else {
+                    as.character(x)
+                }
+            }
         },
-        list(old_serialiser = plumber2::get_serializers("html")[[1L]])
-    ))
+        mime_type = "text/html"
+    )
+
+    freshwater$serialiser_registered <- TRUE
+
+    invisible(NULL)
 }
-
-

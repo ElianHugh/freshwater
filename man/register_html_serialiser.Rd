@@ -4,7 +4,7 @@
 \alias{register_html_serialiser}
 \title{Register HTML Serialiser}
 \usage{
-register_html_serialiser()
+register_html_serialiser(force = FALSE)
 }
 \description{
 Registers an HTML serialiser for \link[plumber2:plumber2-package]{plumber2::plumber2}

@@ -1,11 +1,3 @@
-current_template <- function(
-    env = parent.frame(),
-    default = list(template = "anonymous_template", fragment = NULL, id = NULL)
-) {
-    ctx <- get0(".freshwater_ctx", envir = env, inherits = TRUE)
-    if (is.null(ctx)) default else ctx
-}
-
 #' Create a reusable HTML template
 #'
 #' @description
@@ -142,8 +134,9 @@ template <- function(..., .envir = parent.frame()) {
                     )
                     on.exit(rm(".freshwater_ctx", envir = env), add = TRUE)
 
-                    x <- body_expr
-                    x <- local({body_expr})
+                    x <- local({
+                        body_expr
+                    })
 
                     if (!is.null(fragment)) {
                         x <- walk_nodes(x, fragment)
@@ -229,7 +222,9 @@ print.freshwater_template <- function(x, ...) {
 
 #' @exportS3Method
 print.freshwater_cached_partial <- function(x, ...) {
-    cat("[cached partial]\n")
+    if (interactive()) {
+        cat("[cached partial]\n")
+    }
     NextMethod()
 }
 
@@ -349,10 +344,19 @@ error_fragment_definition <- function(call = rlang::caller_env()) {
     )
 }
 
+current_template <- function(
+    env = parent.frame(),
+    default = list(template = "anonymous_template", fragment = NULL, id = NULL)
+) {
+    ctx <- get0(".freshwater_ctx", envir = env, inherits = TRUE)
+    if (is.null(ctx)) default else ctx
+}
+
 store <- memoise::memoise(
     function(key, fn) fn(),
     hash = function(args) args$key
 )
+
 
 #' @export
 #' @param name unique name for the cached partial template
@@ -361,16 +365,19 @@ store <- memoise::memoise(
 #' @examples
 #' # Caching
 #' nav <- template(user, {
-#'   cache(
-#'     "nav",
-#'     vary = user$id,
-#'     ul(
-#'       li("Home"),
-#'       li("Profile"),
-#'       if (user$is_admin) li("Admin")
+#'   div(
+#'     cache(
+#'       "nav",
+#'       vary = user$id,
+#'       ul(
+#'         li("Home"),
+#'         li("Profile"),
+#'         if (user$is_admin) li("Admin")
+#'       )
 #'     )
 #'   )
 #' })
+#' nav(list(id = 1, is_admin = TRUE))
 #'
 #' # Nested Caches
 #' dashboard <- template(page = list(), stats = list(), recent = list(), {
@@ -392,6 +399,7 @@ store <- memoise::memoise(
 #'         )
 #'     )
 #' })
+#' dashboard()
 #'
 #' @rdname templating
 cache <- function(name, vary = NULL, ...) {
@@ -409,30 +417,33 @@ cache <- function(name, vary = NULL, ...) {
             htmltools::doRenderTags()
     }
 
-    key <- digest::digest(
-        list(name, vary, context$template, context$fragment, context$id),
-        algo = "xxhash32"
+    key <- rlang::hash(
+        list(name, vary, context$template, context$fragment, context$id)
     )
 
     hit <- memoise::has_cache(store)(key)
+
     res <- store(key, fn)
 
     if (hit) {
         class(res) <- c("freshwater_cached_partial", class(res))
     }
 
-    structure(
-        res,
-        class = c(
-            class(res),
-            "freshwater_template_cache"
-        )
-    )
+    res
 }
 
 #' @export
 #' @rdname templating
-clear_cache <- function() {
-    memoise::drop_cache(store)
+clear_cache <- function(reset=TRUE) {
+    if (isTRUE(reset)) {
+        memoise::forget(store)
+    } else {
+        # todo, keys arent user facing rn
+        rlang::abort("Not implemented!")
+        memoise::drop_cache(store)
+    }
     invisible(NULL)
 }
+
+
+
