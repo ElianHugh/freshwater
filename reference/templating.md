@@ -27,7 +27,7 @@ fragment(..., name = NULL)
 
 cache(name, vary = NULL, ...)
 
-clear_cache()
+clear_cache(reset = TRUE)
 ```
 
 ## Arguments
@@ -129,16 +129,24 @@ layout(htmltools::div("content"))
 
 # Caching
 nav <- template(user, {
-  cache(
-    "nav",
-    vary = user$id,
-    ul(
-      li("Home"),
-      li("Profile"),
-      if (user$is_admin) li("Admin")
+  div(
+    cache(
+      "nav",
+      vary = user$id,
+      ul(
+        li("Home"),
+        li("Profile"),
+        if (user$is_admin) li("Admin")
+      )
     )
   )
 })
+nav(list(id = 1, is_admin = TRUE))
+#> <div><ul>
+#>   <li>Home</li>
+#>   <li>Profile</li>
+#>   <li>Admin</li>
+#> </ul></div>
 
 # Nested Caches
 dashboard <- template(page = list(), stats = list(), recent = list(), {
@@ -149,7 +157,7 @@ dashboard <- template(page = list(), stats = list(), recent = list(), {
             h1("Dashboard"),
             cache(
                 name = "stats",
-                vary = stats$updated_at,
+                 vary = stats$updated_at,
                 div(p(stats$count))
             ),
             cache(
@@ -160,4 +168,12 @@ dashboard <- template(page = list(), stats = list(), recent = list(), {
         )
     )
 })
+dashboard()
+#> <div>
+#>   <h1>Dashboard</h1>
+#>   <div>
+#>   <p></p>
+#> </div>
+#>   <div></div>
+#> </div>
 ```

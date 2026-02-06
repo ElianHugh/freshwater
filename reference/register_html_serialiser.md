@@ -13,7 +13,7 @@ attempts to hide for shiny usecases.
 ## Usage
 
 ``` r
-register_html_serialiser()
+register_html_serialiser(force = FALSE)
 ```
 
 ## Details

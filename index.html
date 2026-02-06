@@ -55,11 +55,10 @@
 </blockquote>
 <p>freshwater provides server-side rendering utilities for plumber2 backends:</p>
 <ul>
-<li>composable HTML templates</li>
-<li>template caching<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;not yet implemented&lt;/p&gt;"><sup>1</sup></a>
-</li>
+<li>composable HTML templates (slots, parameters, and fragments)</li>
+<li>template caching</li>
 <li>weak ETag caching</li>
-<li>shiny tag serialisation<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;differs to base plumber2 implementation in that we render the entire tag tree, allowing for emitting head tags amongst others.&lt;/p&gt;"><sup>2</sup></a>
+<li>shiny tag serialisation<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;differs to base plumber2 implementation in that we render the entire tag tree, allowing for emitting head tags amongst others.&lt;/p&gt;"><sup>1</sup></a>
 </li>
 </ul>
 <div class="section level2">
@@ -71,7 +70,7 @@
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"ElianHugh/freshwater"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
+<h2 id="basic-example">Basic Example<a class="anchor" aria-label="anchor" href="#basic-example"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://elianhugh.github.io/freshwater/">freshwater</a></span><span class="op">)</span></span>
