@@ -11,8 +11,11 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3.9000
 Imports:
     htmltools,
-    plumber2
+    memoise,
+    plumber2,
+    rlang
 Suggests:
+    fiery,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 URL: https://elianhugh.github.io/freshwater/

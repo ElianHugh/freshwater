@@ -6,6 +6,10 @@
 \usage{
 register_html_serialiser(force = FALSE)
 }
+\arguments{
+\item{force}{bypass checks and re-register
+the freshwater serialiser}
+}
 \description{
 Registers an HTML serialiser for \link[plumber2:plumber2-package]{plumber2::plumber2}
 that renders shiny tags and taglists via

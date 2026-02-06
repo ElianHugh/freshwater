@@ -173,6 +173,8 @@ template <- function(..., .envir = parent.frame()) {
         list(
             body_expr = body_expr,
             walk_nodes = walk_nodes,
+            new_template_error = new_template_error,
+            rewrite_attrs = rewrite_attrs,
             env = e,
             id = id
         )
@@ -322,7 +324,7 @@ format_template_tree <- function(stack) {
 
     lapply(seq_along(els), \(i) {
         indent <- strrep(" ", i * 3L)
-        branch <- if (i == length(els)) "" else "└─>"
+        branch <- if (i == length(els)) "" else "\u2514\u2500>"
         paste0(els[[i]], "\n", indent, branch)
     }) |>
         paste0(collapse = "")
@@ -491,6 +493,7 @@ cache <- function(name, vary = NULL, ...) {
 }
 
 #' @export
+#' @param reset clear the cache of all memoised templates
 #' @rdname templating
 clear_cache <- function(reset=TRUE) {
     if (isTRUE(reset)) {

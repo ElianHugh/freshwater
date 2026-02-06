@@ -11,6 +11,9 @@
 #' to the default plumber2 implementation for other
 #' classes of inputs.
 #'
+#' @param force bypass checks and re-register
+#' the freshwater serialiser
+#'
 #' @export
 register_html_serialiser <- function(force = FALSE) {
     if (!force && isTRUE(freshwater$serialiser_registered)) {

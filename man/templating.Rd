@@ -23,6 +23,8 @@ clear_cache(reset = TRUE)
 \item{name}{unique name for the cached partial template}
 
 \item{vary}{values that should change when the cached output should change. This is used to construct the cache key.}
+
+\item{reset}{clear the cache of all memoised templates}
 }
 \value{
 function of class \code{template} with interface \verb{fn(<declared params>, ..., fragment = NULL)}
