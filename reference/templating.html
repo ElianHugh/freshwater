@@ -132,14 +132,17 @@ converted to <code>htmltools::div(data_foo="bar")</code>.</p>
 <span class="r-in"><span>    <span class="op">{</span></span></span>
 <span class="r-in"><span>        <span class="fu">div</span><span class="op">(</span></span></span>
 <span class="r-in"><span>            <span class="fu">h1</span><span class="op">(</span><span class="st">"Dashboard"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>            <span class="fu">fragment</span><span class="op">(</span><span class="fu">p</span><span class="op">(</span><span class="st">"Welcome back"</span><span class="op">)</span>, name <span class="op">=</span> <span class="st">"content"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>            <span class="fu">fragment</span><span class="op">(</span></span></span>
+<span class="r-in"><span>                 <span class="fu">p</span><span class="op">(</span><span class="st">"Welcome back"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                 name <span class="op">=</span> <span class="st">"content"</span></span></span>
+<span class="r-in"><span>            <span class="op">)</span>,</span></span>
 <span class="r-in"><span>            <span class="fu">small</span><span class="op">(</span><span class="st">"2026"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>        <span class="op">)</span></span></span>
 <span class="r-in"><span>    <span class="op">}</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">page_main</span><span class="op">(</span>fragment<span class="op">=</span><span class="st">"content"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;p&gt;Welcome back&lt;/p&gt;</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in new_template_error(nm, e, call = call_, bottom = bottom):</span> could not find function "new_template_error"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Template slots</span></span></span>
 <span class="r-in"><span></span></span>
@@ -153,7 +156,7 @@ converted to <code>htmltools::div(data_foo="bar")</code>.</p>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">details</span><span class="op">(</span><span class="st">"Jim"</span>, <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rewrite_attrs(tag):</span> could not find function "rewrite_attrs"</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in new_template_error(nm, e, call = call_, bottom = bottom):</span> could not find function "new_template_error"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Templates and fragments can also be combined</span></span></span>
 <span class="r-in"><span></span></span>
@@ -172,11 +175,11 @@ converted to <code>htmltools::div(data_foo="bar")</code>.</p>
 <span class="r-in"><span>    <span class="op">}</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">card</span><span class="op">(</span><span class="st">"Card Title"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rewrite_attrs(tag):</span> could not find function "rewrite_attrs"</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in new_template_error(nm, e, call = call_, bottom = bottom):</span> could not find function "new_template_error"</span>
 <span class="r-in"><span><span class="fu">card</span><span class="op">(</span><span class="st">"Card Title"</span>, fragment<span class="op">=</span><span class="st">"body"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;Card body&lt;/div&gt;</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in new_template_error(nm, e, call = call_, bottom = bottom):</span> could not find function "new_template_error"</span>
 <span class="r-in"><span><span class="fu">card</span><span class="op">(</span><span class="st">"Card Title"</span>, <span class="st">"Footer text"</span>, fragment <span class="op">=</span> <span class="st">"footer"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;Footer text&lt;/div&gt;</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in new_template_error(nm, e, call = call_, bottom = bottom):</span> could not find function "new_template_error"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Dots (content injection)</span></span></span>
 <span class="r-in"><span><span class="va">layout</span> <span class="op">&lt;-</span> <span class="fu">template</span><span class="op">(</span><span class="op">{</span></span></span>
@@ -187,7 +190,7 @@ converted to <code>htmltools::div(data_foo="bar")</code>.</p>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/layout.html" class="external-link">layout</a></span><span class="op">(</span><span class="fu">htmltools</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/htmltools/reference/builder.html" class="external-link">div</a></span><span class="op">(</span><span class="st">"content"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in as.character(x):</span> cannot coerce type 'closure' to vector of type 'character'</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in new_template_error(nm, e, call = call_, bottom = bottom):</span> could not find function "new_template_error"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Caching</span></span></span>
 <span class="r-in"><span><span class="va">nav</span> <span class="op">&lt;-</span> <span class="fu">template</span><span class="op">(</span><span class="va">user</span>, <span class="op">{</span></span></span>
@@ -204,7 +207,7 @@ converted to <code>htmltools::div(data_foo="bar")</code>.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">nav</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span>, is_admin <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rewrite_attrs(tag):</span> could not find function "rewrite_attrs"</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in new_template_error(nm, e, call = call_, bottom = bottom):</span> could not find function "new_template_error"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Nested Caches</span></span></span>
 <span class="r-in"><span><span class="va">dashboard</span> <span class="op">&lt;-</span> <span class="fu">template</span><span class="op">(</span>page <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, recent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, <span class="op">{</span></span></span>
@@ -227,13 +230,7 @@ converted to <code>htmltools::div(data_foo="bar")</code>.</p>
 <span class="r-in"><span>    <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">dashboard</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;h1&gt;Dashboard&lt;/h1&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;div&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;p&gt;&lt;/p&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/div&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;div&gt;&lt;/div&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/div&gt;</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in new_template_error(nm, e, call = call_, bottom = bottom):</span> could not find function "new_template_error"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

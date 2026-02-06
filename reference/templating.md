@@ -74,14 +74,17 @@ page_main <- template(
     {
         div(
             h1("Dashboard"),
-            fragment(p("Welcome back"), name = "content"),
+            fragment(
+                 p("Welcome back"),
+                 name = "content"
+            ),
             small("2026")
         )
     }
 )
 
 page_main(fragment="content")
-#> <p>Welcome back</p>
+#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
 
 # Template slots
 
@@ -95,7 +98,7 @@ details <- template(name, age, {
 })
 
 details("Jim", 30)
-#> Error in rewrite_attrs(tag): could not find function "rewrite_attrs"
+#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
 
 # Templates and fragments can also be combined
 
@@ -114,11 +117,11 @@ card <- template(
     }
 )
 card("Card Title")
-#> Error in rewrite_attrs(tag): could not find function "rewrite_attrs"
+#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
 card("Card Title", fragment="body")
-#> <div>Card body</div>
+#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
 card("Card Title", "Footer text", fragment = "footer")
-#> <div>Footer text</div>
+#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
 
 # Dots (content injection)
 layout <- template({
@@ -129,7 +132,7 @@ layout <- template({
 })
 
 layout(htmltools::div("content"))
-#> Error in as.character(x): cannot coerce type 'closure' to vector of type 'character'
+#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
 
 # Caching
 nav <- template(user, {
@@ -146,7 +149,7 @@ nav <- template(user, {
   )
 })
 nav(list(id = 1, is_admin = TRUE))
-#> Error in rewrite_attrs(tag): could not find function "rewrite_attrs"
+#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
 
 # Nested Caches
 dashboard <- template(page = list(), stats = list(), recent = list(), {
@@ -169,11 +172,5 @@ dashboard <- template(page = list(), stats = list(), recent = list(), {
     )
 })
 dashboard()
-#> <div>
-#>   <h1>Dashboard</h1>
-#>   <div>
-#>   <p></p>
-#> </div>
-#>   <div></div>
-#> </div>
+#> Error in new_template_error(nm, e, call = call_, bottom = bottom): could not find function "new_template_error"
 ```
