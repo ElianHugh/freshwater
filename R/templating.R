@@ -471,10 +471,9 @@ cache <- function(name, vary = NULL, ...) {
     )
 
     fn <- function() {
-        htmltools::HTML(
-            eval(expr, env) |>
+        eval(expr, env) |>
+            htmltools::as.tags() |>
             htmltools::doRenderTags()
-        )
     }
 
     key <- rlang::hash(

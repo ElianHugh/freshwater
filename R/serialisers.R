@@ -36,7 +36,8 @@ register_html_serialiser <- function(force = FALSE) {
         function(...) {
             function(x) {
                 if (inherits(x, c("shiny.tag", "shiny.tag.list"))) {
-                    htmltools::doRenderTags(x) |>
+                    htmltools::as.tags(x) |>
+                        htmltools::doRenderTags() |>
                         as.character()
                 } else if (is.function(freshwater$old_html_serialiser)) {
                     freshwater$old_html_serialiser(x)
