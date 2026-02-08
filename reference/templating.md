@@ -24,17 +24,14 @@ Templates may define:
 template(..., .envir = parent.frame())
 
 fragment(..., name = NULL)
-
-cache(name, vary = NULL, ...)
-
-clear_cache(reset = TRUE)
 ```
 
 ## Arguments
 
 - ...:
 
-  tag content to render and cache
+  template definition. Provide zero or more parameters, followed by a
+  single braced expression.
 
 - .envir:
 
@@ -42,16 +39,7 @@ clear_cache(reset = TRUE)
 
 - name:
 
-  unique name for the cached partial template
-
-- vary:
-
-  values that should change when the cached output should change. This
-  is used to construct the cache key.
-
-- reset:
-
-  clear the cache of all memoised templates
+  the name of the fragment
 
 ## Value
 
@@ -69,6 +57,10 @@ An escape hatch exists If you explicitly want underscores in your
 attributes. You may use double underscores, which will be converted to
 single underscores e.g. `htmltools::div(data__foo="bar")` which is
 converted to `htmltools::div(data_foo="bar")`.
+
+## See also
+
+[cache](https://elianhugh.github.io/freshwater/reference/template-caching.md)
 
 ## Examples
 
@@ -145,54 +137,4 @@ layout(htmltools::div("content"))
 #> <body>
 #>   <div>content</div>
 #> </body>
-
-# Caching
-nav <- template(user, {
-  div(
-    cache(
-      "nav",
-      vary = user$id,
-      ul(
-        li("Home"),
-        li("Profile"),
-        if (user$is_admin) li("Admin")
-      )
-    )
-  )
-})
-nav(list(id = 1, is_admin = TRUE))
-#> <div><ul>
-#>   <li>Home</li>
-#>   <li>Profile</li>
-#>   <li>Admin</li>
-#> </ul></div>
-
-# Nested Caches
-dashboard <- template(page = list(), stats = list(), recent = list(), {
-    cache(
-        name = "page",
-        vary = page$updated_at,
-        div(
-            h1("Dashboard"),
-            cache(
-                name = "stats",
-                 vary = stats$updated_at,
-                div(p(stats$count))
-            ),
-            cache(
-                name = "recent",
-                vary = recent$updated_at,
-                div(recent)
-            )
-        )
-    )
-})
-dashboard()
-#> <div>
-#>   <h1>Dashboard</h1>
-#>   <div>
-#>   <p></p>
-#> </div>
-#>   <div></div>
-#> </div>
 ```

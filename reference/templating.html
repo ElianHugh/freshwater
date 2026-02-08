@@ -78,11 +78,7 @@ are required.</p></li>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">template</span><span class="op">(</span><span class="va">...</span>, .envir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sys.parent.html" class="external-link">parent.frame</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">fragment</span><span class="op">(</span><span class="va">...</span>, name <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">cache</span><span class="op">(</span><span class="va">name</span>, vary <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">clear_cache</span><span class="op">(</span>reset <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">fragment</span><span class="op">(</span><span class="va">...</span>, name <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -90,7 +86,8 @@ are required.</p></li>
 
 
 <dl><dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>tag content to render and cache</p></dd>
+<dd><p>template definition. Provide zero or more parameters, followed by a
+single braced expression.</p></dd>
 
 
 <dt id="arg--envir">.envir<a class="anchor" aria-label="anchor" href="#arg--envir"></a></dt>
@@ -98,15 +95,7 @@ are required.</p></li>
 
 
 <dt id="arg-name">name<a class="anchor" aria-label="anchor" href="#arg-name"></a></dt>
-<dd><p>unique name for the cached partial template</p></dd>
-
-
-<dt id="arg-vary">vary<a class="anchor" aria-label="anchor" href="#arg-vary"></a></dt>
-<dd><p>values that should change when the cached output should change. This is used to construct the cache key.</p></dd>
-
-
-<dt id="arg-reset">reset<a class="anchor" aria-label="anchor" href="#arg-reset"></a></dt>
-<dd><p>clear the cache of all memoised templates</p></dd>
+<dd><p>the name of the fragment</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -127,6 +116,10 @@ will be converted to single underscores
 e.g.
 <code>htmltools::div(data__foo="bar")</code> which is
 converted to <code>htmltools::div(data_foo="bar")</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><a href="template-caching.html">cache</a></p></div>
     </div>
 
     <div class="section level2">
@@ -203,56 +196,6 @@ converted to <code>htmltools::div(data_foo="bar")</code>.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;body&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;div&gt;content&lt;/div&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/body&gt;</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Caching</span></span></span>
-<span class="r-in"><span><span class="va">nav</span> <span class="op">&lt;-</span> <span class="fu">template</span><span class="op">(</span><span class="va">user</span>, <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="fu">div</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="fu">cache</span><span class="op">(</span></span></span>
-<span class="r-in"><span>      <span class="st">"nav"</span>,</span></span>
-<span class="r-in"><span>      vary <span class="op">=</span> <span class="va">user</span><span class="op">$</span><span class="va">id</span>,</span></span>
-<span class="r-in"><span>      <span class="fu">ul</span><span class="op">(</span></span></span>
-<span class="r-in"><span>        <span class="fu">li</span><span class="op">(</span><span class="st">"Home"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>        <span class="fu">li</span><span class="op">(</span><span class="st">"Profile"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>        <span class="kw">if</span> <span class="op">(</span><span class="va">user</span><span class="op">$</span><span class="va">is_admin</span><span class="op">)</span> <span class="fu">li</span><span class="op">(</span><span class="st">"Admin"</span><span class="op">)</span></span></span>
-<span class="r-in"><span>      <span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">nav</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span>, is_admin <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;&lt;ul&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;li&gt;Home&lt;/li&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;li&gt;Profile&lt;/li&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;li&gt;Admin&lt;/li&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/ul&gt;&lt;/div&gt;</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Nested Caches</span></span></span>
-<span class="r-in"><span><span class="va">dashboard</span> <span class="op">&lt;-</span> <span class="fu">template</span><span class="op">(</span>page <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, recent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, <span class="op">{</span></span></span>
-<span class="r-in"><span>    <span class="fu">cache</span><span class="op">(</span></span></span>
-<span class="r-in"><span>        name <span class="op">=</span> <span class="st">"page"</span>,</span></span>
-<span class="r-in"><span>        vary <span class="op">=</span> <span class="va">page</span><span class="op">$</span><span class="va">updated_at</span>,</span></span>
-<span class="r-in"><span>        <span class="fu">div</span><span class="op">(</span></span></span>
-<span class="r-in"><span>            <span class="fu">h1</span><span class="op">(</span><span class="st">"Dashboard"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>            <span class="fu">cache</span><span class="op">(</span></span></span>
-<span class="r-in"><span>                name <span class="op">=</span> <span class="st">"stats"</span>,</span></span>
-<span class="r-in"><span>                 vary <span class="op">=</span> <span class="va">stats</span><span class="op">$</span><span class="va">updated_at</span>,</span></span>
-<span class="r-in"><span>                <span class="fu">div</span><span class="op">(</span><span class="fu">p</span><span class="op">(</span><span class="va">stats</span><span class="op">$</span><span class="va">count</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span>            <span class="op">)</span>,</span></span>
-<span class="r-in"><span>            <span class="fu">cache</span><span class="op">(</span></span></span>
-<span class="r-in"><span>                name <span class="op">=</span> <span class="st">"recent"</span>,</span></span>
-<span class="r-in"><span>                vary <span class="op">=</span> <span class="va">recent</span><span class="op">$</span><span class="va">updated_at</span>,</span></span>
-<span class="r-in"><span>                <span class="fu">div</span><span class="op">(</span><span class="va">recent</span><span class="op">)</span></span></span>
-<span class="r-in"><span>            <span class="op">)</span></span></span>
-<span class="r-in"><span>        <span class="op">)</span></span></span>
-<span class="r-in"><span>    <span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">dashboard</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;h1&gt;Dashboard&lt;/h1&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;div&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;p&gt;&lt;/p&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/div&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;div&gt;&lt;/div&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/div&gt;</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
