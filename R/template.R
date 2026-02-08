@@ -96,10 +96,13 @@
 #' @param .envir the environment in which to evaluate the template
 #' @return function of class `template` with interface `fn(<declared params>, ..., fragment = NULL)`
 #' @rdname templating
+#' @seealso [cache]
 #' @export
 template <- function(..., .envir = parent.frame()) {
     dots <- as.list(substitute(list(...)))[-1]
-    body_idx <- which(unlist(lapply(dots, \(x) inherits(x, "{"))))
+    body_idx <- lapply(dots, \(x) inherits(x, "{") )|>
+            unlist() |>
+            which()
 
     if (length(body_idx) != 1L) {
         error_template_single_body(body_idx)
@@ -141,8 +144,6 @@ template <- function(..., .envir = parent.frame()) {
         {
             withCallingHandlers(
                 {
-                    call_ <- sys.call()
-                    bottom <- rlang::current_env()
                     nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
 
                     assign(
@@ -166,6 +167,8 @@ template <- function(..., .envir = parent.frame()) {
                     rewrite_attrs(x)
                 },
                 error = function(e) {
+                    call_ <- sys.call()
+                    bottom <- rlang::current_env()
                     new_template_error(nm, e, call = call_, bottom = bottom)
                 }
             )
@@ -185,6 +188,8 @@ template <- function(..., .envir = parent.frame()) {
         "template_body" = body_expr,
         "template_params" = param_exprs,
         "template_env" = .envir,
+        "template_id" = id,
+        "template_name" = "name",
         class = c("freshwater_template", "function")
     )
 }
@@ -220,10 +225,6 @@ rewrite_attrs <- function(tag) {
         return(tag)
     }
 
-    if (inherits(tag, "shiny.tag.list")) {
-        return(htmltools::tagList(lapply(as.list(tag), rewrite_attrs)))
-    }
-
     tag
 }
 
@@ -234,7 +235,7 @@ fragment <- function(..., name = NULL) {
     !is.null(name) || error_fragment_definition()
 
     x <- htmltools::as.tags(...)
-    x$fragment <- name
+    x[["fragment"]] <- name
     x
 }
 
@@ -280,9 +281,7 @@ print.freshwater_template <- function(x, ...) {
 
 #' @exportS3Method
 print.freshwater_cached_partial <- function(x, ...) {
-    if (interactive()) {
-        cat("[cached partial]\n")
-    }
+    if (interactive()) cat("[cached partial]\n")
     NextMethod()
 }
 
@@ -316,9 +315,7 @@ walk_nodes <- function(tag, name) {
 }
 
 format_template_tree <- function(stack) {
-    if (!length(stack)) {
-        return(character())
-    }
+    if (!length(stack)) return(character())
 
     els <- paste0(stack, "()")
 
@@ -408,99 +405,4 @@ current_template <- function(
 ) {
     ctx <- get0(".freshwater_ctx", envir = env, inherits = TRUE)
     if (is.null(ctx)) default else ctx
-}
-
-store <- memoise::memoise(
-    function(key, fn) fn(),
-    hash = function(args) args$key
-)
-
-
-#' @export
-#' @param name unique name for the cached partial template
-#' @param vary values that should change when the cached output should change. This is used to construct the cache key.
-#' @param ... tag content to render and cache
-#' @examples
-#' # Caching
-#' nav <- template(user, {
-#'   div(
-#'     cache(
-#'       "nav",
-#'       vary = user$id,
-#'       ul(
-#'         li("Home"),
-#'         li("Profile"),
-#'         if (user$is_admin) li("Admin")
-#'       )
-#'     )
-#'   )
-#' })
-#' nav(list(id = 1, is_admin = TRUE))
-#'
-#' # Nested Caches
-#' dashboard <- template(page = list(), stats = list(), recent = list(), {
-#'     cache(
-#'         name = "page",
-#'         vary = page$updated_at,
-#'         div(
-#'             h1("Dashboard"),
-#'             cache(
-#'                 name = "stats",
-#'                  vary = stats$updated_at,
-#'                 div(p(stats$count))
-#'             ),
-#'             cache(
-#'                 name = "recent",
-#'                 vary = recent$updated_at,
-#'                 div(recent)
-#'             )
-#'         )
-#'     )
-#' })
-#' dashboard()
-#'
-#' @rdname templating
-cache <- function(name, vary = NULL, ...) {
-    context <- current_template(parent.frame())
-    vary <- force(vary)
-
-    env <- parent.frame()
-
-    expr <- substitute(
-        htmltools::tagList(...)
-    )
-
-    fn <- function() {
-        eval(expr, env) |>
-            htmltools::as.tags() |>
-            htmltools::doRenderTags()
-    }
-
-    key <- rlang::hash(
-        list(name, vary, context$template, context$fragment, context$id)
-    )
-
-    hit <- memoise::has_cache(store)(key)
-
-    res <- store(key, fn)
-
-    if (hit) {
-        class(res) <- c("freshwater_cached_partial", class(res))
-    }
-
-    res
-}
-
-#' @export
-#' @param reset clear the cache of all memoised templates
-#' @rdname templating
-clear_cache <- function(reset=TRUE) {
-    if (isTRUE(reset)) {
-        memoise::forget(store)
-    } else {
-        # todo, keys arent user facing rn
-        rlang::abort("Not implemented!")
-        memoise::drop_cache(store)
-    }
-    invisible(NULL)
 }

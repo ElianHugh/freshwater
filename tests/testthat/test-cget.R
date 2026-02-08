@@ -14,9 +14,7 @@ test_that("304 is returned on matching etag", {
             `If-None-Match` = "W/\"1\""
         )
     )
-
     res <- pa$test_request(req)
-
     expect_identical(res$status, 304L)
 })
 
