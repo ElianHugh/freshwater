@@ -5,7 +5,7 @@
 \alias{clear_cache}
 \alias{invalidate_cache}
 \alias{invalidate_cache_here}
-\title{Clear the cache of all memoised templates}
+\title{Cache a renderd partial within a template}
 \usage{
 cache(name, vary = NULL, ...)
 
@@ -27,7 +27,29 @@ invalidate_cache_here(name, vary = NULL, fragment = NULL)
 \item{fragment}{optional fragment name for targetting cached fragments}
 }
 \description{
-Clear the cache of all memoised templates
+\code{cache()} memoises a portion of HTML output within a freshwater template.
+The contents are computed once per unique cache key, and reused in subsequent calls.
+This avoids repeat evaluation of expensive or stable HTML trees.
+
+\code{clear_cache()} removes all memoised templates from freshwater's cache store.
+
+\code{invalidate_cache()} removes a single cached entry identified by \code{name}, and optionally via
+\code{vary} and fragment values. Note that the \code{invalidate_cache} arguments
+must match those in the original \code{cache} call, as they are used to construct
+the cache key.
+
+\code{invalidate_cache_here()} is the in-template version of \code{invalidate_cache}. It uses
+the current template execution context to allow users to forcibly regenerate caches
+inside the template function.
+}
+\details{
+Caches may be freely nested, as each cache is scoped to the template
+context it is executed in.
+
+Caching occurs a small overhead for first-time usage, but is faster in proceeding calls.
+
+Note: invalidation affects future renders only. Calling this within the \code{cache()} block
+that is being targeted will not result in an invalidation of the cache.
 }
 \examples{
 # Caching

@@ -21,6 +21,17 @@ cache_key <- function(name, vary, id, fragment) {
   )
 }
 
+#' Cache a renderd partial within a template
+#'
+#' `cache()` memoises a portion of HTML output within a freshwater template.
+#' The contents are computed once per unique cache key, and reused in subsequent calls.
+#' This avoids repeat evaluation of expensive or stable HTML trees.
+#'
+#' Caches may be freely nested, as each cache is scoped to the template
+#' context it is executed in.
+#'
+#' Caching occurs a small overhead for first-time usage, but is faster in proceeding calls.
+#'
 #' @export
 #' @param name unique name for the cached partial template
 #' @param vary values that should change when the cached output should change. This is used to construct the cache key.
@@ -100,6 +111,9 @@ cache <- function(name, vary = NULL, ...) {
 }
 
 #' Clear the cache of all memoised templates
+#'
+#' `clear_cache()` removes all memoised templates from freshwater's cache store.
+#'
 #' @export
 #' @rdname template-caching
 clear_cache <- function() {
@@ -107,6 +121,14 @@ clear_cache <- function() {
   invisible(TRUE)
 }
 
+
+#' Invalidate a specific cached fragment or partial template
+#'
+#' `invalidate_cache()` removes a single cached entry identified by `name`, and optionally via
+#' `vary` and fragment values. Note that the `invalidate_cache` arguments
+#' must match those in the original `cache` call, as they are used to construct
+#' the cache key.
+#'
 #' @rdname template-caching
 #' @param tpl a template function created by [template()].
 #' @param fragment optional fragment name for targetting cached fragments
@@ -131,6 +153,15 @@ invalidate_cache <- function(tpl, name, vary = NULL, fragment = NULL) {
   }
 }
 
+#' Invalidate a cached partial from within a template
+#'
+#' `invalidate_cache_here()` is the in-template version of `invalidate_cache`. It uses
+#' the current template execution context to allow users to forcibly regenerate caches
+#' inside the template function.
+#'
+#' Note: invalidation affects future renders only. Calling this within the `cache()` block
+#' that is being targeted will not result in an invalidation of the cache.
+#'
 #' @rdname template-caching
 #' @examples
 #' # Invalidate the current cache
