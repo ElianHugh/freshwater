@@ -243,15 +243,15 @@ fragment <- function(..., name = NULL) {
     if (inherits(x, "shiny.tag.list")) {
         for (i in seq_along(x)) {
             if (inherits(x[[i]], "shiny.tag")) {
-                x[[i]][["fragment"]] <- name
+                attr(x[[i]], "fragment") <- name
             } else if (inherits(x[[i]], "list")) {
                 for (j in seq_along(x[[i]])) {
-                    x[[i]][[j]][["fragment"]] <- name
+                    attr(x[[i]][[j]], "fragment") <- name
                 }
             }
         }
     } else {
-        x[["fragment"]] <- name
+        attr(x, "fragment") <- name
     }
 
     x
@@ -310,7 +310,7 @@ walk_nodes <- function(tag, name) {
 
         if (inherits(x, "shiny.tag")) {
 
-            fragment <- x[["fragment"]]
+            fragment <- attr(x, "fragment")
 
             if (!is.null(fragment) && identical(fragment, name)) {
                 found[[length(found) + 1L]] <<- x

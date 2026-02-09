@@ -88,9 +88,14 @@ cache <- function(name, vary = NULL, ...) {
   )
 
   fn <- function() {
-    eval(expr, env) |>
-      htmltools::as.tags() |>
-      htmltools::doRenderTags()
+    res <- eval(expr, env) |>
+      htmltools::as.tags()
+
+      if (is.null(context$fragment)) {
+        htmltools::doRenderTags(res)
+      } else {
+        res
+      }
   }
 
   key <- cache_key(

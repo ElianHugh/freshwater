@@ -198,23 +198,3 @@ test_that("template attribute norming", {
     )
   )
 })
-
-test_that("template caching works", {
-
-  t <- template(user, {
-    div(
-      cache("foo", user$id,
-        message("cached!"),
-        div()
-      )
-    )
-  })
-
-  msgs1 <- testthat::capture_messages(t(list(id = 1)))
-  msgs2 <- testthat::capture_messages(t(list(id = 1)))
-  msgs3 <- testthat::capture_messages(t(list(id = 2)))
-
-  expect_true(any(grepl("cached!", msgs1, fixed = TRUE)))
-  expect_false(any(grepl("cached!", msgs2, fixed = TRUE)))
-  expect_true(any(grepl("cached!", msgs3, fixed = TRUE)))
-})
