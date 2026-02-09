@@ -1,4 +1,4 @@
-# Cache a renderd partial within a template
+# Cache a rendered partial within a template
 
 `cache()` memoises a portion of HTML output within a freshwater
 template. The contents are computed once per unique cache key, and
@@ -67,7 +67,8 @@ invalidation of the cache.
 
 ## See also
 
-[template](https://elianhugh.github.io/freshwater/reference/templating.md)
+[template](https://elianhugh.github.io/freshwater/reference/templating.md),
+[api_cget](https://elianhugh.github.io/freshwater/reference/api_cget.md)
 
 ## Examples
 

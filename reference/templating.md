@@ -23,7 +23,7 @@ Templates may define:
 ``` r
 template(..., .envir = parent.frame())
 
-fragment(..., name = NULL)
+fragment(name = NULL, ...)
 ```
 
 ## Arguments
