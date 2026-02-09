@@ -4,6 +4,8 @@
 
 - [`api_cget()`](https://elianhugh.github.io/freshwater/reference/api_cget.md)
   : Conditional GET
+- [`redirect()`](https://elianhugh.github.io/freshwater/reference/redirect.md)
+  : Redirect to another resource
 - [`register_html_serialiser()`](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md)
   : Register HTML Serialiser
 - [`cache()`](https://elianhugh.github.io/freshwater/reference/template-caching.md)

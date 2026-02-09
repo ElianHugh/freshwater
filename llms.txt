@@ -11,6 +11,9 @@ backends:
 - weak ETag caching
 - shiny tag serialisation[¹](#fn1)
 
+For autoreloading support, consider
+[hotwater](https://github.com/ElianHugh/hotwater).
+
 ## Installation
 
 You can install the development version of freshwater from
@@ -229,6 +232,8 @@ function() {
 
 - [`api_cget()`](https://elianhugh.github.io/freshwater/reference/api_cget.md)
   : Conditional GET
+- [`redirect()`](https://elianhugh.github.io/freshwater/reference/redirect.md)
+  : Redirect to another resource
 - [`register_html_serialiser()`](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md)
   : Register HTML Serialiser
 - [`cache()`](https://elianhugh.github.io/freshwater/reference/template-caching.md)

@@ -11,6 +11,9 @@ backends:
 - weak ETag caching
 - shiny tag serialisation[¹](#fn1)
 
+For autoreloading support, consider
+[hotwater](https://github.com/ElianHugh/hotwater).
+
 ## Installation
 
 You can install the development version of freshwater from
