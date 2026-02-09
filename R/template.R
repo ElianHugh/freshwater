@@ -178,6 +178,7 @@ template <- function(..., .envir = parent.frame()) {
             walk_nodes = walk_nodes,
             new_template_error = new_template_error,
             rewrite_attrs = rewrite_attrs,
+            error_missing_fragment = error_missing_fragment,
             env = e,
             id = id
         )
@@ -201,12 +202,15 @@ rewrite_attrs <- function(tag) {
     }
 
     if (inherits(tag, "shiny.tag.list")) {
-        out <- lapply(tag, rewrite_attrs)
-        class(out) <- "shiny.tag.list"
-        return(out)
+
+        for (i in seq_along(tag)) {
+            tag[[i]] <- rewrite_attrs(tag[[i]])
+        }
+        return(tag)
     }
 
     if (inherits(tag, "shiny.tag")) {
+
         if (length(tag$attribs)) {
             attribs <- tag$attribs
             nms <- names(attribs)
@@ -235,8 +239,23 @@ fragment <- function(..., name = NULL) {
     !is.null(name) || error_fragment_definition()
 
     x <- htmltools::as.tags(...)
-    x[["fragment"]] <- name
+
+    if (inherits(x, "shiny.tag.list")) {
+        for (i in seq_along(x)) {
+            if (inherits(x[[i]], "shiny.tag")) {
+                x[[i]][["fragment"]] <- name
+            } else if (inherits(x[[i]], "list")) {
+                for (j in seq_along(x[[i]])) {
+                    x[[i]][[j]][["fragment"]] <- name
+                }
+            }
+        }
+    } else {
+        x[["fragment"]] <- name
+    }
+
     x
+
 }
 
 #' @exportS3Method
@@ -286,32 +305,43 @@ print.freshwater_cached_partial <- function(x, ...) {
 }
 
 walk_nodes <- function(tag, name) {
-    found <- NULL
+    found <- list()
     walk <- function(x) {
-        if (!is.null(found)) {
-            return()
-        }
 
         if (inherits(x, "shiny.tag")) {
-            if (!is.null(x$fragment) && identical(x$fragment, name)) {
-                found <<- x
-                return()
+
+            fragment <- x[["fragment"]]
+
+            if (!is.null(fragment) && identical(fragment, name)) {
+                found[[length(found) + 1L]] <<- x
             }
 
             for (i in seq_along(x$children)) {
                 walk(x$children[[i]])
-                if (!is.null(found)) return()
             }
-        } else if (inherits(x, "shiny.tag.list")) {
+            return(invisible(NULL))
+
+        } else if (inherits(x, "list")) {
             for (child in x) {
                 walk(child)
-                if (!is.null(found)) return()
             }
+            return(invisible(NULL))
         }
+        invisible(NULL)
     }
 
     walk(tag)
-    found
+
+
+    if (!length(found)) {
+        return(NULL)
+    }
+
+    if (length(found) == 1L) {
+        return(found[[1L]])
+    }
+
+    htmltools::tagList(found)
 }
 
 format_template_tree <- function(stack) {

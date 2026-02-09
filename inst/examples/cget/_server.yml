@@ -1,0 +1,6 @@
+engine: plumber2
+routes: ./cget.R
+constructor: ~
+options: {
+  port: 9999
+}

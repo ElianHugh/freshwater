@@ -1,8 +1,10 @@
 expect_identical_when_rendered <- function(arg1, arg2) {
   arg1 <- arg1 |>
+    htmltools::as.tags() |>
     htmltools::doRenderTags()
 
   arg2 <- arg2 |>
+    htmltools::as.tags() |>
     htmltools::doRenderTags()
 
   expect_identical(arg1, arg2)
@@ -26,6 +28,7 @@ test_that("templates work", {
 
 
 test_that("template fragments work", {
+  # Multiple fragments
   t1 <- template({
     div(
       p("Foo"),
@@ -45,6 +48,78 @@ test_that("template fragments work", {
   t3 <- t1(fragment = "test")
   t4 <- htmltools::p("Bar")
   expect_identical_when_rendered(t3, t4)
+
+  # Fragments without a root
+  t1 <- template({
+    div(
+      p("Foo"),
+      fragment(
+        name = "test",
+        htmltools::tagList(
+          htmltools::p("Bar"),
+          htmltools::p("Baz"),
+        )
+      )
+    )
+  })
+
+  expect_identical_when_rendered(
+    t1(),
+    htmltools::div(
+      htmltools::p("Foo"),
+      htmltools::p("Bar"),
+      htmltools::p("Baz")
+    )
+  )
+
+  # Fragments when children are conditional
+
+  t1 <- template(x, {
+    div(
+      p("Foo"),
+      fragment(
+        name = "test",
+        htmltools::tagList(
+          if (x > 1) {
+            htmltools::p("Bar")
+          } else {
+            htmltools::p("Baz")
+          }
+        )
+      )
+    )
+  })
+
+  expect_identical_when_rendered(
+    t1(x = 2L, fragment = "test"),
+    htmltools::p("Bar")
+  )
+
+  expect_identical_when_rendered(
+    t1(x = 1L, fragment = "test"),
+    htmltools::p("Baz")
+  )
+
+
+  # Lists too
+
+    t1 <- template(x, {
+      div(
+        p("Foo"),
+        fragment(
+          name = "test",
+          htmltools::tagList(
+            lapply(seq(10), function(i) htmltools::p(i))
+          )
+        )
+      )
+    })
+
+    expect_identical_when_rendered(
+      t1(fragment = "test"),
+      htmltools::as.tags(lapply(seq(10), function(i) htmltools::p(i)))
+    )
+
 })
 
 test_that("template params work", {
