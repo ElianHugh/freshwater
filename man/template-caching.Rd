@@ -5,7 +5,7 @@
 \alias{clear_cache}
 \alias{invalidate_cache}
 \alias{invalidate_cache_here}
-\title{Cache a renderd partial within a template}
+\title{Cache a rendered partial within a template}
 \usage{
 cache(name, vary = NULL, ...)
 
@@ -117,5 +117,5 @@ page(list(id = 1, refresh = TRUE))
 
 }
 \seealso{
-\link{template}
+\link{template}, \link{api_cget}
 }

@@ -2,6 +2,7 @@
 
 S3method(apply_plumber2_block,etag)
 S3method(print,freshwater_cached_partial)
+S3method(print,freshwater_fragment)
 S3method(print,freshwater_template)
 export(api_cget)
 export(cache)

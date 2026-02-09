@@ -7,7 +7,7 @@
 \usage{
 template(..., .envir = parent.frame())
 
-fragment(..., name = NULL)
+fragment(name = NULL, ...)
 }
 \arguments{
 \item{...}{template definition. Provide zero or more parameters, followed by a

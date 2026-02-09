@@ -21,7 +21,7 @@ cache_key <- function(name, vary, id, fragment) {
   )
 }
 
-#' Cache a renderd partial within a template
+#' Cache a rendered partial within a template
 #'
 #' `cache()` memoises a portion of HTML output within a freshwater template.
 #' The contents are computed once per unique cache key, and reused in subsequent calls.
@@ -75,7 +75,7 @@ cache_key <- function(name, vary, id, fragment) {
 #' })
 #' dashboard()
 #'
-#' @seealso [template]
+#' @seealso [template], [api_cget]
 #' @rdname template-caching
 cache <- function(name, vary = NULL, ...) {
   context <- current_template(parent.frame())
@@ -208,4 +208,12 @@ invalidate_cache_here <- function(name, vary = NULL, fragment = NULL) {
   } else {
     FALSE
   }
+}
+
+#' @exportS3Method
+print.freshwater_cached_partial <- function(x, ...) {
+  if (interactive()) {
+    cat("[cached partial]\n")
+  }
+  NextMethod()
 }

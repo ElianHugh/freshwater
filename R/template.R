@@ -235,7 +235,7 @@ rewrite_attrs <- function(tag) {
 #' @rdname templating
 #' @param name the name of the fragment
 #' @export
-fragment <- function(..., name = NULL) {
+fragment <- function(name = NULL, ...) {
     !is.null(name) || error_fragment_definition()
 
     x <- htmltools::as.tags(...)
@@ -254,8 +254,9 @@ fragment <- function(..., name = NULL) {
         attr(x, "fragment") <- name
     }
 
-    x
+    class(x) <- unique(c("freshwater_fragment", class(x)))
 
+    x
 }
 
 #' @exportS3Method
@@ -299,8 +300,10 @@ print.freshwater_template <- function(x, ...) {
 }
 
 #' @exportS3Method
-print.freshwater_cached_partial <- function(x, ...) {
-    if (interactive()) cat("[cached partial]\n")
+print.freshwater_fragment <- function(x, ...) {
+    if (interactive()) {
+        cat("[fragment]\n")
+    }
     NextMethod()
 }
 

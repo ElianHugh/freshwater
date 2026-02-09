@@ -13,6 +13,12 @@ redirect(response, location)
 }
 \description{
 Sends a 303 response and halts request processing.
+Client is redirected to the given location.
+}
+\details{
+This is commonly used in Post/Redirect/GET (PRG) setups
+to redirect clients to a new page following
+form submissions.
 }
 \examples{
 #* @get /
