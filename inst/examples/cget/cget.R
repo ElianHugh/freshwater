@@ -48,7 +48,5 @@ function() {
 #' @post /users/increment
 function(response) {
     dashboard_data$increment_users()
-    response$status <- 303L
-    response$set_header("Location", "/")
-    plumber2::Break
+    redirect(response, "/")
 }

@@ -22,6 +22,8 @@ freshwater provides server-side rendering utilities for plumber2 backends:
 
 [^1]: differs to base plumber2 implementation in that we render the entire tag tree, allowing for emitting head tags amongst others.
 
+For autoreloading support, consider [hotwater](https://github.com/ElianHugh/hotwater).
+
 ## Installation
 
 You can install the development version of freshwater from [GitHub](https://github.com/) with:
