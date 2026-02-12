@@ -19,6 +19,7 @@ freshwater provides server-side rendering utilities for plumber2 backends:
 - template caching
 - weak ETag caching
 - shiny tag serialisation[^1]
+- CSRF protection
 
 [^1]: differs to base plumber2 implementation in that we render the entire tag tree, allowing for emitting head tags amongst others.
 
@@ -63,8 +64,8 @@ card <- template(title, {
     h2(title),
     fragment(
         div("Card body"),
-        name = "body")
-    ,
+        name = "body"
+    ),
     fragment(
         div("Footer"),
         name = "footer"
@@ -227,5 +228,16 @@ dashboard(
 #* @etag \() as.integer(Sys.Date())
 function() {
   page_main()
+}
+```
+
+## CSRF Protection
+
+> Prevent hijacking unsafe HTTP methods via the double-submit cookie pattern
+
+```r
+function(api) {
+  api |>
+    api_csrf(secure = TRUE)
 }
 ```

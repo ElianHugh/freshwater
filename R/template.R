@@ -64,13 +64,13 @@
 #' # Templates and fragments can also be combined
 #'
 #' card <- template(
-#'     ttl, foot = NULL, {
+#'     ttl, footer = NULL, {
 #'         div(
 #'             h2(ttl),
 #'             fragment(div("Card body"), name="body"),
-#'             if (!is.null(foot)) {
+#'             if (!is.null(footer)) {
 #'                 fragment(
-#'                     div(foot),
+#'                     div(footer),
 #'                     name = "footer"
 #'                 )
 #'             }
@@ -138,6 +138,8 @@ template <- function(..., .envir = parent.frame()) {
 
     e <- new.env(parent = .envir)
     list2env(as.list(htmltools::tags), envir = e)
+    e$form <- form
+    e$csrf_token <- csrf_token
     id <- paste0("tpl_", sprintf("%08x", sample.int(2^31 - 1L, 1L)))
 
     f_body <- substitute(
@@ -153,9 +155,8 @@ template <- function(..., .envir = parent.frame()) {
                     )
                     on.exit(rm(".freshwater_ctx", envir = env), add = TRUE)
 
-                    x <- local({
-                        body_expr
-                    })
+
+                    x <- local({body_expr})
 
                     if (!is.null(fragment)) {
                         x <- walk_nodes(x, fragment)
