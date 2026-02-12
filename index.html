@@ -60,6 +60,7 @@
 <li>weak ETag caching</li>
 <li>shiny tag serialisation<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;differs to base plumber2 implementation in that we render the entire tag tree, allowing for emitting head tags amongst others.&lt;/p&gt;"><sup>1</sup></a>
 </li>
+<li>CSRF protection</li>
 </ul>
 <p>For autoreloading support, consider <a href="https://github.com/ElianHugh/hotwater" class="external-link">hotwater</a>.</p>
 <div class="section level2">
@@ -98,8 +99,8 @@
 <span>    <span class="fu">h2</span><span class="op">(</span><span class="va">title</span><span class="op">)</span>,</span>
 <span>    <span class="fu"><a href="reference/templating.html">fragment</a></span><span class="op">(</span></span>
 <span>        <span class="fu">div</span><span class="op">(</span><span class="st">"Card body"</span><span class="op">)</span>,</span>
-<span>        name <span class="op">=</span> <span class="st">"body"</span><span class="op">)</span></span>
-<span>    ,</span>
+<span>        name <span class="op">=</span> <span class="st">"body"</span></span>
+<span>    <span class="op">)</span>,</span>
 <span>    <span class="fu"><a href="reference/templating.html">fragment</a></span><span class="op">(</span></span>
 <span>        <span class="fu">div</span><span class="op">(</span><span class="st">"Footer"</span><span class="op">)</span>,</span>
 <span>        name <span class="op">=</span> <span class="st">"footer"</span></span>
@@ -242,6 +243,18 @@
 <span><span class="co">#* @etag \() as.integer(Sys.Date())</span></span>
 <span><span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu">page_main</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="csrf-protection">CSRF Protection<a class="anchor" aria-label="anchor" href="#csrf-protection"></a>
+</h2>
+<blockquote>
+<p>Prevent hijacking unsafe HTTP methods via the double-submit cookie pattern</p>
+</blockquote>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">function</span><span class="op">(</span><span class="va">api</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">api</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="reference/api_csrf.html">api_csrf</a></span><span class="op">(</span>secure <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
 </div>

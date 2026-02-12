@@ -37,5 +37,5 @@ function(response) {
 #>     print("Hello!")
 #>     redirect(response, "/foo")
 #> }
-#> <environment: 0x55fd3625f1e0>
+#> <environment: 0x5619d70c6158>
 ```

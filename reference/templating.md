@@ -102,13 +102,13 @@ details("Jim", 30)
 # Templates and fragments can also be combined
 
 card <- template(
-    ttl, foot = NULL, {
+    ttl, footer = NULL, {
         div(
             h2(ttl),
             fragment(div("Card body"), name="body"),
-            if (!is.null(foot)) {
+            if (!is.null(footer)) {
                 fragment(
-                    div(foot),
+                    div(footer),
                     name = "footer"
                 )
             }

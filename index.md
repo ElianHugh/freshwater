@@ -10,6 +10,7 @@ backends:
 - template caching
 - weak ETag caching
 - shiny tag serialisation[¹](#fn1)
+- CSRF protection
 
 For autoreloading support, consider
 [hotwater](https://github.com/ElianHugh/hotwater).
@@ -54,8 +55,8 @@ card <- template(title, {
     h2(title),
     fragment(
         div("Card body"),
-        name = "body")
-    ,
+        name = "body"
+    ),
     fragment(
         div("Footer"),
         name = "footer"
@@ -218,6 +219,18 @@ dashboard(
 #* @etag \() as.integer(Sys.Date())
 function() {
   page_main()
+}
+```
+
+## CSRF Protection
+
+> Prevent hijacking unsafe HTTP methods via the double-submit cookie
+> pattern
+
+``` r
+function(api) {
+  api |>
+    api_csrf(secure = TRUE)
 }
 ```
 
