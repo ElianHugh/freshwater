@@ -27,6 +27,9 @@
 #'
 #' @export
 api_csrf <- function(api, secure = TRUE) {
+    if (!requireNamespace("openssl", quietly = TRUE)) {
+        rlang::abort("openssl is required to enable CSRF protection.")
+    }
 
     if (isTRUE(attr(api, "csrf_installed", exact = TRUE))) {
         return(api)
