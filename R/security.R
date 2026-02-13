@@ -37,7 +37,6 @@ api_csrf <- function(api, secure = TRUE) {
 
     attr(api, "csrf_installed") <- TRUE
 
-
     unsafe_methods <- c("post", "put", "delete", "patch")
     safe_methods <- c("get", "head", "options")
     cookie_name <- if (isTRUE(secure)) "__Host-csrf" else "csrf"
@@ -100,11 +99,11 @@ api_csrf <- function(api, secure = TRUE) {
     plumber2::api_any(api, path = "/*", handler = csrf_validator, route = "csrf_req")
 
     plumber2::api_on(api, "start", function(...) {
-        api$trigger("freshwater")
+        api$trigger("freshwater_csrf")
     })
 
     # separate event for testing purposes
-    plumber2::api_on(api, "freshwater", function(...) {
+    plumber2::api_on(api, "freshwater_csrf", function(...) {
          if (isTRUE(attr(api, "csrf_hooked", exact = TRUE))) {
             return(invisible(NULL))
         }
@@ -161,7 +160,7 @@ csrf_hook <- function(args, next_call) {
         return(do.call(user_fn, args))
     }
 
-    cookie_name <- freshwater$csrf_cookie_name %||% "RSC-XSRF"
+    cookie_name <- freshwater$csrf_cookie_name %||% "csrf"
     token <- request$cookies[[cookie_name]] %||% ""
 
     # set current req context
@@ -175,3 +174,4 @@ csrf_hook <- function(args, next_call) {
 
     next_call()
 }
+
