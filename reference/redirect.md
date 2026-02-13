@@ -15,7 +15,8 @@ redirect(response, location, after = NULL)
 
 - response:
 
-  Plumber2 response object
+  [reqres::Response](https://reqres.data-imaginist.com/reference/Response.html)
+  object
 
 - location:
 
@@ -23,13 +24,15 @@ redirect(response, location, after = NULL)
 
 - after:
 
-  number of seconds to wait before redirection
+  optional number of seconds to wait before redirection
 
 ## Value
 
-- Plumber2::Break when issuing an immediate redirect.
+- [plumber2::Break](https://plumber2.posit.co/reference/Next.html) when
+  issuing an immediate redirect.
 
-- Plumber2::Next when issuing a delayed navigation.
+- [plumber2::Next](https://plumber2.posit.co/reference/Next.html) when
+  issuing a delayed navigation.
 
 ## Details
 
@@ -40,6 +43,12 @@ number of seconds.
 The delayed redirect uses the non-standard "Refresh" HTTP header which
 is widely supported by browsers but is not part of the official HTTP
 specification. It should not be relied on for API & non-browser clients.
+
+See also:
+
+- <https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Redirections>
+
+- <https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Refresh>
 
 ## Examples
 
@@ -55,7 +64,7 @@ function(response) {
 #>     print("Hello!")
 #>     redirect(response, "/foo")
 #> }
-#> <environment: 0x55c4e0250ca8>
+#> <environment: 0x5588f518e878>
 
 # Delayed redirect after rendering content
 #* @get /count/<n>
@@ -68,5 +77,5 @@ function(n, response) {
 #>     redirect(response, "/", after = 1)
 #>     paste("n =", n)
 #> }
-#> <environment: 0x55c4e0250ca8>
+#> <environment: 0x5588f518e878>
 ```

@@ -54,7 +54,7 @@ form submissions.</p>
 
 
 <dl><dt id="arg-response">response<a class="anchor" aria-label="anchor" href="#arg-response"></a></dt>
-<dd><p>Plumber2 response object</p></dd>
+<dd><p><a href="https://reqres.data-imaginist.com/reference/Response.html" class="external-link">reqres::Response</a> object</p></dd>
 
 
 <dt id="arg-location">location<a class="anchor" aria-label="anchor" href="#arg-location"></a></dt>
@@ -62,14 +62,14 @@ form submissions.</p>
 
 
 <dt id="arg-after">after<a class="anchor" aria-label="anchor" href="#arg-after"></a></dt>
-<dd><p>number of seconds to wait before redirection</p></dd>
+<dd><p>optional number of seconds to wait before redirection</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
 
-<ul><li><p>Plumber2::Break when issuing an immediate redirect.</p></li>
-<li><p>Plumber2::Next when issuing a delayed navigation.</p></li>
+<ul><li><p><a href="https://plumber2.posit.co/reference/Next.html" class="external-link">plumber2::Break</a> when issuing an immediate redirect.</p></li>
+<li><p><a href="https://plumber2.posit.co/reference/Next.html" class="external-link">plumber2::Next</a> when issuing a delayed navigation.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -79,7 +79,9 @@ of seconds.</p>
 <p>The delayed redirect uses the non-standard "Refresh" HTTP header which is
 widely supported by browsers but is not part of the official HTTP specification.
 It should not be relied on for API &amp; non-browser clients.</p>
-    </div>
+<p>See also:</p><ul><li><p><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Redirections" class="external-link">https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Redirections</a></p></li>
+<li><p><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Refresh" class="external-link">https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Refresh</a></p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
@@ -94,7 +96,7 @@ It should not be relied on for API &amp; non-browser clients.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     print("Hello!")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     redirect(response, "/foo")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55c4e0250ca8&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5588f518e878&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Delayed redirect after rendering content</span></span></span>
 <span class="r-in"><span><span class="co">#* @get /count/&lt;n&gt;</span></span></span>
@@ -107,7 +109,7 @@ It should not be relied on for API &amp; non-browser clients.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     redirect(response, "/", after = 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     paste("n =", n)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55c4e0250ca8&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5588f518e878&gt;</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
