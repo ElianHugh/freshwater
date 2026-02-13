@@ -10,7 +10,7 @@
 #' instructing the browser to navigate to `location` after the specified number
 #' of seconds.
 #'
-#' @param response Plumber2 response object
+#' @param response [reqres::Response] object
 #' @param location path or url to redirect to
 #' @param after optional number of seconds to wait before redirection
 #'
@@ -19,9 +19,13 @@
 #' widely supported by browsers but is not part of the official HTTP specification.
 #' It should not be relied on for API & non-browser clients.
 #'
+#' See also:
+#' - <https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Redirections>
+#' - <https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Refresh>
+#'
 #' @return
-#' - Plumber2::Break when issuing an immediate redirect.
-#' - Plumber2::Next when issuing a delayed navigation.
+#' - [plumber2::Break] when issuing an immediate redirect.
+#' - [plumber2::Next] when issuing a delayed navigation.
 #'
 #' @examples
 #' # Immediate redirect (PRG pattern)
@@ -46,6 +50,13 @@ redirect <- function(response, location, after = NULL) {
         return(plumber2::Break)
     } else {
         after <- as.integer(after)
+        !is.na(after) ||
+            rlang::abort(
+                c(
+                    "`after` should be a number greater than 0L.",
+                    sprintf("Got `%s`", after)
+                )
+            )
         response$set_header(
             "Refresh",
             sprintf("%s; url=%s", after, location)

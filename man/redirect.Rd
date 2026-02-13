@@ -7,16 +7,16 @@
 redirect(response, location, after = NULL)
 }
 \arguments{
-\item{response}{Plumber2 response object}
+\item{response}{\link[reqres:Response]{reqres::Response} object}
 
 \item{location}{path or url to redirect to}
 
-\item{after}{number of seconds to wait before redirection}
+\item{after}{optional number of seconds to wait before redirection}
 }
 \value{
 \itemize{
-\item Plumber2::Break when issuing an immediate redirect.
-\item Plumber2::Next when issuing a delayed navigation.
+\item \link[plumber2:Next]{plumber2::Break} when issuing an immediate redirect.
+\item \link[plumber2:Next]{plumber2::Next} when issuing a delayed navigation.
 }
 }
 \description{
@@ -33,6 +33,12 @@ of seconds.
 The delayed redirect uses the non-standard "Refresh" HTTP header which is
 widely supported by browsers but is not part of the official HTTP specification.
 It should not be relied on for API & non-browser clients.
+
+See also:
+\itemize{
+\item \url{https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Redirections}
+\item \url{https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Refresh}
+}
 }
 \examples{
 # Immediate redirect (PRG pattern)
