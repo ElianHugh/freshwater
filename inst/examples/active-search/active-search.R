@@ -108,7 +108,7 @@ search_page <- template(query = "", {
 # Routes #
 # ~~~~~~ #
 
-#' @get /contacts
+#' @get /cars
 #' @serializer html
 function() {
     search_page()

@@ -1,3 +1,5 @@
+testthat::skip_if_not_installed("openssl")
+
 test_that("csrf works", {
     api <- plumber2::api()
 

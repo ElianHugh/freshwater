@@ -1,0 +1,6 @@
+engine: plumber2
+routes: ./redirect.R
+constructor: ~
+options: {
+  port: 9999
+}

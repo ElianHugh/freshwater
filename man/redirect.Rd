@@ -4,26 +4,48 @@
 \alias{redirect}
 \title{Redirect to another resource}
 \usage{
-redirect(response, location)
+redirect(response, location, after = NULL)
 }
 \arguments{
 \item{response}{Plumber2 response object}
 
 \item{location}{path or url to redirect to}
+
+\item{after}{number of seconds to wait before redirection}
+}
+\value{
+\itemize{
+\item Plumber2::Break when issuing an immediate redirect.
+\item Plumber2::Next when issuing a delayed navigation.
+}
 }
 \description{
-Sends a 303 response and halts request processing.
-Client is redirected to the given location.
-}
-\details{
-This is commonly used in Post/Redirect/GET (PRG) setups
-to redirect clients to a new page following
+If \code{after} is NULL, sends a 303 response and halts request processing.
+Client is redirected to the given location. This is commonly used in
+Post/Redirect/GET (PRG) setups to redirect clients to a new page following
 form submissions.
 }
+\details{
+If after is a numeric, a "Refresh" header is attached to the response,
+instructing the browser to navigate to \code{location} after the specified number
+of seconds.
+
+The delayed redirect uses the non-standard "Refresh" HTTP header which is
+widely supported by browsers but is not part of the official HTTP specification.
+It should not be relied on for API & non-browser clients.
+}
 \examples{
+# Immediate redirect (PRG pattern)
 #* @get /
 function(response) {
     print("Hello!")
     redirect(response, "/foo")
+}
+
+# Delayed redirect after rendering content
+#* @get /count/<n>
+function(n, response) {
+  redirect(response, "/", after = 1)
+  paste("n =", n)
 }
 }
