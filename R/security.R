@@ -94,9 +94,6 @@ api_csrf <- function(api, secure = TRUE) {
         plumber2::Next
     }
 
-    attr(csrf_handler, "freshwater_wrapped") <- TRUE
-    attr(csrf_validator, "freshwater_wrapped") <- TRUE
-
     plumber2::api_add_route(api, "csrf", header = TRUE, after = 0L)
     plumber2::api_add_route(api, "csrf_req", header = FALSE, after = 0L)
     plumber2::api_any_header(api, path = "/*", handler = csrf_handler, route = "csrf")
@@ -108,11 +105,11 @@ api_csrf <- function(api, secure = TRUE) {
 
     # separate event for testing purposes
     plumber2::api_on(api, "freshwater", function(...) {
-         if (isTRUE(attr(api, "routes_wrapped", exact = TRUE))) {
+         if (isTRUE(attr(api, "csrf_hooked", exact = TRUE))) {
             return(invisible(NULL))
         }
-        attr(api, "routes_wrapped") <- TRUE
-        wrap_routes(api)
+        attr(api, "csrf_hooked") <- TRUE
+        enhook_routes(api, csrf_hook)
     })
 
     api
@@ -157,57 +154,24 @@ form <- function(...) {
     do.call(htmltools::tags$form, args = children)
 }
 
-wrap_user_handler <- function(user_fn) {
-    force(user_fn)
+csrf_hook <- function(args, next_call) {
+    request <- args$request
 
-    function(...) {
-        args <- list(...)
-        request <- args$request
-        if (is.null(request)) {
-            return(do.call(user_fn, args))
-        }
-
-        cookie_name <- freshwater$csrf_cookie_name %||% "RSC-XSRF"
-        token <- request$cookies[[cookie_name]] %||% ""
-
-        # set current req context
-        # todo, see if this is async compat
-        ctx <- new.env(parent = emptyenv())
-        ctx$csrf_token <- function() token
-        ctx$request <- request
-
-        old <- set_fw_context(ctx)
-        on.exit(set_fw_context(old), add = TRUE)
-
-        do.call(user_fn, args)
-    }
-}
-
-patch_dispatcher <- function(dispatcher) {
-    plumber_env <- environment(dispatcher)
-    user_function <- plumber_env[["handler"]]
-
-    if (!is.function(user_function)) {
-        return(dispatcher)
-    }
-    if (isTRUE(attr(user_function, "freshwater_wrapped"))) {
-        return(dispatcher)
+    if (is.null(request)) {
+        return(do.call(user_fn, args))
     }
 
-    wrapped <- wrap_user_handler(user_function)
-    attr(wrapped, "freshwater_wrapped") <- TRUE
-    plumber_env[["handler"]] <- wrapped
-    dispatcher
-}
+    cookie_name <- freshwater$csrf_cookie_name %||% "RSC-XSRF"
+    token <- request$cookies[[cookie_name]] %||% ""
 
-wrap_routes <- function(api) {
-    rr <- api$request_router
-    routes <- rr$routes
-    for (route in routes) {
-        r <- rr$get_route(route)
-        r$remap_handlers(function(method, path, handler) {
-            r$add_handler(method, path, patch_dispatcher(handler))
-        })
-    }
-    api
+    # set current req context
+    # todo, see if this is async compat
+    ctx <- new.env(parent = emptyenv())
+    ctx$csrf_token <- function() token
+    ctx$request <- request
+
+    old <- set_fw_context(ctx)
+    on.exit(set_fw_context(old), add = TRUE)
+
+    next_call()
 }

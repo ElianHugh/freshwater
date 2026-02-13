@@ -5,7 +5,7 @@ register_html_serialiser()
 #' @plumber
 function(api) {
     api |>
-        freshwater::api_csrf(secure = FALSE)
+        freshwater::api_csrf(secure = TRUE)
 }
 
 my_form <- template({
