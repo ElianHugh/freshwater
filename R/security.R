@@ -157,7 +157,7 @@ csrf_hook <- function(args, next_call) {
     request <- args$request
 
     if (is.null(request)) {
-        return(do.call(user_fn, args))
+        return(next_call())
     }
 
     cookie_name <- freshwater$csrf_cookie_name %||% "csrf"

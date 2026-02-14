@@ -1,4 +1,9 @@
+#' Freshwater Error Pages
+#'
+#' todo
+#'
 #' @export
+#' @param api a [plumber2] api object.
 api_error_pages <- function(api) {
     if (!requireNamespace("cli", quietly = TRUE)) {
         rlang::abort("cli is required to enable error pages.")
@@ -46,7 +51,10 @@ error_page_hook <- function(args, next_call) {
             if (wants_html) {
                 response$set_header("Content-Type", "text/html; charset=utf-8")
 
-                response$body <- response$formatter(get_error_template()(e, request))
+                response$body <- response$formatter(get_error_template()(
+                    e,
+                    request
+                ))
             } else {
                 response$set_header("Content-Type", "text/plain; charset=utf-8")
                 response$body <- response$formatter(
@@ -63,34 +71,46 @@ error_page_hook <- function(args, next_call) {
 }
 
 default_error_template <- function() {
-    template(e, request = NULL, {
-	raw <- tryCatch(conditionMessage(e), error = function(...) "Unknown error")
-	safe <- htmltools::htmlEscape(raw)
-	msg_html <- tryCatch(
-	      cli::ansi_html(safe),
-	      error = function(...) safe
-	)
+    if (!requireNamespace("cli", quietly = TRUE)) {
+        rlang::abort("cli is required to enable error pages.")
+    }
 
-	css <- tryCatch(
-	      paste(format(cli::ansi_html_style(palette = "iterm-solarized")), collapse = "\n"),
-	      error = function(...) ""
-	    )
+    template(e = NULL, request = NULL, {
+        raw <- tryCatch(conditionMessage(e), error = function(...) {
+            "Unknown error"
+        })
+        msg_html <- tryCatch(
+            cli::ansi_html(raw, escape_reserved = TRUE, csi = "drop"),
+            error = function(...) raw
+        )
+
+        css <- tryCatch(
+            paste(
+                format(cli::ansi_html_style(palette = "iterm-solarized")),
+                collapse = "\n"
+            ),
+            error = function(...) ""
+        )
 
         is_debug <- TRUE #todo
 
-        html(
-            head(
-                title("Server error"),
-                if (nzchar(css)) style(css)
+        # fully qualifying the tags to pacify R CMD
+
+        htmltools::tags$html(
+            htmltools::tags$head(
+                htmltools::tags$title("Server error"),
+                if (nzchar(css)) htmltools::tags$style(css)
             ),
-            body(
-                h3("freshwater"),
-                h2("Something went wrong (Error 500)"),
-                p("The server hit an error while processing your request."),
+            htmltools::tags$body(
+                htmltools::tags$h3("freshwater"),
+                htmltools::tags$h2("Something went wrong (Error 500)"),
+                htmltools::tags$p(
+                    "The server hit an error while processing your request."
+                ),
                 if (isTRUE(is_debug)) {
-                    details(
+                    htmltools::tags$details(
                         open = NA,
-                        pre(htmltools::HTML(msg_html))
+                        htmltools::tags$pre(htmltools::HTML(msg_html))
                     )
                 }
             )
@@ -99,8 +119,8 @@ default_error_template <- function() {
 }
 
 get_error_template <- function() {
-  if (is.null(freshwater$error_handler)) {
-    freshwater$error_handler <- default_error_template()
-  }
-  freshwater$error_handler
+    if (is.null(freshwater$error_handler)) {
+        freshwater$error_handler <- default_error_template()
+    }
+    freshwater$error_handler
 }

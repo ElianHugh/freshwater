@@ -191,7 +191,6 @@ template <- function(..., .envir = parent.frame()) {
         "template_params" = param_exprs,
         "template_env" = .envir,
         "template_id" = id,
-        "template_name" = "name",
         class = c("freshwater_template", "function")
     )
 }
