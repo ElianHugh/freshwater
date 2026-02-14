@@ -13,7 +13,7 @@ test_that("csrf works", {
 
     api <- api_csrf(api, secure = FALSE)
 
-    api$trigger("freshwater")
+    api$trigger("freshwater_csrf")
 
     req <- fiery::fake_request("http://localhost:8080/", method = "get")
     res <- api$test_request(req)
