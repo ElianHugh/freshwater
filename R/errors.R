@@ -64,14 +64,24 @@ error_page_hook <- function(args, next_call) {
 
 default_error_template <- function() {
     template(e, request = NULL, {
-        msg <- cli::ansi_html(conditionMessage(e))
-        css <- paste(format(cli::ansi_html_style(palette="iterm-solarized")), collapse = "\n")
+	raw <- tryCatch(conditionMessage(e), error = function(...) "Unknown error")
+	safe <- htmltools::htmlEscape(raw)
+	msg_html <- tryCatch(
+	      cli::ansi_html(safe),
+	      error = function(...) safe
+	)
+
+	css <- tryCatch(
+	      paste(format(cli::ansi_html_style(palette = "iterm-solarized")), collapse = "\n"),
+	      error = function(...) ""
+	    )
+
         is_debug <- TRUE #todo
 
         html(
             head(
                 title("Server error"),
-                style(css),
+                if (nzchar(css)) style(css)
             ),
             body(
                 h3("freshwater"),
@@ -80,7 +90,7 @@ default_error_template <- function() {
                 if (isTRUE(is_debug)) {
                     details(
                         open = NA,
-                        pre(htmltools::HTML(msg))
+                        pre(htmltools::HTML(msg_html))
                     )
                 }
             )
