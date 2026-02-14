@@ -1,3 +1,5 @@
+utils::globalVariables(c("e", "request"))
+
 #' Freshwater Error Pages
 #'
 #' todo
