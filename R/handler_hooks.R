@@ -50,18 +50,7 @@ patch_plumber_handler <- function(plumber_handler, hooks) {
     }
 
     user_function <- add_hook(user_function, hooks)
-
-    # if (
-    #     !isTRUE(attr(
-    #         plumber_env[["handler"]],
-    #         "freshwater_hook_wrapper",
-    #         exact = TRUE
-    #     ))
-    # ) {
-    #     plumber_env[["handler"]] <- invoke_hooks(user_function)
-    # }
     plumber_env[["handler"]] <- invoke_hooks(user_function)
-
     plumber_handler
 }
 
