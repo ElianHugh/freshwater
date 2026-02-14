@@ -15,12 +15,13 @@ test_that("error page installation is idempotent", {
 	})
 	
 	api <- api_error_pages(api)
+	api$trigger("freshwater_error_pages")
 	handler <- get_user_handler_from_route(api, "/")
 	hooks <- attr(handler, "freshwater_hooks", exact = TRUE)
-	
 	expect_length(hooks, 1L)
 
 	api <- api_error_pages(api)
+	api$trigger("freshwater_error_pages")
 	handler <- get_user_handler_from_route(api, "/")
 	hooks <- attr(handler, "freshwater_hooks", exact = TRUE)
 	expect_length(hooks, 1L)
