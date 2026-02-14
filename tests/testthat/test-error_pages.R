@@ -1,6 +1,3 @@
-testthat::skip_if_not_installed("cli")
-
-
 get_user_handler_from_route <- function(api, path) {
 	rr <- api$request_router
 	r <- rr$get_route("default")
@@ -18,13 +15,16 @@ test_that("error page installation is idempotent", {
 	api$trigger("freshwater_error_pages")
 	handler <- get_user_handler_from_route(api, "/")
 	hooks <- attr(handler, "freshwater_hooks", exact = TRUE)
-	print(handler)
 	expect_length(hooks, 1L)
 
 	api <- api_error_pages(api)
 	api$trigger("freshwater_error_pages")
 	handler <- get_user_handler_from_route(api, "/")
-	print(handler)
 	hooks <- attr(handler, "freshwater_hooks", exact = TRUE)
 	expect_length(hooks, 1L)
+})
+
+
+test_that("error pages render upon user error", {
+	testthat::skip_if_not_installed("cli")
 })

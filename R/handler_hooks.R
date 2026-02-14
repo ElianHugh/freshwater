@@ -1,5 +1,34 @@
+validate_hook <- function(hook) {
+  if (!is.function(hook)) {
+    rlang::abort("Hook must be a function.", class = "freshwater_hook_invalid")
+  }
+
+  fmls <- formals(hook)
+  nms <- names(fmls)
+
+  if (length(fmls) != 2L || !identical(nms, c("args", "next_call"))) {
+    rlang::abort(
+      c(
+        "Hooks must have exactly two arguments named `args` and `next_call`.",
+        i = paste0(
+          "Got: function(",
+          paste(ifelse(nzchar(nms), nms, "<unnamed>"), collapse = ", "),
+          ")"
+        )
+      ),
+      class = "freshwater_hook_invalid"
+    )
+  }
+
+  invisible(TRUE)
+}
+
+
 add_hook <- function(handler, hook) {
+
     incoming <- if (is.list(hook)) hook else list(hook)
+
+    for (h in incoming) validate_hook(h)
 
     current <- attr(handler, "freshwater_hooks", exact = TRUE)
     if (is.null(current)) current <- list()
@@ -66,3 +95,13 @@ enhook_routes <- function(api, hooks) {
     }
     api
 }
+
+
+#n_hooks <- function(api} {
+#total_hooks <- 0L
+#	rr <- api$request_router
+#	
+#	for (route_name in rr$routes) {
+#	    r <- rr$get_route(route_name)
+#
+#}
