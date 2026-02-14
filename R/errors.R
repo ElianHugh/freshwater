@@ -75,7 +75,7 @@ default_error_template <- function() {
             ),
             body(
                 h3("freshwater"),
-                h2("Something went wrong"),
+                h2("Something went wrong (Error 500)"),
                 p("The server hit an error while processing your request."),
                 if (isTRUE(is_debug)) {
                     details(

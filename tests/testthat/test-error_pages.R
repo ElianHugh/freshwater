@@ -3,7 +3,7 @@ testthat::skip_if_not_installed("cli")
 
 get_user_handler_from_route <- function(api, path) {
 	rr <- api$request_router
-	r <- rr$get_route(route)
+	r <- rr$get_route("default")
 	e <- environment(r$get_handler("get", path))
 	e$handler
 }
