@@ -6,7 +6,7 @@ validate_hook <- function(hook) {
   fmls <- formals(hook)
   nms <- names(fmls)
 
-  if (length(fmls) != 2L || !identical(nms, c("args", "next_call"))) {
+  if (length(fmls) != 3L || !identical(nms, c("api", "args", "next_call"))) {
     rlang::abort(
       c(
         "Hooks must have exactly two arguments named `args` and `next_call`.",
@@ -38,7 +38,7 @@ add_hook <- function(handler, hook) {
     handler
 }
 
-invoke_hooks <- function(handler) {
+invoke_hooks <- function(api, handler) {
     force(handler)
 
     fn <- function(...) {
@@ -50,7 +50,7 @@ invoke_hooks <- function(handler) {
 
             i <<- i + 1L
             if (i <= length(hooks)) {
-                return(hooks[[i]](args, next_call))
+                return(hooks[[i]](api, args, next_call))
             }
 
             do.call(handler, args)
@@ -63,7 +63,7 @@ invoke_hooks <- function(handler) {
     fn
 }
 
-patch_plumber_handler <- function(plumber_handler, hooks) {
+patch_plumber_handler <- function(api, plumber_handler, hooks) {
     plumber_env <- environment(plumber_handler)
     user_function <- plumber_env[["handler"]]
 
@@ -79,7 +79,7 @@ patch_plumber_handler <- function(plumber_handler, hooks) {
     }
 
     user_function <- add_hook(user_function, hooks)
-    plumber_env[["handler"]] <- invoke_hooks(user_function)
+    plumber_env[["handler"]] <- invoke_hooks(api, user_function)
     plumber_handler
 }
 
@@ -89,7 +89,7 @@ enhook_routes <- function(api, hooks) {
     for (route in routes) {
         r <- rr$get_route(route)
         r$remap_handlers(function(method, path, handler) {
-            handler <- patch_plumber_handler(handler, hooks)
+            handler <- patch_plumber_handler(api, handler, hooks)
             r$add_handler(method, path, handler)
         })
     }
@@ -100,7 +100,7 @@ enhook_routes <- function(api, hooks) {
 #n_hooks <- function(api} {
 #total_hooks <- 0L
 #	rr <- api$request_router
-#	
+#
 #	for (route_name in rr$routes) {
 #	    r <- rr$get_route(route_name)
 #

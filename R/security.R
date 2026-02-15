@@ -153,7 +153,7 @@ form <- function(...) {
     do.call(htmltools::tags$form, args = children)
 }
 
-csrf_hook <- function(args, next_call) {
+csrf_hook <- function(api, args, next_call) {
     request <- args$request
 
     if (is.null(request)) {
