@@ -43,3 +43,15 @@ page <- template(contacts, {
 function() {
     page(contacts = contacts)
 }
+
+
+#' @get /contact/<id:integer>
+#' @serializer html
+function(id, response) {
+    if (length(contacts) >= id) {
+        contact_card(contacts[[id]])
+    } else {
+        response$status <- 404L
+        plumber2::Break
+    }
+}

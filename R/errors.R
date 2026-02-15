@@ -26,11 +26,13 @@ api_error_pages <- function(api) {
             return(invisible(NULL))
         }
         attr(api, "error_hooked") <- TRUE
-        enhook_routes(api, error_page_hook)
+        enhook_routes(api, error_500_page_hook)
     })
+
+    plumber2::api_on(api, "request", error_404_page_hook)
 }
 
-error_page_hook <- function(args, next_call) {
+error_500_page_hook <- function(args, next_call) {
     response <- args$response %||% NULL
     request <- args$request %||% NULL
 
@@ -53,7 +55,7 @@ error_page_hook <- function(args, next_call) {
             if (wants_html) {
                 response$set_header("Content-Type", "text/html; charset=utf-8")
 
-                response$body <- response$formatter(get_error_template()(
+                response$body <- response$formatter(get_error_500_template()(
                     e,
                     request
                 ))
@@ -61,8 +63,7 @@ error_page_hook <- function(args, next_call) {
                 response$set_header("Content-Type", "text/plain; charset=utf-8")
                 response$body <- response$formatter(
                     paste0(
-                        "Internal Server Error\n\n",
-                        conditionMessage(e)
+                        "Internal Server Error"
                     )
                 )
             }
@@ -72,7 +73,14 @@ error_page_hook <- function(args, next_call) {
     )
 }
 
-default_error_template <- function() {
+get_error_500_template <- function() {
+    if (is.null(freshwater$error_handler)) {
+        freshwater$error_handler <- default_error_500_template()
+    }
+    freshwater$error_handler
+}
+
+default_error_500_template <- function() {
     if (!requireNamespace("cli", quietly = TRUE)) {
         rlang::abort("cli is required to enable error pages.")
     }
@@ -120,9 +128,48 @@ default_error_template <- function() {
     })
 }
 
-get_error_template <- function() {
-    if (is.null(freshwater$error_handler)) {
-        freshwater$error_handler <- default_error_template()
+
+error_404_page_hook <- function(server, id, request, arg_list) {
+    response <- request$response
+    status <- response$status
+
+    if (!identical(status, 404L)) {
+        return(plumber2::Next)
     }
-    freshwater$error_handler
+
+    accept <- ""
+    if (!is.null(request) && is.function(request$get_header)) {
+        accept <- request$get_header("accept") %||% ""
+    }
+
+    wants_html <- any(grepl("text/html", accept, fixed = TRUE))
+    response$set_header("Content-Type", "text/html; charset=utf-8")
+    formatter <- plumber2::get_serializers("html")[[1L]]
+    response$body <- formatter(get_error_404_template()())
+
+    plumber2::Break
+}
+
+get_error_404_template <- function() {
+    if (is.null(freshwater$error_404_handler)) {
+        freshwater$error_404_handler <- default_error_404_template()
+    }
+    freshwater$error_404_handler
+}
+
+default_error_404_template <- function() {
+    template({
+        htmltools::tags$html(
+            htmltools::tags$head(
+                htmltools::tags$title("Server error")
+            ),
+            htmltools::tags$body(
+                htmltools::tags$h3("freshwater"),
+                htmltools::tags$h2("Not Found (Error 404)"),
+                htmltools::tags$p(
+                    "Server cannot find the requested resource."
+                )
+            )
+        )
+    })
 }
