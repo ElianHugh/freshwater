@@ -4,8 +4,11 @@ utils::globalVariables(c("e", "request"))
 #'
 #' todo
 #'
-#' @export
 #' @param api a [plumber2] api object.
+#' @param server_error TODO
+#' @param not_found TODO
+#'
+#' @export
 api_error_pages <- function(api, server_error = NULL, not_found = NULL) {
     if (!requireNamespace("cli", quietly = TRUE)) {
         rlang::abort("cli is required to enable error pages.")
@@ -41,6 +44,7 @@ api_error_pages <- function(api, server_error = NULL, not_found = NULL) {
             tryCatch(
                 next_call(),
                 error = function(e) {
+                    response$status <- 500L
                     api$trigger(
                         "error_code",
                         status = 500L,
@@ -77,17 +81,57 @@ api_error_pages <- function(api, server_error = NULL, not_found = NULL) {
         api,
         "error_code",
         function(status, request, response, message) {
-            status <- as.character(status)
-            if (length(status)) {
+            if (!is.null(status) && length(status)) {
+                status <- as.character(status)
+
+                use_html <- wants_html(request)
+
+                if (use_html) {
+                    response$set_header(
+                        "Content-Type",
+                        "text/html; charset=utf-8"
+                    )
+                } else {
+                    response$set_header(
+                        "Content-Type",
+                        "text/plain; charset=utf-8"
+                    )
+                }
+
+                formatter <- if (use_html) {
+                    plumber2::get_serializers("html")[[1L]]
+                } else {
+                    plumber2::get_serializers("text")[[1L]]
+                }
+
                 switch(
                     status,
-                    "404" = error_404_page_hook(request, response),
-                    "500" = error_500_page(request, response, message),
+                    "404" = {
+                        if (use_html) {
+                            response$body <- formatter(get_error_template(404)(
+                                request
+                            ))
+                        } else {
+                            response$body <- formatter("Not Found")
+                        }
+                    },
+                    "500" = {
+                        if (use_html) {
+                            response$body <- formatter(get_error_template(500)(
+                                message,
+                                request
+                            ))
+                        } else {
+                            response$body <- formatter("Internal Server Error")
+                        }
+                    },
                     rlang::abort(sprintf(
                         "Unhandled error code? Got {%s}.",
                         status
                     ))
                 )
+
+                plumber2::Break
             }
         }
     )
@@ -95,39 +139,14 @@ api_error_pages <- function(api, server_error = NULL, not_found = NULL) {
     api
 }
 
-error_500_page <- function(request = NULL, response = NULL, error) {
-    if (is.null(response)) {
-        stop(error)
+wants_html <- function(request) {
+    accept <- ""
+    if (!is.null(request) && is.function(request$get_header)) {
+        accept <- request$get_header("accept") %||% ""
     }
-
-    response$status <- 500L
-
-    if (wants_html(request)) {
-        response$set_header("Content-Type", "text/html; charset=utf-8")
-        formatter <- plumber2::get_serializers("html")[[1L]]
-        response$body <- formatter(get_error_template(500)(error, request))
-    } else {
-        response$set_header("Content-Type", "text/plain; charset=utf-8")
-        formatter <- plumber2::get_serializers("text")[[1L]]
-        response$body <- formatter("Internal Server Error")
-    }
-
-    plumber2::Break
-}
-
-error_404_page_hook <- function(request, response) {
-
-    if (wants_html(request)) {
-        response$set_header("Content-Type", "text/html; charset=utf-8")
-        formatter <- plumber2::get_serializers("html")[[1L]]
-        response$body <- formatter(get_error_template(404)(request))
-    } else {
-        response$set_header("Content-Type", "text/plain; charset=utf-8")
-        formatter <- plumber2::get_serializers("text")[[1L]]
-        response$body <- formatter("Not Found")
-    }
-
-    plumber2::Break
+    any(
+        grepl("text/html", accept, fixed = TRUE)
+    )
 }
 
 # error templates
@@ -215,15 +234,4 @@ default_error_404_template <- function() {
             )
         )
     })
-}
-
-wants_html <- function(request) {
-    accept <- ""
-    if (!is.null(request) && is.function(request$get_header)) {
-        accept <- request$get_header("accept") %||% ""
-    }
-    any(
-        grepl("text/html", accept, fixed = TRUE) |
-            grepl("*/*", accept, fixed = TRUE)
-    )
 }
