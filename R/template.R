@@ -169,7 +169,8 @@ template <- function(..., .envir = parent.frame()) {
                 },
                 error = function(e) {
                     call_ <- sys.call()
-                    bottom <- rlang::current_env()
+                    # bottom <- rlang::current_env()
+                    bottom <- parent.frame()
                     new_template_error(nm, e, call = call_, bottom = bottom)
                 }
             )
@@ -376,6 +377,11 @@ new_template_error <- function(template_name, error, call, bottom) {
         )
     }
 
+    bt <- tryCatch(
+        rlang::trace_back(top = bottom, bottom = trace_bottom),
+        error = function(...) NULL
+    )
+
     rlang::abort(
         message = msg,
         class = "freshwater_template_error",
@@ -384,6 +390,7 @@ new_template_error <- function(template_name, error, call, bottom) {
         template_stack = stack,
         cause = cause,
         trace_bottom = trace_bottom,
+        trace = bt,
         .frame = bottom,
         .trace_bottom = trace_bottom
     )

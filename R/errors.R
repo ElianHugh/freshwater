@@ -60,6 +60,7 @@ api_error_pages <- function(
                         response = response,
                         message = e
                     )
+
                     plumber2::Break
                 }
             )
@@ -103,8 +104,8 @@ api_error_pages <- function(
             }
 
             status <- as.character(status)
-
             use_html <- wants_html(request)
+
 
             if (use_html) {
                 response$set_header(
@@ -199,9 +200,19 @@ default_error_500_template <- function() {
         raw <- tryCatch(conditionMessage(e), error = function(...) {
             "Unknown error"
         })
+
         msg_html <- tryCatch(
             cli::ansi_html(raw, escape_reserved = TRUE, csi = "drop"),
             error = function(...) raw
+        )
+
+        trace <- e$trace %||% "No trace available"
+        trace <- paste0(format(trace), collapse="\n")
+
+
+        trace_html <- tryCatch(
+            cli::ansi_html(trace, escape_reserved = TRUE, csi = "drop"),
+            error = function(...) trace
         )
 
         css <- tryCatch(
@@ -228,10 +239,18 @@ default_error_500_template <- function() {
                     "The server hit an error while processing your request."
                 ),
                 if (isTRUE(is_debug)) {
-                    htmltools::tags$details(
-                        open = NA,
-                        htmltools::tags$pre(htmltools::HTML(msg_html))
+                    htmltools::div(
+                        htmltools::tags$details(
+                            htmltools::tags$summary("Error message"),
+                            open = NA,
+                            htmltools::tags$pre(htmltools::HTML(msg_html))
+                        ),
+                        htmltools::tags$details(
+                            htmltools::tags$summary("Stack trace"),
+                            htmltools::tags$pre(htmltools::HTML(trace_html))
+                        )
                     )
+
                 }
             )
         )
@@ -239,7 +258,7 @@ default_error_500_template <- function() {
 }
 
 default_error_404_template <- function() {
-    template(request, {
+    template(request = NULL, {
         htmltools::tags$html(
             htmltools::tags$head(
                 htmltools::tags$title("Not Found")

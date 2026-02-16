@@ -55,3 +55,11 @@ function(id, response) {
         plumber2::Break
     }
 }
+
+#' @get /manual_error
+#' @serializer html
+function() {
+    if (TRUE) {
+        rlang::abort("This is a user error!")
+    }
+}
