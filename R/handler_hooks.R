@@ -9,7 +9,7 @@ validate_hook <- function(hook) {
   if (length(fmls) != 3L || !identical(nms, c("api", "args", "next_call"))) {
     rlang::abort(
       c(
-        "Hooks must have exactly two arguments named `args` and `next_call`.",
+        "Hooks must have exactly three arguments named `api`, `args` and `next_call`.",
         i = paste0(
           "Got: function(",
           paste(ifelse(nzchar(nms), nms, "<unnamed>"), collapse = ", "),
@@ -95,13 +95,3 @@ enhook_routes <- function(api, hooks) {
     }
     api
 }
-
-
-#n_hooks <- function(api} {
-#total_hooks <- 0L
-#	rr <- api$request_router
-#
-#	for (route_name in rr$routes) {
-#	    r <- rr$get_route(route_name)
-#
-#}

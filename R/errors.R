@@ -5,21 +5,25 @@ utils::globalVariables(c("e", "request"))
 #' todo
 #'
 #' @param api a [plumber2] api object.
-#' @param server_error TODO
-#' @param not_found TODO
+#' @param handlers TODO
 #'
 #' @export
-api_error_pages <- function(api, server_error = NULL, not_found = NULL) {
+api_error_pages <- function(
+    api,
+    handlers = NULL
+) {
     if (!requireNamespace("cli", quietly = TRUE)) {
         rlang::abort("cli is required to enable error pages.")
     }
 
-    if (!is.null(server_error)) {
-        freshwater$error_handler <- server_error
-    }
+    if (!is.null(handlers)) {
+        if (!is.null(handlers[["404"]])) {
+            freshwater$missing_handler <- handlers[["404"]]
+        }
 
-    if (!is.null(not_found)) {
-        freshwater$missing_handler <- not_found
+        if (!is.null(handlers[["500"]])) {
+            freshwater$error_handler <- handlers[["500"]]
+        }
     }
 
     if (isTRUE(attr(api, "error_pages_installed", exact = TRUE))) {
@@ -37,6 +41,7 @@ api_error_pages <- function(api, server_error = NULL, not_found = NULL) {
             return(invisible(NULL))
         }
         attr(api, "error_hooked") <- TRUE
+
         enhook_routes(api, function(api, args, next_call) {
             response <- args$response %||% NULL
             request <- args$request %||% NULL
@@ -44,7 +49,10 @@ api_error_pages <- function(api, server_error = NULL, not_found = NULL) {
             tryCatch(
                 next_call(),
                 error = function(e) {
-                    response$status <- 500L
+                    if (!is.null(response)) {
+                        response$status <- 500L
+                    }
+
                     api$trigger(
                         "error_code",
                         status = 500L,
@@ -52,14 +60,19 @@ api_error_pages <- function(api, server_error = NULL, not_found = NULL) {
                         response = response,
                         message = e
                     )
-                    plumber2::Next
+                    plumber2::Break
                 }
             )
         })
     })
 
     plumber2::api_on(api, "request", function(server, id, request, arg_list) {
-        response <- request$response
+        response <- request$response %||% NULL
+
+        if (is.null(response) || !is.function(response$set_header)) {
+            return(plumber2::Next)
+        }
+
         status <- response$status
 
         if (!status %in% c(404L, 500L)) {
@@ -81,58 +94,64 @@ api_error_pages <- function(api, server_error = NULL, not_found = NULL) {
         api,
         "error_code",
         function(status, request, response, message) {
-            if (!is.null(status) && length(status)) {
-                status <- as.character(status)
-
-                use_html <- wants_html(request)
-
-                if (use_html) {
-                    response$set_header(
-                        "Content-Type",
-                        "text/html; charset=utf-8"
-                    )
-                } else {
-                    response$set_header(
-                        "Content-Type",
-                        "text/plain; charset=utf-8"
-                    )
-                }
-
-                formatter <- if (use_html) {
-                    plumber2::get_serializers("html")[[1L]]
-                } else {
-                    plumber2::get_serializers("text")[[1L]]
-                }
-
-                switch(
-                    status,
-                    "404" = {
-                        if (use_html) {
-                            response$body <- formatter(get_error_template(404)(
-                                request
-                            ))
-                        } else {
-                            response$body <- formatter("Not Found")
-                        }
-                    },
-                    "500" = {
-                        if (use_html) {
-                            response$body <- formatter(get_error_template(500)(
-                                message,
-                                request
-                            ))
-                        } else {
-                            response$body <- formatter("Internal Server Error")
-                        }
-                    },
-                    rlang::abort(sprintf(
-                        "Unhandled error code? Got {%s}.",
-                        status
-                    ))
-                )
-
-                plumber2::Break
+            if (is.null(response) || !is.function(response$set_header)) {
+                return(plumber2::Next)
             }
+
+            if (is.null(status) || !length(status)) {
+                return(plumber2::Next)
+            }
+
+            status <- as.character(status)
+
+            use_html <- wants_html(request)
+
+            if (use_html) {
+                response$set_header(
+                    "Content-Type",
+                    "text/html; charset=utf-8"
+                )
+            } else {
+                response$set_header(
+                    "Content-Type",
+                    "text/plain; charset=utf-8"
+                )
+            }
+
+            formatter <- if (use_html) {
+                plumber2::get_serializers("html")[[1L]]
+            } else {
+                plumber2::get_serializers("text")[[1L]]
+            }
+
+            switch(
+                status,
+                "404" = {
+                    if (use_html) {
+                        response$body <- formatter(get_error_template(404)(
+                            request
+                        ))
+                    } else {
+                        response$body <- formatter("Not Found")
+                    }
+                },
+                "500" = {
+                    if (use_html) {
+                        response$body <- formatter(get_error_template(500)(
+                            message,
+                            request
+                        ))
+                    } else {
+                        response$body <- formatter("Internal Server Error")
+                    }
+                },
+                rlang::abort(sprintf(
+                    "Unhandled error code? Got {%s}.",
+                    status
+                ))
+            )
+
+            plumber2::Break
         }
     )
 

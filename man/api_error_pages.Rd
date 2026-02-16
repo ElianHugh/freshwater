@@ -4,14 +4,12 @@
 \alias{api_error_pages}
 \title{Freshwater Error Pages}
 \usage{
-api_error_pages(api, server_error = NULL, not_found = NULL)
+api_error_pages(api, handlers = NULL)
 }
 \arguments{
 \item{api}{a \link[plumber2:plumber2-package]{plumber2::plumber2} api object.}
 
-\item{server_error}{TODO}
-
-\item{not_found}{TODO}
+\item{handlers}{TODO}
 }
 \description{
 todo
