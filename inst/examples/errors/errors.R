@@ -44,7 +44,6 @@ function() {
     page(contacts = contacts)
 }
 
-
 #' @get /contact/<id:integer>
 #' @serializer html
 function(id, response) {
@@ -62,4 +61,13 @@ function() {
     if (TRUE) {
         rlang::abort("This is a user error!")
     }
+}
+
+#' @get /http_problem
+#' @serializer html
+function() {
+    plumber2::abort_http_problem(
+        code = 500L,
+        detail = "A big server error"
+    )
 }

@@ -144,6 +144,9 @@ template <- function(..., .envir = parent.frame()) {
 
     f_body <- substitute(
         {
+            bottom <- parent.frame()
+            this <- rlang::caller_env()
+
             withCallingHandlers(
                 {
                     nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
@@ -169,9 +172,15 @@ template <- function(..., .envir = parent.frame()) {
                 },
                 error = function(e) {
                     call_ <- sys.call()
-                    # bottom <- rlang::current_env()
-                    bottom <- parent.frame()
-                    new_template_error(nm, e, call = call_, bottom = bottom)
+
+                    new_template_error(
+                        nm,
+                        e,
+                        call = call_,
+                        this =
+                        this,
+                        bottom = bottom
+                    )
                 }
             )
         },
@@ -196,6 +205,57 @@ template <- function(..., .envir = parent.frame()) {
     )
 }
 
+
+format_template_tree <- function(stack) {
+    if (!length(stack)) {
+        return(character())
+    }
+
+    els <- paste0(stack, "()")
+
+    lapply(seq_along(els), \(i) {
+        indent <- strrep(" ", i * 3L)
+        branch <- if (i == length(els)) "" else "\u2514\u2500>"
+        paste0(els[[i]], "\n", indent, branch)
+    }) |>
+        paste0(collapse = "")
+}
+
+new_template_error <- function(template_name, error, call, this, bottom) {
+    stack <- c(template_name, error$template_stack)
+
+    cause <- error$cause %||% error
+    trace_bottom <- error$trace_bottom %||% bottom
+
+    if (length(stack) <= 1L) {
+        msg <- "Error while rendering template:"
+    } else {
+        tree <- format_template_tree(stack)
+        msg <- c(
+            "Error while rendering template(s):",
+            tree
+        )
+    }
+
+    bt <- tryCatch(
+        rlang::trace_back(
+            top = this,
+            bottom = trace_bottom
+        ),
+        error = function(...) NULL
+    )
+
+    rlang::abort(
+        message = msg,
+        class = "freshwater_template_error",
+        parent = cause,
+        call = call,
+        template_stack = stack,
+        cause = cause,
+        trace_bottom = trace_bottom,
+        trace = bt
+    )
+}
 
 rewrite_attrs <- function(tag) {
     if (inherits(tag, "html")) {
@@ -348,53 +408,6 @@ walk_nodes <- function(tag, name) {
     htmltools::tagList(found)
 }
 
-format_template_tree <- function(stack) {
-    if (!length(stack)) return(character())
-
-    els <- paste0(stack, "()")
-
-    lapply(seq_along(els), \(i) {
-        indent <- strrep(" ", i * 3L)
-        branch <- if (i == length(els)) "" else "\u2514\u2500>"
-        paste0(els[[i]], "\n", indent, branch)
-    }) |>
-        paste0(collapse = "")
-}
-
-new_template_error <- function(template_name, error, call, bottom) {
-    stack <- c(template_name, error$template_stack)
-
-    cause <- error$cause %||% error
-    trace_bottom <- error$trace_bottom %||% bottom
-
-    if (length(stack) <= 1L) {
-        msg <- "Error while rendering template:"
-    } else {
-        tree <- format_template_tree(stack)
-        msg <- c(
-            "Error while rendering template(s):",
-            tree
-        )
-    }
-
-    bt <- tryCatch(
-        rlang::trace_back(top = bottom, bottom = trace_bottom),
-        error = function(...) NULL
-    )
-
-    rlang::abort(
-        message = msg,
-        class = "freshwater_template_error",
-        parent = cause,
-        call = call,
-        template_stack = stack,
-        cause = cause,
-        trace_bottom = trace_bottom,
-        trace = bt,
-        .frame = bottom,
-        .trace_bottom = trace_bottom
-    )
-}
 
 error_template_single_body <- function(indices, call = rlang::caller_env()) {
     msg <- sprintf(

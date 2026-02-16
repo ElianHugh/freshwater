@@ -206,8 +206,17 @@ default_error_500_template <- function() {
             error = function(...) raw
         )
 
+        # if (inherits(e, "freshwater_template_error")) {
+
+        # } else {
+        #     # trace <-
+        #     # todo
+        # }
+
         trace <- e$trace %||% "No trace available"
-        trace <- paste0(format(trace), collapse="\n")
+
+        trace <- paste0(format(trace), collapse = "\n")
+
 
 
         trace_html <- tryCatch(
