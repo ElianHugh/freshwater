@@ -98,7 +98,7 @@
 #' @rdname templating
 #' @seealso [cache]
 #' @export
-template <- function(..., .envir = parent.frame()) {
+template <- function(..., .envir = rlang::caller_env()) {
     dots <- as.list(substitute(list(...)))[-1]
     body_idx <- lapply(dots, \(x) inherits(x, "{") )|>
             unlist() |>
@@ -158,8 +158,7 @@ template <- function(..., .envir = parent.frame()) {
                     )
                     on.exit(rm(".freshwater_ctx", envir = env), add = TRUE)
 
-
-                    x <- local({body_expr})
+                    x <- local({ BODY })
 
                     if (!is.null(fragment)) {
                         x <- walk_nodes(x, fragment)
@@ -185,7 +184,7 @@ template <- function(..., .envir = parent.frame()) {
             )
         },
         list(
-            body_expr = body_expr,
+            BODY = body_expr,
             walk_nodes = walk_nodes,
             new_template_error = new_template_error,
             rewrite_attrs = rewrite_attrs,
@@ -195,8 +194,11 @@ template <- function(..., .envir = parent.frame()) {
         )
     )
 
+    fn <- eval(call("function", formals_pl, f_body), envir = baseenv())
+    environment(fn) <- e
+
     structure(
-        eval(call("function", formals_pl, f_body), e),
+        fn,
         "template_body" = body_expr,
         "template_params" = param_exprs,
         "template_env" = .envir,

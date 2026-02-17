@@ -198,3 +198,71 @@ test_that("template attribute norming", {
     )
   )
 })
+
+
+test_that("template scoping works", {
+  # foo must come from tmpl env, not caller
+  tmpl <- template({
+    div(foo)
+  })
+
+  expect_error(
+    local({
+      foo <- "oops"
+      tmpl()
+    }),
+    regexp = "object 'foo' not found"
+  )
+
+  # template arguments are resolved correctly
+
+  tmpl <- template(x, {
+    div(x)
+  })
+
+  res <- local({
+    x <- "foo"
+    tmpl("bar")
+  })
+
+  expect_identical_when_rendered(
+    res,
+    htmltools::div("bar")
+  )
+
+  # use helpers from its defining scope, not
+  # the caller scope
+
+  e <- new.env(parent = baseenv())
+  e$foo <- function() "foo"
+  tmpl <- template(
+    {
+      div(foo())
+    },
+    .envir = e
+  )
+
+  res <- local({
+    foo <- function() "foo-caller"
+    tmpl()
+  })
+
+  expect_identical_when_rendered(
+    res,
+    htmltools::div("foo")
+  )
+
+  # cycle test
+})
+
+
+
+x <- template({
+  div("foo")
+})
+
+
+foo <- new.env()
+foo$x <- template({
+  div("bla")
+})

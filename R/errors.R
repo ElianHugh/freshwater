@@ -70,7 +70,7 @@ api_error_pages <- function(
     plumber2::api_on(api, "request", function(server, id, request, arg_list) {
         response <- request$response %||% NULL
 
-        if (is.null(response) || !is.function(response$set_header)) {
+        if (!should_freshwater_handle(request, response)) {
             return(plumber2::Next)
         }
 
@@ -95,7 +95,7 @@ api_error_pages <- function(
         api,
         "error_code",
         function(status, request, response, message) {
-            if (is.null(response) || !is.function(response$set_header)) {
+            if (!should_freshwater_handle(request, response, message)) {
                 return(plumber2::Next)
             }
 
@@ -105,7 +105,6 @@ api_error_pages <- function(
 
             status <- as.character(status)
             use_html <- wants_html(request)
-
 
             if (use_html) {
                 response$set_header(
@@ -132,6 +131,7 @@ api_error_pages <- function(
                         response$body <- formatter(get_error_template(404)(
                             request
                         ))
+
                     } else {
                         response$body <- formatter("Not Found")
                     }
@@ -142,6 +142,7 @@ api_error_pages <- function(
                             message,
                             request
                         ))
+                        response$set_data("freshwater_handled", TRUE)
                     } else {
                         response$body <- formatter("Internal Server Error")
                     }
@@ -167,6 +168,22 @@ wants_html <- function(request) {
     any(
         grepl("text/html", accept, fixed = TRUE)
     )
+}
+
+should_freshwater_handle <- function(request, response, message = NULL) {
+    if (is.null(response) || !is.function(response$set_header)) {
+        return(FALSE)
+    }
+
+    if (isTRUE(response$get_data("freshwater_handled"))) {
+        return(FALSE)
+    }
+
+    if (!is.null(message) && inherits(message, "reqres_problem")) {
+        return(FALSE)
+    }
+
+    TRUE
 }
 
 # error templates
