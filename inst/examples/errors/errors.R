@@ -64,7 +64,6 @@ function() {
 }
 
 #' @get /http_problem
-#' @serializer html
 function() {
     plumber2::abort_http_problem(
         code = 500L,

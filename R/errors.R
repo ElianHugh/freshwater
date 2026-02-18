@@ -42,29 +42,33 @@ api_error_pages <- function(
         }
         attr(api, "error_hooked") <- TRUE
 
-        enhook_routes(api, function(api, args, next_call) {
-            response <- args$response %||% NULL
-            request <- args$request %||% NULL
+        enhook_routes(
+            api,
+            function(api, args, next_call) {
+                response <- args$response %||% NULL
+                request <- args$request %||% NULL
 
-            tryCatch(
-                next_call(),
-                error = function(e) {
-                    if (!is.null(response)) {
-                        response$status <- 500L
+                tryCatch(
+                    next_call(),
+                    error = function(e) {
+                        if (!is.null(response)) {
+                            response$status <- 500L
+                        }
+
+                        api$trigger(
+                            "error_code",
+                            status = 500L,
+                            request = request,
+                            response = response,
+                            message = e
+                        )
+
+                        plumber2::Next
                     }
-
-                    api$trigger(
-                        "error_code",
-                        status = 500L,
-                        request = request,
-                        response = response,
-                        message = e
-                    )
-
-                    plumber2::Break
-                }
-            )
-        })
+                )
+            },
+            .where = "prepend"
+        )
     })
 
     plumber2::api_on(api, "request", function(server, id, request, arg_list) {
@@ -124,6 +128,7 @@ api_error_pages <- function(
                 plumber2::get_serializers("text")[[1L]]
             }
 
+
             switch(
                 status,
                 "404" = {
@@ -153,7 +158,7 @@ api_error_pages <- function(
                 ))
             )
 
-            plumber2::Break
+            plumber2::Next
         }
     )
 

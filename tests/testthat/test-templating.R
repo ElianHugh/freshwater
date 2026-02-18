@@ -252,6 +252,29 @@ test_that("template scoping works", {
     htmltools::div("foo")
   )
 
-  # cycle test
+
+  # rendering & definition works even when the env is locked
+
+  e <- new.env(parent = baseenv())
+  e$foo <- "ok"
+  tmpl <- template({ div(foo) }, .envir = e)
+  lockEnvironment(e, bindings = TRUE)
+  res <- tmpl()
+
+  expect_identical_when_rendered(
+    res,
+    htmltools::div("ok")
+  )
+
 })
 
+test_that("error traces are maintained", {
+  tmpl <- template(x, {
+    div(x)
+  })
+
+
+  tmpl_parent <- template({
+    tmpl(base::stop("error"))
+  })
+})

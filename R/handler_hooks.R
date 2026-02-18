@@ -24,18 +24,27 @@ validate_hook <- function(hook) {
 }
 
 
-add_hook <- function(handler, hook) {
+add_hook <- function(handler, hook, .where = c("append", "prepend")) {
+  .where <- match.arg(.where)
 
-    incoming <- if (is.list(hook)) hook else list(hook)
+  incoming <- if (is.list(hook)) hook else list(hook)
 
-    for (h in incoming) validate_hook(h)
+  for (h in incoming) {
+    validate_hook(h)
+  }
 
-    current <- attr(handler, "freshwater_hooks", exact = TRUE)
-    if (is.null(current)) current <- list()
+  current <- attr(handler, "freshwater_hooks", exact = TRUE)
+  if (is.null(current)) {
+    current <- list()
+  }
 
-    attr(handler, "freshwater_hooks") <- unique(c(current, incoming))
+  attr(handler, "freshwater_hooks") <- unique(switch(
+    .where,
+    append = c(current, incoming),
+    prepend = c(incoming, current)
+  ))
 
-    handler
+  handler
 }
 
 invoke_hooks <- function(api, handler) {
@@ -63,7 +72,9 @@ invoke_hooks <- function(api, handler) {
     fn
 }
 
-patch_plumber_handler <- function(api, plumber_handler, hooks) {
+patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("append","prepend")) {
+    .where <- match.arg(.where)
+
     plumber_env <- environment(plumber_handler)
     user_function <- plumber_env[["handler"]]
 
@@ -78,20 +89,31 @@ patch_plumber_handler <- function(api, plumber_handler, hooks) {
         }
     }
 
-    user_function <- add_hook(user_function, hooks)
+    user_function <- add_hook(user_function, hooks, .where = .where)
     plumber_env[["handler"]] <- invoke_hooks(api, user_function)
     plumber_handler
 }
 
-enhook_routes <- function(api, hooks) {
-    rr <- api$request_router
-    routes <- rr$routes
-    for (route in routes) {
-        r <- rr$get_route(route)
-        r$remap_handlers(function(method, path, handler) {
-            handler <- patch_plumber_handler(api, handler, hooks)
-            r$add_handler(method, path, handler)
-        })
-    }
-    api
+#' Handler Hooks
+#'
+#' Sometimes you need to get the results of a [plumber2] handler *before*
+#' it is processed by the server. Or you need to guarantee that some
+#' checks occur before any further routing.
+#'
+#' Order of when handlers are executed isn't really guaranteed.
+#'
+#' @export
+enhook_routes <- function(api, hooks, .where = c("append", "prepend")) {
+  .where <- match.arg(.where)
+
+  rr <- api$request_router
+  routes <- rr$routes
+  for (route in routes) {
+    r <- rr$get_route(route)
+    r$remap_handlers(function(method, path, handler) {
+      handler <- patch_plumber_handler(api, handler, hooks, .where = .where)
+      r$add_handler(method, path, handler)
+    })
+  }
+  api
 }

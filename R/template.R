@@ -144,8 +144,10 @@ template <- function(..., .envir = rlang::caller_env()) {
 
     f_body <- substitute(
         {
-            bottom <- parent.frame()
+            call_ <- rlang::caller_call()
+            bottom <- rlang::current_env()
             this <- rlang::caller_env()
+
 
             withCallingHandlers(
                 {
@@ -173,14 +175,14 @@ template <- function(..., .envir = rlang::caller_env()) {
                     rewrite_attrs(x)
                 },
                 error = function(e) {
-                    call_ <- sys.call()
+                    # call_ <- sys.call()
+
 
                     new_template_error(
                         nm,
                         e,
                         call = call_,
-                        this =
-                        this,
+                        this = this,
                         bottom = bottom
                     )
                 }
@@ -243,7 +245,7 @@ new_template_error <- function(template_name, error, call, this, bottom) {
             top = this,
             bottom = trace_bottom
         ),
-        error = function(...) NULL
+        error = function(...) rlang::trace_back()
     )
 
     rlang::abort(
