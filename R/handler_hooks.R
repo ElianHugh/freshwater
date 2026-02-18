@@ -94,13 +94,33 @@ patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("appen
     plumber_handler
 }
 
-#' Handler Hooks
+#' Route handler hooks
 #'
-#' Sometimes you need to get the results of a [plumber2] handler *before*
-#' it is processed by the server. Or you need to guarantee that some
-#' checks occur before any further routing.
+#' Add middleware-style hooks to *all
+#' existing routes* in a [plumber2] API.
 #'
-#' Order of when handlers are executed isn't really guaranteed.
+#' Hooks are called iteratively in order of
+#' installation (barring if they are prepended), culminating in the
+#' final user handler.
+#'
+#' @details
+#'
+#' - Routing is managed by [plumber2] -- this function does not change
+#' routing precedence. Within the handler itself, however, hooks run in the order
+#' they are installed.
+#' - The function is idempotent, and only new hooks will
+#' be installed.
+#'
+#' @param api a [plumber2] api object.
+#' @param hooks a single hook or list of hooks that take the signature
+#' `fn(api, args, next_call)`, where `args`
+#' is the list of handler arguments.
+#' The return value of the hook should be
+#' `next_call()` to facilitate calling of subsequent hooks &
+#' the user handler function. Not calling next_call() will
+#' short-circuit the handler chain.
+#' @param .where whether the hooks should be appended or prepended to the
+#' list of installed hooks
 #'
 #' @export
 enhook_routes <- function(api, hooks, .where = c("append", "prepend")) {

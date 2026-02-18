@@ -2,12 +2,37 @@
 % Please edit documentation in R/handler_hooks.R
 \name{enhook_routes}
 \alias{enhook_routes}
-\title{Handler Hooks}
+\title{Route handler hooks}
 \usage{
 enhook_routes(api, hooks, .where = c("append", "prepend"))
 }
+\arguments{
+\item{api}{a \link[plumber2:plumber2-package]{plumber2::plumber2} api object.}
+
+\item{hooks}{a single hook or list of hooks that take the signature
+\code{fn(api, args, next_call)}, where \code{args}
+is the list of handler arguments.
+The return value of the hook should be
+\code{next_call()} to facilitate calling of subsequent hooks &
+the user handler function. Not calling next_call() will
+short-circuit the handler chain.}
+
+\item{.where}{whether the hooks should be appended or prepended to the
+list of installed hooks}
+}
 \description{
-Sometimes you need to get the results of a \link[plumber2:plumber2-package]{plumber2::plumber2} handler \emph{before}
-it is processed by the server. Or you need to guarantee that some
-checks occur before any further routing.
+Add middleware-style hooks to \emph{all
+existing routes} in a \link[plumber2:plumber2-package]{plumber2::plumber2} API.
+}
+\details{
+Hooks are called iteratively in order of
+installation (barring if they are prepended), culminating in the
+final user handler.
+\itemize{
+\item Routing is managed by \link[plumber2:plumber2-package]{plumber2::plumber2} -- this function does not change
+routing precedence. Within the handler itself, however, hooks run in the order
+they are installed.
+\item The function is idempotent, and only new hooks will
+be installed.
+}
 }
