@@ -255,14 +255,3 @@ test_that("template scoping works", {
   # cycle test
 })
 
-
-
-x <- template({
-  div("foo")
-})
-
-
-foo <- new.env()
-foo$x <- template({
-  div("bla")
-})

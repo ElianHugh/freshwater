@@ -5,7 +5,7 @@
 \alias{fragment}
 \title{Create a reusable HTML template}
 \usage{
-template(..., .envir = parent.frame())
+template(..., .envir = rlang::caller_env())
 
 fragment(name = NULL, ...)
 }

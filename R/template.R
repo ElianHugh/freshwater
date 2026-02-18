@@ -151,12 +151,15 @@ template <- function(..., .envir = rlang::caller_env()) {
                 {
                     nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
 
+
+                    runtime <- environment(sys.function())
+
                     assign(
                         ".freshwater_ctx",
                         list(template = nm, fragment = fragment, id = id),
-                        envir = env
+                        envir = runtime
                     )
-                    on.exit(rm(".freshwater_ctx", envir = env), add = TRUE)
+                    on.exit(rm(".freshwater_ctx", envir = runtime), add = TRUE)
 
                     x <- local({ BODY })
 
@@ -189,16 +192,12 @@ template <- function(..., .envir = rlang::caller_env()) {
             new_template_error = new_template_error,
             rewrite_attrs = rewrite_attrs,
             error_missing_fragment = error_missing_fragment,
-            env = e,
             id = id
         )
     )
 
-    fn <- eval(call("function", formals_pl, f_body), envir = baseenv())
-    environment(fn) <- e
-
     structure(
-        fn,
+        eval(call("function", formals_pl, f_body), envir = e),
         "template_body" = body_expr,
         "template_params" = param_exprs,
         "template_env" = .envir,
