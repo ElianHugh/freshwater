@@ -1,7 +1,10 @@
 library(freshwater)
 
-register_html_serialiser()
-
+#' @plumber
+function(api) {
+    register_html_serialiser()
+    api
+}
 
 tpl <- template({
     div(

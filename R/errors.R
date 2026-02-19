@@ -303,3 +303,10 @@ default_error_404_template <- function() {
         )
     })
 }
+
+
+default_error_405_template <- function() {
+    template( {
+
+    })
+}

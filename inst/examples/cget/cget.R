@@ -1,6 +1,10 @@
 library(freshwater)
 
-register_html_serialiser()
+#' @plumber
+function(api) {
+    register_html_serialiser()
+    api
+}
 
 dashboard_data <- local({
     data <- list(

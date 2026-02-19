@@ -13,6 +13,7 @@ test_that("csrf works", {
 
     api <- api_csrf(api, secure = FALSE)
     api <- plumber2::api_security_headers(api)
+    api <- plumber2::api_security_cors(api)
     api <- plumber2::api_security_resource_isolation(api)
 
     api$trigger("freshwater_csrf")

@@ -1,9 +1,9 @@
 library(freshwater)
 
-register_html_serialiser()
-
 #' @plumber
 function(api) {
+    register_html_serialiser()
+
     api |>
         freshwater::api_csrf(secure = TRUE)
 }
