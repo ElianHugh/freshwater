@@ -95,7 +95,7 @@ api_error_pages <- function(
             message = NULL
         )
 
-        plumber2::Break
+        plumber2::Next
     })
 
     plumber2::api_on(
