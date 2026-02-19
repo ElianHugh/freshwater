@@ -2,9 +2,12 @@
 % Please edit documentation in R/handler_hooks.R
 \name{enhook_routes}
 \alias{enhook_routes}
+\alias{hook}
 \title{Route handler hooks}
 \usage{
 enhook_routes(api, hooks, .where = c("append", "prepend"))
+
+hook(id = NULL, fn)
 }
 \arguments{
 \item{api}{a \link[plumber2:plumber2-package]{plumber2::plumber2} api object.}
@@ -19,6 +22,10 @@ short-circuit the handler chain.}
 
 \item{.where}{whether the hooks should be appended or prepended to the
 list of installed hooks}
+
+\item{id}{id of the hook}
+
+\item{fn}{function with signature \code{fn(api, args, next_call)}}
 }
 \description{
 Add middleware-style hooks to \emph{all
@@ -32,7 +39,7 @@ final user handler.
 \item Routing is managed by \link[plumber2:plumber2-package]{plumber2::plumber2} -- this function does not change
 routing precedence. Within the handler itself, however, hooks run in the order
 they are installed.
-\item The function is idempotent, and only new hooks will
-be installed.
+\item The function is idempotent (with respect to either a computed hash of the hook or a
+provided id), and only new hooks will be installed.
 }
 }

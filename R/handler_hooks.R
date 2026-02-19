@@ -38,13 +38,30 @@ add_hook <- function(handler, hook, .where = c("append", "prepend")) {
     current <- list()
   }
 
-  attr(handler, "freshwater_hooks") <- unique(switch(
+  hooks <- switch(
     .where,
     append = c(current, incoming),
     prepend = c(incoming, current)
-  ))
+  )
+
+  attr(handler, "freshwater_hooks") <- dedupe_hooks(hooks)
 
   handler
+}
+
+dedupe_hooks <- function(hooks) {
+  ids <- vapply(
+    hooks,
+    function(hook) {
+      attr(hook, "freshwater_hook_id", exact = TRUE) %||%
+        paste0("user::", rlang::hash(hook))
+    },
+    character(1L),
+    USE.NAMES = FALSE
+  )
+
+  hooks[!duplicated(ids)]
+
 }
 
 invoke_hooks <- function(api, handler) {
@@ -108,8 +125,8 @@ patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("appen
 #' - Routing is managed by [plumber2] -- this function does not change
 #' routing precedence. Within the handler itself, however, hooks run in the order
 #' they are installed.
-#' - The function is idempotent, and only new hooks will
-#' be installed.
+#' - The function is idempotent (with respect to either a computed hash of the hook or a
+#' provided id), and only new hooks will be installed.
 #'
 #' @param api a [plumber2] api object.
 #' @param hooks a single hook or list of hooks that take the signature
@@ -122,6 +139,7 @@ patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("appen
 #' @param .where whether the hooks should be appended or prepended to the
 #' list of installed hooks
 #'
+#' @rdname hooks
 #' @export
 enhook_routes <- function(api, hooks, .where = c("append", "prepend")) {
   .where <- match.arg(.where)
@@ -136,4 +154,24 @@ enhook_routes <- function(api, hooks, .where = c("append", "prepend")) {
     })
   }
   api
+}
+
+
+#' @rdname hooks
+#' @param id id of the hook
+#' @param fn function with signature `fn(api, args, next_call)`
+#' @export
+hook <- function(id = NULL, fn) {
+  is.function(fn) || rlang::abort("Hook `fn` must be a function.")
+
+  validate_hook(fn)
+
+  if (!is.null(id)) {
+    if (!is.character(id) || length(id) != 1L || !nzchar(id)) {
+      rlang::abort("Hook `id` must be a non-empty character scalar.")
+    }
+    attr(fn, "freshwater_hook_id") <- id
+  }
+
+  fn
 }
