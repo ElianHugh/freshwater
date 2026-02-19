@@ -12,10 +12,12 @@ test_that("csrf works", {
     })
 
     api <- api_csrf(api, secure = FALSE)
+    api <- plumber2::api_security_headers(api)
+    api <- plumber2::api_security_resource_isolation(api)
 
     api$trigger("freshwater_csrf")
 
-    req <- fiery::fake_request("http://localhost:8080/", method = "get")
+    req <- fiery::fake_request("https://localhost:8080/", method = "get")
     res <- api$test_request(req)
 
     headers <- unname(unlist(res$headers, use.names = FALSE))
@@ -29,7 +31,7 @@ test_that("csrf works", {
     expect_identical(nchar(csrf_token), 128L)
 
     # No token
-    req <- fiery::fake_request("http://localhost:8080/bar", method = "post")
+    req <- fiery::fake_request("https://localhost:8080/bar", method = "post")
     res <- api$test_request(req)
 
     expect_identical(res$status, 403L)
@@ -37,7 +39,7 @@ test_that("csrf works", {
 
     # Correct token
     req <- fiery::fake_request(
-        "http://localhost:8080/bar",
+        "https://localhost:8080/bar",
         method = "post",
         headers = list(
             `x-csrf-token` = csrf_token,
