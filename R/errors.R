@@ -6,11 +6,13 @@ utils::globalVariables(c("e", "request"))
 #'
 #' @param api a [plumber2] api object.
 #' @param handlers TODO
+#' @param debug TODO
 #'
 #' @export
 api_error_pages <- function(
     api,
-    handlers = NULL
+    handlers = NULL,
+    debug = plumber2::get_opts("fw_debug", default = interactive())
 ) {
     if (!requireNamespace("cli", quietly = TRUE)) {
         rlang::abort("cli is required to enable error pages.")
@@ -148,7 +150,8 @@ api_error_pages <- function(
                     if (use_html) {
                         response$body <- formatter(get_error_template(500)(
                             message,
-                            request
+                            request,
+                            is_debug = debug
                         ))
                         response$set_data("freshwater_handled", TRUE)
                     } else {
@@ -221,33 +224,28 @@ default_error_500_template <- function() {
         rlang::abort("cli is required to enable error pages.")
     }
 
-    template(e = NULL, request = NULL, {
-        raw <- tryCatch(conditionMessage(e), error = function(...) {
-            "Unknown error"
-        })
+    template(e = NULL, request = NULL, is_debug, {
 
-        msg_html <- tryCatch(
-            cli::ansi_html(raw, escape_reserved = TRUE, csi = "drop"),
-            error = function(...) raw
-        )
+        if (isTRUE(is_debug)) {
+            raw <- tryCatch(conditionMessage(e), error = function(...) {
+                "Unknown error"
+            })
 
-        # if (inherits(e, "freshwater_template_error")) {
+            msg_html <- tryCatch(
+                cli::ansi_html(raw, escape_reserved = TRUE, csi = "drop"),
+                error = function(...) raw
+            )
 
-        # } else {
-        #     # trace <-
-        #     # todo
-        # }
+            trace <- e$trace %||% "No trace available"
 
-        trace <- e$trace %||% "No trace available"
+            trace <- paste0(format(trace), collapse = "\n")
 
-        trace <- paste0(format(trace), collapse = "\n")
+            trace_html <- tryCatch(
+                cli::ansi_html(trace, escape_reserved = TRUE, csi = "drop"),
+                error = function(...) trace
+            )
+        }
 
-
-
-        trace_html <- tryCatch(
-            cli::ansi_html(trace, escape_reserved = TRUE, csi = "drop"),
-            error = function(...) trace
-        )
 
         css <- tryCatch(
             paste(
@@ -256,8 +254,6 @@ default_error_500_template <- function() {
             ),
             error = function(...) ""
         )
-
-        is_debug <- TRUE #todo
 
         # fully qualifying the tags to pacify R CMD
 

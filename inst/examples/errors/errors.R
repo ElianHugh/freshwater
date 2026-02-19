@@ -5,7 +5,7 @@ register_html_serialiser()
 #' @plumber
 function(api) {
     api |>
-        freshwater::api_error_pages()
+        api_error_pages(debug = TRUE)
 }
 
 contacts <- list(
