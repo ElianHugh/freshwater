@@ -21,7 +21,7 @@ Templates may define:
 ## Usage
 
 ``` r
-template(..., .envir = parent.frame())
+template(..., .envir = rlang::caller_env())
 
 fragment(name = NULL, ...)
 ```
