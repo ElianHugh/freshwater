@@ -43,7 +43,7 @@ api_error_pages <- function(
 
     if (!is.null(handlers)) {
         if (!is.null(handlers[["403"]])) {
-            freshwater$missing_handler <- handlers[["403"]]
+            freshwater$forbidden_handler <- handlers[["403"]]
         }
 
         if (!is.null(handlers[["404"]])) {
@@ -82,13 +82,19 @@ api_error_pages <- function(
                     tryCatch(
                         next_call(),
                         error = function(e) {
-                            if (!is.null(response)) {
+                            if (!should_freshwater_handle(request, response, e)) {
+                               return(plumber2::Next)
+                            }
+
+                            if (!inherits(e, "reqres_problem")) {
                                 response$status <- 500L
+                            } else {
+                                response$status <- e$status
                             }
 
                             api$trigger(
                                 "error_code",
-                                status = 500L,
+                                status = response$status,
                                 request = request,
                                 response = response,
                                 message = e
@@ -167,8 +173,10 @@ api_error_pages <- function(
                 "403" = {
                     if (use_html) {
                         response$body <- formatter(get_error_template(403)(
+                            message,
                             request
                         ))
+                        response$set_data("freshwater_handled", TRUE)
                     } else {
                         response$body <- formatter("Forbidden")
                     }
@@ -176,6 +184,7 @@ api_error_pages <- function(
                 "404" = {
                     if (use_html) {
                         response$body <- formatter(get_error_template(404)(
+                            message,
                             request
                         ))
                     } else {
@@ -199,8 +208,7 @@ api_error_pages <- function(
                     status
                 ))
             )
-
-            plumber2::Break
+            plumber2::Next
         }
     )
 
@@ -223,10 +231,6 @@ should_freshwater_handle <- function(request, response, message = NULL) {
     }
 
     if (isTRUE(response$get_data("freshwater_handled"))) {
-        return(FALSE)
-    }
-
-    if (!is.null(message) && inherits(message, "reqres_problem")) {
         return(FALSE)
     }
 
@@ -279,6 +283,47 @@ get_error_template <- function(error_code) {
 #' @name freshwater_error_templates
 NULL
 
+
+# fully qualifying the tags to pacify R CMD
+error_page <- template(
+    title,
+    heading = title,
+    code = 500L,
+    sub = NULL,
+    head_extra = NULL,
+    {
+        css_path <- system.file(
+            "assets",
+            "error.css",
+            package = "freshwater"
+        )
+
+        htmltools::tags$html(
+            htmltools::tags$head(
+                htmltools::tags$title("Server error"),
+                if (!is.null(head_extra)) head_extra,
+                if (nzchar(css_path) && file.exists(css_path)) {
+                    htmltools::includeCSS(css_path)
+                }
+            ),
+            htmltools::tags$body(
+                htmltools::tags$div(
+                    class = "fw-card",
+                    htmltools::tags$h3("freshwater", class = "fw-brand"),
+                    htmltools::tags$h2(
+                        class = "fw-title",
+                        heading,
+                        htmltools::tags$span(as.character(code), class = "fw-badge")
+                    ),
+                    if (!is.null(sub)) htmltools::tags$p(sub, class = "fw-sub"),
+                    ...
+                )
+            )
+        )
+    }
+)
+
+
 #' @rdname freshwater_error_templates
 #' @export
 default_error_500_template <- template(error = NULL, request = NULL, is_debug = FALSE, {
@@ -287,9 +332,13 @@ default_error_500_template <- template(error = NULL, request = NULL, is_debug = 
     }
 
     if (isTRUE(is_debug)) {
-        raw <- tryCatch(conditionMessage(message), error = function(...) {
-            "Unknown error"
-        })
+        old <- options(cli.num_colors = 256)
+        on.exit(options(old), add = TRUE)
+
+        raw <- tryCatch(
+            conditionMessage(error),
+            error = function(...)  "Unknown error"
+        )
 
         msg_html <- tryCatch(
             cli::ansi_html(raw, escape_reserved = TRUE, csi = "drop"),
@@ -314,76 +363,59 @@ default_error_500_template <- template(error = NULL, request = NULL, is_debug = 
         error = function(...) ""
     )
 
-    # fully qualifying the tags to pacify R CMD
-
-    htmltools::tags$html(
-        htmltools::tags$head(
-            htmltools::tags$title("Server error"),
-            if (nzchar(css)) htmltools::tags$style(css)
-        ),
-        htmltools::tags$body(
-            htmltools::tags$h3("freshwater"),
-            htmltools::tags$h2("Something went wrong (Error 500)"),
-            htmltools::tags$p(
-                "The server hit an error while processing your request."
-            ),
-            if (isTRUE(is_debug)) {
-                htmltools::div(
-                    htmltools::tags$details(
-                        htmltools::tags$summary("Error message"),
-                        open = NA,
-                        htmltools::tags$pre(htmltools::HTML(msg_html))
-                    ),
-                    htmltools::tags$details(
-                        htmltools::tags$summary("Stack trace"),
-                        htmltools::tags$pre(htmltools::HTML(trace_html))
-                    )
-                )
-            }
-        )
+    error_page(
+        title = "Server error",
+        heading = "Something went wrong",
+        code = 500L,
+        sub = "The server hit an error while processing your request.",
+        head_extra = htmltools::tags$style(css),
+        if (isTRUE(is_debug)) {
+            htmltools::tags$div(
+                class = "fw-error-block",
+                htmltools::tags$details(
+                    summary("Error message"),
+                    open = NA,
+                    htmltools::tags$pre(htmltools::HTML(msg_html))
+                ),
+                htmltools::tags$details(summary("Stack trace"), htmltools::tags$pre(htmltools::HTML(trace_html)))
+            )
+        }
     )
 })
 
 #' @rdname freshwater_error_templates
 #' @export
-default_error_404_template <- template(request = NULL, {
-    msg <- if (
-        !is.null(request$response$body) && nzchar(request$response$body)
-    ) {
-        request$response$body
+default_error_404_template <- template(error = NULL, request = NULL, {
+    msg <- "Server cannot find the requested resource."
+    msg <- if (!is.null(error) && inherits(error, "reqres_problem")) {
+        error$detail %||% msg
     } else {
-        "Server cannot find the requested resource."
+        msg
     }
 
-    htmltools::tags$html(
-        htmltools::tags$head(
-            htmltools::tags$title("Not Found")
-        ),
-        htmltools::tags$body(
-            htmltools::tags$h3("freshwater"),
-            htmltools::tags$h2("Not Found (Error 404)"),
-            htmltools::tags$p(msg)
-        )
+    error_page(
+        title = "Not Found",
+        code = 404L,
+        sub = msg
     )
 })
 
 #' @rdname freshwater_error_templates
 #' @export
-default_error_403_template <- template(request = NULL, {
-    msg <- if (!is.null(request$response$body) && nzchar(request$response$body)) {
+default_error_403_template <- template(error = NULL, request = NULL, {
+    msg <- "You don't have permission to access this resource."
+    msg <- if (!is.null(error) && inherits(error, "reqres_problem")) {
+        error$detail %||% msg
+    } else if (!is.null(request$response$body) && nzchar(request$response$body)) {
         request$response$body
     } else {
-        ""
+       msg
     }
-    htmltools::tags$html(
-        htmltools::tags$head(
-            htmltools::tags$title("Forbidden")
-        ),
-        htmltools::tags$body(
-            htmltools::tags$h3("freshwater"),
-            htmltools::tags$h2("Forbidden (Error 403)"),
-            htmltools::tags$p(msg)
-        )
+
+    error_page(
+        title = "Forbidden",
+        code = 403L,
+        sub = msg
     )
 })
 

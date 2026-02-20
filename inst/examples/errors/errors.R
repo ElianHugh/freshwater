@@ -74,3 +74,18 @@ function() {
         detail = "A big server error"
     )
 }
+
+#' @get /forbidden
+function() {
+    plumber2::abort_http_problem(
+        code = 403L,
+        detail = "Not allowed"
+    )
+}
+
+
+#' @post /post_only
+#' @serializer html
+function() {
+    1L
+}

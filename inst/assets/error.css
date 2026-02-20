@@ -1,0 +1,120 @@
+:root {
+  --bg: #f6f8fa;
+  --card: #ffffff;
+  --border: #e1e4e8;
+  --text: #24292f;
+  --muted: #57606a;
+  --error: #cf222e;
+  --code-bg: #f0f2f5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --error: #ff7b72;
+    --code-bg: #1f2428;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.fw-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 800px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+}
+
+.fw-brand {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.fw-title {
+  font-size: 28px;
+  margin: 0 0 12px 0;
+}
+
+.fw-sub {
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.fw-error-block {
+  border-left: 4px solid var(--error);
+  padding-left: 12px;
+  margin-bottom: 16px;
+}
+
+details {
+  margin-top: 12px;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+pre {
+  background: var(--code-bg);
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.fw-card {
+  animation: fw-fade 0.25s ease-out;
+}
+
+@keyframes fw-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fw-title {
+  font-size: 28px;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fw-badge {
+  background: var(--error);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+}
