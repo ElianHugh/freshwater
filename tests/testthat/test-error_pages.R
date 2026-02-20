@@ -61,7 +61,7 @@ test_that("error pages render upon user error", {
 	)
 	res <- api$test_request(req)
 
-	error_page <- default_error_500_template()(
+	error_page <- default_error_500_template(
 		e = errorCondition("bar"),
 		is_debug = TRUE
 	) |>
@@ -80,7 +80,7 @@ test_that("error pages render upon user error", {
 	)
 	res <- api$test_request(req)
 
-	missing_page <- default_error_404_template()() |>
+	missing_page <- default_error_404_template() |>
 		as.character()
 
 	expect_identical(res$status, 404L)
@@ -107,7 +107,7 @@ test_that("manual user 404s are respected", {
 	)
 	res <- api$test_request(req)
 
-	missing_page <- default_error_404_template()(list(response=list(body = "Foo"))) |>
+	missing_page <- default_error_404_template(list(response=list(body = "Foo"))) |>
 		as.character()
 
 	expect_identical(res$status, 404L)
@@ -138,7 +138,7 @@ test_that("other methods return error pages", {
 		method = "post"
 	)
 	res <- api$test_request(req)
-	error_page <- default_error_500_template()(
+	error_page <- default_error_500_template(
 		e = errorCondition("bar"),
 		is_debug = TRUE
 	) |>
@@ -158,7 +158,7 @@ test_that("other methods return error pages", {
 	)
 	res <- api$test_request(req)
 
-	missing_page <- default_error_404_template()() |>
+	missing_page <- default_error_404_template() |>
 		as.character()
 
 	expect_identical(res$status, 404L)

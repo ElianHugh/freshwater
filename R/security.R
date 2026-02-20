@@ -84,7 +84,7 @@ api_csrf <- function(api, secure = TRUE) {
 
             if (is.null(token) || !identical(token, cookie_token)) {
                 response$status <- 403L
-                response$set_header("Content-Type", "text/plain")
+                # response$set_header("Content-Type", "text/html")
                 response$body <- "Invalid CSRF token"
 
                 return(plumber2::Break)

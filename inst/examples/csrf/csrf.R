@@ -5,7 +5,8 @@ function(api) {
     register_html_serialiser()
 
     api |>
-        freshwater::api_csrf(secure = TRUE)
+        api_csrf(secure = FALSE) |>
+        api_error_pages(debug = TRUE)
 }
 
 my_form <- template({

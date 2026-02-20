@@ -1,14 +1,37 @@
-utils::globalVariables(c("e", "request"))
+#' @include template.R security.R
+utils::globalVariables(c("error", "request"))
 
 #' Freshwater Error Pages
 #'
-#' todo
+#' Adds request/error hooks to a [plumber2] API so that
+#' freshwater can render friendly **HTML error pages** for:
+#'  - {**403 Forbidden**} responses
+#'  - {**404 Not Found**} responses
+#'  - {**500 Internal Server Error**} conditions
+#'
+#' Custom error page templates can be supplied via the
+#' `handler` parameter. These should be freshwater templates
+#' created via [template()], and should match the call signatures of
+#' the default error templates. See [freshwater_error_templates] for
+#' the relevant template signatures required.
 #'
 #' @param api a [plumber2] api object.
-#' @param handlers TODO
-#' @param debug TODO
+#' @param handlers optional list of named error templates. Supported keys
+#' are: "403", "404", "500". If omitted, freshwater installs default templates.
+#' @param debug whether the **500** error template should render error
+#' messages and stack traces. Defaults to the `fw_debug` plumber2 option,
+#' and falls back to `interactive()`.
+#'
+#' @examples
+#' #* @plumber
+#' function(api) {
+#'  api |>
+#'      api_error_pages(debug = TRUE)
+#' }
 #'
 #' @export
+#' @seealso [freshwater_error_templates], [enhook_routes]
+#' @rdname error_pages
 api_error_pages <- function(
     api,
     handlers = NULL,
@@ -19,6 +42,10 @@ api_error_pages <- function(
     }
 
     if (!is.null(handlers)) {
+        if (!is.null(handlers[["403"]])) {
+            freshwater$missing_handler <- handlers[["403"]]
+        }
+
         if (!is.null(handlers[["404"]])) {
             freshwater$missing_handler <- handlers[["404"]]
         }
@@ -85,7 +112,8 @@ api_error_pages <- function(
 
         status <- response$status
 
-        if (!status %in% c(404L, 500L)) {
+
+        if (!status %in% c(403L, 404L, 500L)) {
             return(plumber2::Next)
         }
 
@@ -136,12 +164,20 @@ api_error_pages <- function(
 
             switch(
                 status,
+                "403" = {
+                    if (use_html) {
+                        response$body <- formatter(get_error_template(403)(
+                            request
+                        ))
+                    } else {
+                        response$body <- formatter("Forbidden")
+                    }
+                },
                 "404" = {
                     if (use_html) {
                         response$body <- formatter(get_error_template(404)(
                             request
                         ))
-
                     } else {
                         response$body <- formatter("Not Found")
                     }
@@ -164,11 +200,11 @@ api_error_pages <- function(
                 ))
             )
 
-            plumber2::Next
+            plumber2::Break
         }
     )
 
-    api
+    invisible(api)
 }
 
 wants_html <- function(request) {
@@ -203,15 +239,21 @@ get_error_template <- function(error_code) {
     error_code <- as.character(error_code)
     switch(
         error_code,
+        "403" = {
+            if (is.null(freshwater$forbidden_handler)) {
+                freshwater$forbidden_handler <- default_error_403_template
+            }
+            freshwater$forbidden_handler
+        },
         "404" = {
             if (is.null(freshwater$missing_handler)) {
-                freshwater$missing_handler <- default_error_404_template()
+                freshwater$missing_handler <- default_error_404_template
             }
             freshwater$missing_handler
         },
         "500" = {
             if (is.null(freshwater$error_handler)) {
-                freshwater$error_handler <- default_error_500_template()
+                freshwater$error_handler <- default_error_500_template
             }
             freshwater$error_handler
         },
@@ -219,98 +261,129 @@ get_error_template <- function(error_code) {
     )
 }
 
-default_error_500_template <- function() {
+#' Error Page Templates
+#'
+#' freshwater provides a number of default views
+#' that are served to HTML clients in the event of common HTTP
+#' error codes.
+#'
+#' @param error the error condition signaled by an error in the server's route handler
+#' @param request the [reqres::Request] request object the handler is responding to
+#' @param is_debug whether to provide the stack trace and error message to the
+#' web client. Although useful during development, it is heavily recommended to
+#' set as `FALSE` in production as it can leak sensitive information.
+#' @param ... unused
+#' @param fragment unused
+#'
+#' @seealso [api_error_pages], [template]
+#' @name freshwater_error_templates
+NULL
+
+#' @rdname freshwater_error_templates
+#' @export
+default_error_500_template <- template(error = NULL, request = NULL, is_debug = FALSE, {
     if (!requireNamespace("cli", quietly = TRUE)) {
         rlang::abort("cli is required to enable error pages.")
     }
 
-    template(e = NULL, request = NULL, is_debug, {
+    if (isTRUE(is_debug)) {
+        raw <- tryCatch(conditionMessage(message), error = function(...) {
+            "Unknown error"
+        })
 
-        if (isTRUE(is_debug)) {
-            raw <- tryCatch(conditionMessage(e), error = function(...) {
-                "Unknown error"
-            })
-
-            msg_html <- tryCatch(
-                cli::ansi_html(raw, escape_reserved = TRUE, csi = "drop"),
-                error = function(...) raw
-            )
-
-            trace <- e$trace %||% "No trace available"
-
-            trace <- paste0(format(trace), collapse = "\n")
-
-            trace_html <- tryCatch(
-                cli::ansi_html(trace, escape_reserved = TRUE, csi = "drop"),
-                error = function(...) trace
-            )
-        }
-
-
-        css <- tryCatch(
-            paste(
-                format(cli::ansi_html_style(palette = "iterm-solarized")),
-                collapse = "\n"
-            ),
-            error = function(...) ""
+        msg_html <- tryCatch(
+            cli::ansi_html(raw, escape_reserved = TRUE, csi = "drop"),
+            error = function(...) raw
         )
 
-        # fully qualifying the tags to pacify R CMD
+        trace <- error$trace %||% "No trace available"
 
-        htmltools::tags$html(
-            htmltools::tags$head(
-                htmltools::tags$title("Server error"),
-                if (nzchar(css)) htmltools::tags$style(css)
+        trace <- paste0(format(trace), collapse = "\n")
+
+        trace_html <- tryCatch(
+            cli::ansi_html(trace, escape_reserved = TRUE, csi = "drop"),
+            error = function(...) trace
+        )
+    }
+
+    css <- tryCatch(
+        paste(
+            format(cli::ansi_html_style(palette = "iterm-solarized")),
+            collapse = "\n"
+        ),
+        error = function(...) ""
+    )
+
+    # fully qualifying the tags to pacify R CMD
+
+    htmltools::tags$html(
+        htmltools::tags$head(
+            htmltools::tags$title("Server error"),
+            if (nzchar(css)) htmltools::tags$style(css)
+        ),
+        htmltools::tags$body(
+            htmltools::tags$h3("freshwater"),
+            htmltools::tags$h2("Something went wrong (Error 500)"),
+            htmltools::tags$p(
+                "The server hit an error while processing your request."
             ),
-            htmltools::tags$body(
-                htmltools::tags$h3("freshwater"),
-                htmltools::tags$h2("Something went wrong (Error 500)"),
-                htmltools::tags$p(
-                    "The server hit an error while processing your request."
-                ),
-                if (isTRUE(is_debug)) {
-                    htmltools::div(
-                        htmltools::tags$details(
-                            htmltools::tags$summary("Error message"),
-                            open = NA,
-                            htmltools::tags$pre(htmltools::HTML(msg_html))
-                        ),
-                        htmltools::tags$details(
-                            htmltools::tags$summary("Stack trace"),
-                            htmltools::tags$pre(htmltools::HTML(trace_html))
-                        )
+            if (isTRUE(is_debug)) {
+                htmltools::div(
+                    htmltools::tags$details(
+                        htmltools::tags$summary("Error message"),
+                        open = NA,
+                        htmltools::tags$pre(htmltools::HTML(msg_html))
+                    ),
+                    htmltools::tags$details(
+                        htmltools::tags$summary("Stack trace"),
+                        htmltools::tags$pre(htmltools::HTML(trace_html))
                     )
-
-                }
-            )
+                )
+            }
         )
-    })
-}
+    )
+})
 
-default_error_404_template <- function() {
-    template(request = NULL, {
-        msg <- if (!is.null(request$response$body) && nzchar(request$response$body)) {
-            request$response$body
-        } else {
-            "Server cannot find the requested resource."
-        }
+#' @rdname freshwater_error_templates
+#' @export
+default_error_404_template <- template(request = NULL, {
+    msg <- if (
+        !is.null(request$response$body) && nzchar(request$response$body)
+    ) {
+        request$response$body
+    } else {
+        "Server cannot find the requested resource."
+    }
 
-        htmltools::tags$html(
-            htmltools::tags$head(
-                htmltools::tags$title("Not Found")
-            ),
-            htmltools::tags$body(
-                htmltools::tags$h3("freshwater"),
-                htmltools::tags$h2("Not Found (Error 404)"),
-                htmltools::tags$p(msg)
-            )
+    htmltools::tags$html(
+        htmltools::tags$head(
+            htmltools::tags$title("Not Found")
+        ),
+        htmltools::tags$body(
+            htmltools::tags$h3("freshwater"),
+            htmltools::tags$h2("Not Found (Error 404)"),
+            htmltools::tags$p(msg)
         )
-    })
-}
+    )
+})
 
+#' @rdname freshwater_error_templates
+#' @export
+default_error_403_template <- template(request = NULL, {
+    msg <- if (!is.null(request$response$body) && nzchar(request$response$body)) {
+        request$response$body
+    } else {
+        ""
+    }
+    htmltools::tags$html(
+        htmltools::tags$head(
+            htmltools::tags$title("Forbidden")
+        ),
+        htmltools::tags$body(
+            htmltools::tags$h3("freshwater"),
+            htmltools::tags$h2("Forbidden (Error 403)"),
+            htmltools::tags$p(msg)
+        )
+    )
+})
 
-default_error_405_template <- function() {
-    template( {
-
-    })
-}
