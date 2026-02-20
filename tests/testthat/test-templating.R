@@ -278,5 +278,15 @@ test_that("error traces are maintained", {
     tmpl(base::stop("error"))
   })
 
-  # todo
+
+  expect_snapshot_error(
+    tmpl(base::stop("error")),
+    class = "freshwater_template_error"
+  )
+
+  expect_snapshot_error(
+    tmpl_parent(),
+    class = "freshwater_template_error"
+  )
+
 })
