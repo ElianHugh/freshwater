@@ -175,9 +175,6 @@ template <- function(..., .envir = rlang::caller_env()) {
                     rewrite_attrs(x)
                 },
                 error = function(e) {
-                    # call_ <- sys.call()
-
-
                     new_template_error(
                         nm,
                         e,

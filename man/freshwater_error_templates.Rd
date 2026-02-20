@@ -15,9 +15,9 @@ default_error_500_template(
   fragment = NULL
 )
 
-default_error_404_template(request = NULL, ..., fragment = NULL)
+default_error_404_template(error = NULL, request = NULL, ..., fragment = NULL)
 
-default_error_403_template(request = NULL, ..., fragment = NULL)
+default_error_403_template(error = NULL, request = NULL, ..., fragment = NULL)
 }
 \arguments{
 \item{error}{the error condition signaled by an error in the server's route handler}
