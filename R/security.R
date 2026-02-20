@@ -37,7 +37,6 @@ api_csrf <- function(api, secure = TRUE) {
 
     attr(api, "csrf_installed") <- TRUE
 
-
     unsafe_methods <- c("post", "put", "delete", "patch")
     safe_methods <- c("get", "head", "options")
     cookie_name <- if (isTRUE(secure)) "__Host-csrf" else "csrf"
@@ -85,7 +84,7 @@ api_csrf <- function(api, secure = TRUE) {
 
             if (is.null(token) || !identical(token, cookie_token)) {
                 response$status <- 403L
-                response$set_header("Content-Type", "text/plain")
+                # response$set_header("Content-Type", "text/html")
                 response$body <- "Invalid CSRF token"
 
                 return(plumber2::Break)
@@ -100,16 +99,42 @@ api_csrf <- function(api, secure = TRUE) {
     plumber2::api_any(api, path = "/*", handler = csrf_validator, route = "csrf_req")
 
     plumber2::api_on(api, "start", function(...) {
-        api$trigger("freshwater")
+        api$trigger("freshwater_csrf")
     })
 
     # separate event for testing purposes
-    plumber2::api_on(api, "freshwater", function(...) {
+    plumber2::api_on(api, "freshwater_csrf", function(...) {
          if (isTRUE(attr(api, "csrf_hooked", exact = TRUE))) {
             return(invisible(NULL))
         }
         attr(api, "csrf_hooked") <- TRUE
-        enhook_routes(api, csrf_hook)
+        enhook_routes(
+            api,
+            hook(
+                id = "freshwater::csrf",
+                function(api, args, next_call) {
+                    request <- args$request
+
+                    if (is.null(request)) {
+                        return(next_call())
+                    }
+
+                    cookie_name <- freshwater$csrf_cookie_name %||% "csrf"
+                    token <- request$cookies[[cookie_name]] %||% ""
+
+                    # set current req context
+                    # todo, see if this is async compat
+                    ctx <- new.env(parent = emptyenv())
+                    ctx$csrf_token <- function() token
+                    ctx$request <- request
+
+                    old <- set_fw_context(ctx)
+                    on.exit(set_fw_context(old), add = TRUE)
+
+                    next_call()
+                }
+            )
+        )
     })
 
     api
@@ -154,24 +179,4 @@ form <- function(...) {
     do.call(htmltools::tags$form, args = children)
 }
 
-csrf_hook <- function(args, next_call) {
-    request <- args$request
 
-    if (is.null(request)) {
-        return(do.call(user_fn, args))
-    }
-
-    cookie_name <- freshwater$csrf_cookie_name %||% "RSC-XSRF"
-    token <- request$cookies[[cookie_name]] %||% ""
-
-    # set current req context
-    # todo, see if this is async compat
-    ctx <- new.env(parent = emptyenv())
-    ctx$csrf_token <- function() token
-    ctx$request <- request
-
-    old <- set_fw_context(ctx)
-    on.exit(set_fw_context(old), add = TRUE)
-
-    next_call()
-}

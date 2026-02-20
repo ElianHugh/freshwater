@@ -198,3 +198,95 @@ test_that("template attribute norming", {
     )
   )
 })
+
+
+test_that("template scoping works", {
+  # foo must come from tmpl env, not caller
+  tmpl <- template({
+    div(foo)
+  })
+
+  expect_error(
+    local({
+      foo <- "oops"
+      tmpl()
+    }),
+    regexp = "object 'foo' not found"
+  )
+
+  # template arguments are resolved correctly
+
+  tmpl <- template(x, {
+    div(x)
+  })
+
+  res <- local({
+    x <- "foo"
+    tmpl("bar")
+  })
+
+  expect_identical_when_rendered(
+    res,
+    htmltools::div("bar")
+  )
+
+  # use helpers from its defining scope, not
+  # the caller scope
+
+  e <- new.env(parent = baseenv())
+  e$foo <- function() "foo"
+  tmpl <- template(
+    {
+      div(foo())
+    },
+    .envir = e
+  )
+
+  res <- local({
+    foo <- function() "foo-caller"
+    tmpl()
+  })
+
+  expect_identical_when_rendered(
+    res,
+    htmltools::div("foo")
+  )
+
+
+  # rendering & definition works even when the env is locked
+
+  e <- new.env(parent = baseenv())
+  e$foo <- "ok"
+  tmpl <- template({ div(foo) }, .envir = e)
+  lockEnvironment(e, bindings = TRUE)
+  res <- tmpl()
+
+  expect_identical_when_rendered(
+    res,
+    htmltools::div("ok")
+  )
+
+})
+
+test_that("error traces are maintained", {
+  tmpl <- template(x, {
+    div(x)
+  })
+
+
+  tmpl_parent <- template({
+    tmpl(base::stop("error"))
+  })
+
+
+  expect_snapshot_error(
+    tmpl(base::stop("error")),
+    class = "freshwater_template_error"
+  )
+
+  expect_snapshot_error(
+    tmpl_parent(),
+    class = "freshwater_template_error"
+  )
+
+})

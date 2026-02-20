@@ -1,0 +1,153 @@
+:root {
+	--bg: #f4f9fb;
+	--card: #ffffff;
+	--border: #d9eef5;
+	--text: #163a45;
+	--muted: #5c7f8a;
+
+	--accent: #1aa3c8;
+	--accent-soft: #e0f7fc;
+
+	--danger: #e05a5a;
+
+	--code-bg: #eaf4f8;
+	--code-border: #cfeaf3;
+
+	--bg-start: #f4f9fb;
+	--bg-end: #eaf6fa;
+	--fw-bg-gradient: linear-gradient(
+		to bottom,
+		var(--bg-start),
+		var(--bg-end)
+	);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: #071a20;
+		--card: #0e2b33;
+		--border: #164a55;
+		--text: #cce9f2;
+		--muted: #7faab5;
+
+		--accent: #4fd3ff;
+		--accent-soft: #0f3a44;
+
+		--danger: #ff7b7b;
+
+		--code-bg: #0b2027;
+		--code-border: #164a55;
+
+		--bg-start: #06161b;
+		--bg-end: #0b252d;
+	}
+}
+
+body {
+	margin: 0;
+	font-family: system-ui, sans-serif;
+	background: var(--fw-bg-gradient);
+
+	color: var(--text);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+
+	padding: 24px;
+}
+
+.fw-card {
+	background: var(--card);
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	padding: 32px;
+	max-width: 800px;
+	width: 90%;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+
+	border-top: 4px solid var(--accent);
+	animation: fw-fade 0.25s ease-out;
+}
+
+@media (prefers-color-scheme: dark) {
+	.fw-card {
+		box-shadow: 0 12px 50px rgba(0, 0, 0, 0.35);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.fw-card {
+		animation: none;
+	}
+}
+
+.fw-brand {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--muted);
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	margin-bottom: 12px;
+}
+
+.fw-sub {
+	color: var(--muted);
+	margin-bottom: 24px;
+}
+
+.fw-error-block {
+	border-left: 4px solid var(--danger);
+	padding-left: 12px;
+	margin-bottom: 16px;
+}
+
+details {
+	margin-top: 12px;
+}
+
+summary {
+	cursor: pointer;
+	font-weight: 600;
+	color: var(--muted);
+	margin-bottom: 8px;
+}
+
+pre {
+	border: 1px solid var(--code-border);
+	background: var(--code-bg);
+	padding: 16px;
+	border-radius: 8px;
+	overflow-x: auto;
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+@keyframes fw-fade {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.fw-title {
+	font-size: 28px;
+	margin: 0 0 12px 0;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.fw-badge {
+	background: var(--accent);
+	color: white;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 14px;
+	font-weight: 600;
+}
