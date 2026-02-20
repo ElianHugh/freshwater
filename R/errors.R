@@ -289,6 +289,12 @@ default_error_500_template <- function() {
 
 default_error_404_template <- function() {
     template(request = NULL, {
+        msg <- if (!is.null(request$response$body) && nzchar(request$response$body)) {
+            request$response$body
+        } else {
+            "Server cannot find the requested resource."
+        }
+
         htmltools::tags$html(
             htmltools::tags$head(
                 htmltools::tags$title("Not Found")
@@ -296,9 +302,7 @@ default_error_404_template <- function() {
             htmltools::tags$body(
                 htmltools::tags$h3("freshwater"),
                 htmltools::tags$h2("Not Found (Error 404)"),
-                htmltools::tags$p(
-                    "Server cannot find the requested resource."
-                )
+                htmltools::tags$p(msg)
             )
         )
     })

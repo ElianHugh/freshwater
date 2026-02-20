@@ -277,4 +277,6 @@ test_that("error traces are maintained", {
   tmpl_parent <- template({
     tmpl(base::stop("error"))
   })
+
+  # todo
 })
