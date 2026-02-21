@@ -241,3 +241,13 @@ function(api) {
     api_csrf(secure = TRUE)
 }
 ```
+
+## Error Pages
+
+> Provide pretty error-pags for common HTTP error codes (403, 404, and 500)
+
+```r
+function(api) {
+  api |>
+    api_error_pages(debug=TRUE)
+}
