@@ -52,3 +52,15 @@ test_that("csrf works", {
     expect_identical(res$status, 200L)
     expect_identical(res$body, "[\"bar\"]")
 })
+
+
+test_that("404s still occur with CSRF on", {
+    api <- plumber2::api()
+    api <- api_csrf(api, secure = FALSE)
+    api$trigger("freshwater_csrf")
+
+    req <- fiery::fake_request("https://localhost:8080/", method = "get")
+    res <- api$test_request(req)
+
+    expect_identical(res$status, 404L)
+})

@@ -82,12 +82,14 @@ function() {
 }
 
 #' @post /post-form
+#' @serializer html
 function(response) {
     print("Authenticated via form body!")
     redirect(response, "/form")
 }
 
 #' @post /post-meta
+#' @serializer html
 function(response) {
     print("Authenticated via meta tag!")
     redirect(response, "/meta")

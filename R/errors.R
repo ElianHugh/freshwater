@@ -82,8 +82,10 @@ api_error_pages <- function(
                     tryCatch(
                         next_call(),
                         error = function(e) {
-                            if (!should_freshwater_handle(request, response, e)) {
-                               return(plumber2::Next)
+                            if (
+                                !should_freshwater_handle(request, response, e)
+                            ) {
+                                return(plumber2::Next)
                             }
 
                             if (!inherits(e, "reqres_problem")) {
@@ -104,8 +106,8 @@ api_error_pages <- function(
                         }
                     )
                 }
-            ),
-            .where = "prepend"
+
+            )
         )
     })
 
@@ -117,7 +119,6 @@ api_error_pages <- function(
         }
 
         status <- response$status
-
 
         if (!status %in% c(403L, 404L, 500L)) {
             return(plumber2::Next)
@@ -166,7 +167,6 @@ api_error_pages <- function(
             } else {
                 plumber2::get_serializers("text")[[1L]]
             }
-
 
             switch(
                 status,

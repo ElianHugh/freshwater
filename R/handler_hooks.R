@@ -23,6 +23,35 @@ validate_hook <- function(hook) {
   invisible(TRUE)
 }
 
+is_system_hook <- function(h) {
+  startsWith(hook_id(h), "freshwater::")
+}
+
+
+order_hooks <- function(hooks) {
+  system_order <- c(
+    "freshwater::context",
+    "freshwater::error_pages",
+    "freshwater::csrf",
+    "freshwater::csrf_context"
+  )
+
+  ids <- vapply(hooks, hook_id, character(1), USE.NAMES = FALSE)
+  pos <- match(ids, system_order)
+  is_sys <- startsWith(ids, "freshwater::")
+
+  rank <- ifelse(
+    !is.na(pos),
+    pos,
+    ifelse(is_sys, Inf, Inf + 1)
+  )
+  hooks[order(rank)]
+}
+
+hook_id <- function(h) {
+  attr(h, "freshwater_hook_id", exact = TRUE) %||%
+    paste0("user::", rlang::hash(h))
+}
 
 add_hook <- function(handler, hook, .where = c("append", "prepend")) {
   .where <- match.arg(.where)
@@ -44,7 +73,9 @@ add_hook <- function(handler, hook, .where = c("append", "prepend")) {
     prepend = c(incoming, current)
   )
 
-  attr(handler, "freshwater_hooks") <- dedupe_hooks(hooks)
+  hooks <- dedupe_hooks(hooks)
+  hooks <- order_hooks(hooks)
+  attr(handler, "freshwater_hooks") <- hooks
 
   handler
 }
