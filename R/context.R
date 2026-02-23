@@ -27,6 +27,25 @@ api_context <- function(api) {
         api$trigger("freshwater_context")
     })
 
+    plumber2::api_on(api, "before-request", function(server, id, request, arg_list) {
+        if (is.null(request)) {
+            return(TRUE)
+        }
+        if (request$method == "post") {
+            try(request$parse(plumber2::get_parsers()))
+            req_body <- request$body
+            if (!is.null(req_body) && "_method" %in% names(req_body)) {
+                method <- req_body[["_method"]]
+                if (tolower(method) %in% c("delete", "patch", "put")) {
+                    origin <- request$origin
+                    origin$REQUEST_METHOD <- toupper(method)
+                    request$origin <- origin
+                }
+            }
+        }
+        TRUE
+    })
+
     plumber2::api_on(api, "freshwater_context", function(...) {
         if (isTRUE(attr(api, "context_hooked", exact = TRUE))) {
             return(invisible(NULL))
@@ -34,21 +53,24 @@ api_context <- function(api) {
         attr(api, "context_hooked") <- TRUE
         enhook_routes(
             api,
-            hook("freshwater::context", function(api, args, next_call) {
-                request <- args$request
-                response <- request$response
+            list(
+                hook("freshwater::context", function(api, args, next_call) {
+                    request <- args$request
+                    response <- request$response
 
-                if (is.null(request)) {
-                    return(next_call())
-                }
+                    if (is.null(request)) {
+                        return(next_call())
+                    }
 
-                ctx <- new.env(parent = emptyenv())
-                ctx$request <- request
-                old <- set_fw_context(ctx)
-                on.exit(set_fw_context(old), add = TRUE)
+                    ctx <- new.env(parent = emptyenv())
+                    ctx$request <- request
+                    old <- set_fw_context(ctx)
+                    on.exit(set_fw_context(old), add = TRUE)
 
-                next_call()
-            }),
+                    next_call()
+                })
+            ),
+
             .where = "prepend"
         )
     })
@@ -66,12 +88,7 @@ get_fw_context <- function() {
     freshwater$request_context %||% NULL
 }
 
-current_root <- function() {
-    ctx <- get_fw_context()
-    if (is.null(ctx)) return("")
-    ctx$request$root
-}
-
+#' @export
 current_path <- function() {
     ctx <- get_fw_context()
     if (is.null(ctx)) return("")

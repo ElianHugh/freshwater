@@ -47,68 +47,6 @@ api_csrf <- function(api, secure = TRUE) {
         "/__docs__/"
     )
 
-    # csrf_handler <- function(request, response, body) {
-    #     if (startsWith(request$path, ignored_paths)) {
-    #         return(plumber2::Next)
-    #     }
-
-    #     cookie_token <- request$cookies[[cookie_name]] %||% ""
-
-    #     method <- request$method
-
-    #     if (method %in% safe_methods && !nzchar(cookie_token)) {
-    #         cookie_token <- csrf_new_token()
-    #         response$set_cookie(
-    #             name = cookie_name,
-    #             value = cookie_token,
-    #             path = "/",
-    #             http_only = FALSE,
-    #             secure = secure,
-    #             same_site = "Lax"
-    #         )
-    #     }
-    #     plumber2::Next
-    # }
-
-    # csrf_validator <- function(request, response, body) {
-    #     if (startsWith(request$path, ignored_paths)) {
-    #         return(plumber2::Next)
-    #     }
-
-    #     cookie_token <- request$cookies[[cookie_name]] %||% ""
-    #     method <- request$method
-
-    #     if (method %in% unsafe_methods) {
-    #         token <- request$get_header("x-csrf-token") %||%
-    #             body$csrf_token
-
-    #         if (is.null(token) || !identical(token, cookie_token)) {
-    #             response$status <- 403L
-    #             # response$set_header("Content-Type", "text/html")
-    #             response$body <- "Invalid CSRF token"
-
-    #             return(plumber2::Break)
-    #         }
-    #     }
-    #     plumber2::Next
-    # }
-
-    # # todo, this prevents 404s...
-    # plumber2::api_add_route(api, "csrf", header = TRUE, after = 0L)
-    # # plumber2::api_add_route(api, "csrf_req", header = FALSE, after = 0L)
-    # plumber2::api_any_header(
-    #     api,
-    #     path = "/*",
-    #     handler = csrf_handler,
-    #     route = "csrf"
-    # )
-    # plumber2::api_any(
-    #     api,
-    #     path = "/*",
-    #     handler = csrf_validator,
-    #     route = "csrf_req"
-    # )
-
     plumber2::api_on(api, "start", function(...) {
         api$trigger("freshwater_csrf")
     })
@@ -220,19 +158,38 @@ csrf_token <- function() {
     ctx$csrf_token()
 }
 
-form <- function(...) {
+form <- function(method = "get", ...) {
     ctx <- get_fw_context()
-    if (!is.null(ctx) && !is.null(ctx$csrf_token)) {
-        children <- list(
-            htmltools::tags$input(
+    children <- list(...)
+    method <- tolower(method)
+
+    valid <- c("get", "post", "put", "patch", "delete")
+    if (!method %in% valid) {
+        rlang::abort(paste0("Unsupported form method: ", method))
+    }
+
+    if (!is.null(ctx)) {
+        if (!is.null(ctx$csrf_token)) {
+            token_input <- htmltools::tags$input(
                 type = "hidden",
                 name = "csrf_token",
                 value = csrf_token()
-            ),
-            ...
-        )
-    } else {
-        children <- list(...)
+            )
+            children <- c(list(token_input), children)
+        }
     }
-    do.call(htmltools::tags$form, args = children)
+    if (method %in% c("put", "patch", "delete")) {
+        faux_method <- htmltools::tags$input(
+            type = "hidden",
+            name = "_method",
+            value = toupper(method)
+        )
+        children <- c(list(faux_method), children)
+        method <- "post"
+    }
+
+    do.call(
+        htmltools::tags$form,
+        c(list(method = method), children)
+    )
 }
