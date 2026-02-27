@@ -46,12 +46,12 @@ demo <- template(result = "", {
             color: #1f2937;
         }
 
-        h1{ margin: 0 0 16px; font-size: 24px; }
-        h2{ margin: 18px 0 8px; font-size: 13px; font-weight: 650; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
+        h1 { margin: 0 0 16px; font-size: 24px; }
+        h2 { margin: 18px 0 8px; font-size: 13px; font-weight: 650; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
 
-        form, button{ margin: 0 0 10px; }
+        form, button { margin: 0 0 10px; }
 
-        button, input[type="submit"]{
+        button, input[type="submit"] {
             padding: 10px 12px;
             border-radius: 10px;
             border: 1px solid #d1d5db;
@@ -59,12 +59,16 @@ demo <- template(result = "", {
             font-weight: 600;
             cursor: pointer;
         }
-        button:hover, input[type="submit"]:hover{ border-color: #94a3b8; background: #f8fafc; }
+
+        button:hover, input[type="submit"]:hover{
+            border-color: #94a3b8;
+            background: #f8fafc;
+        }
 
         .good_form input[type="submit"], button { border-color: #10b981; }
         .bad_form input[type="submit"]{ border-color: #ef4444; }
 
-        #result{
+        #result {
             margin-top: 10px;
             padding: 12px;
             border-radius: 12px;

@@ -67,7 +67,7 @@ api_csrf <- function(api, secure = TRUE) {
                         response <- args$response
                         body <- args$body
 
-                        if (startsWith(request$path, ignored_paths)) {
+                        if (is.null(request) || startsWith(request$path, ignored_paths)) {
                             return(next_call())
                         }
 
@@ -158,7 +158,7 @@ csrf_token <- function() {
     ctx$csrf_token()
 }
 
-form <- function(method = "get", ...) {
+form <- function(..., method = "get") {
     ctx <- get_fw_context()
     children <- list(...)
     method <- tolower(method)

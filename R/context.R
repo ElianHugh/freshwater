@@ -64,10 +64,8 @@ api_context <- function(api) {
 
                     ctx <- new.env(parent = emptyenv())
                     ctx$request <- request
-                    old <- set_fw_context(ctx)
-                    on.exit(set_fw_context(old), add = TRUE)
+                    with_fw_context(ctx, next_call())
 
-                    next_call()
                 })
             ),
 
@@ -76,6 +74,37 @@ api_context <- function(api) {
     })
 
     invisible(api)
+}
+
+with_fw_context <- function(ctx, expr) {
+    old <- set_fw_context(ctx)
+    on.exit(set_fw_context(old), add = TRUE)
+
+     res <- force(expr)
+
+    if (inherits(res, "promise")) {
+        res <- promises::with_promise_domain(
+            promises::new_promise_domain(
+                wrapOnFulfilled = function(onFulfilled) {
+                    function(value) {
+                        old <- set_fw_context(ctx)
+                        on.exit(set_fw_context(old), add = TRUE)
+                        onFulfilled(value)
+                    }
+                },
+                wrapOnRejected = function(onRejected) {
+                    function(reason) {
+                        old <- set_fw_context(ctx)
+                        on.exit(set_fw_context(old), add = TRUE)
+                        onRejected(reason)
+                    }
+                }
+            ),
+            res
+        )
+    }
+
+    res
 }
 
 set_fw_context <- function(ctx) {

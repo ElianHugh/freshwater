@@ -61,6 +61,8 @@ api_error_pages <- function(
 
     attr(api, "error_pages_installed") <- TRUE
 
+    api <- api_context(api)
+
     plumber2::api_on(api, "start", function(...) {
         api$trigger("freshwater_error_pages")
     })
@@ -78,10 +80,10 @@ api_error_pages <- function(
                 function(api, args, next_call) {
                     response <- args$response %||% NULL
                     request <- args$request %||% NULL
-
                     tryCatch(
                         next_call(),
                         error = function(e) {
+
                             if (
                                 !should_freshwater_handle(request, response, e)
                             ) {
