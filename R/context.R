@@ -28,6 +28,7 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
 }
 
 #' @keywords internal
+#' @noRd
 api_context <- function(api) {
     if (isTRUE(attr(api, "context_installed", exact = TRUE))) {
         return(api)
@@ -128,8 +129,7 @@ get_fw_context <- function() {
     freshwater$request_context %||% NULL
 }
 
-#' @title
-#' Get current request path from context
+#' @title Get current request path from context
 #'
 #' @description
 #' Return the URL path of the current HTTP request,
@@ -141,10 +141,11 @@ get_fw_context <- function() {
 #' where the request context has been established.
 #'
 #' Context is Available when freshwater context middleware is
-#' active (installed automatically by api_csrf(),
-#' api_error_pages(), or api_freshwater()).
+#' active (installed automatically by [api_csrf()],
+#' [api_error_pages()], or [api_freshwater())].
 #'
 #' @family context helpers
+#' @seealso [api_freshwater()], [api_csrf()], [api_error_pages()]
 #' @export
 current_path <- function() {
     ctx <- get_fw_context()

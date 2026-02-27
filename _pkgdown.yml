@@ -1,6 +1,21 @@
 url: https://elianhugh.github.io/freshwater/
 template:
   bootstrap: 5
+  light-switch: true
+  theme: gruvbox-light
+  theme-dark: gruvbox-dark
+  bslib:
+    bg: "#f4f9fb"
+    fg: "#163a45"
+    primary: "#1aa3c8"
+    secondary: "#5c7f8a"
+    success: "#1aa3c8"
+    danger: "#e05a5a"
+    border-color: "#d9eef5"
+    code-bg: "#eaf4f8"
+
+    navbar-light-bg: "#ffffff"
+    navbar-dark-bg: "#0e2b33"
 
 reference:
   - title: "Rendering"
