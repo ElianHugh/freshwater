@@ -7,6 +7,8 @@
 #' [register_html_serialiser()], [api_csrf()], and
 #' [api_error_pages()].
 #'
+#' This middleware installs freshwater request context.
+#'
 #' @param api a [plumber2] api object.
 #' @param csrf whether to enable CSRF protection
 #' @param error_pages whether to enable error pages
@@ -138,6 +140,11 @@ get_fw_context <- function() {
 #' This is primarily intended for use inside templates
 #' where the request context has been established.
 #'
+#' Context is Available when freshwater context middleware is
+#' active (installed automatically by api_csrf(),
+#' api_error_pages(), or api_freshwater()).
+#'
+#' @family context helpers
 #' @export
 current_path <- function() {
     ctx <- get_fw_context()

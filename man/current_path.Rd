@@ -14,4 +14,9 @@ is returned.
 
 This is primarily intended for use inside templates
 where the request context has been established.
+
+Context is Available when freshwater context middleware is
+active (installed automatically by api_csrf(),
+api_error_pages(), or api_freshwater()).
 }
+\concept{context helpers}

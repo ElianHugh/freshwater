@@ -19,7 +19,7 @@ Installs CSRF middleware on a plumber2 API using the double-submit cookie patter
 When installed:
 \itemize{
 \item Any \code{form} element inside \link{template} automatically
-include a CSRF token.
+includes a CSRF token.
 \item If working in JavaScript contexts, the \code{csrf_token()} helper is also accessible inside templates.
 }
 
@@ -28,9 +28,11 @@ Middleware behaviour:
 \item On \strong{safe} methods (\code{GET}, \code{HEAD}, \code{OPTIONS}), if the CSRF cookie is missing,
 a new token is generated and set as a cookie.
 \item On \strong{unsafe} methods (\code{POST}, \code{PUT}, \code{DELETE}, \code{PATCH}), the request is
-rejected with \strong{403} unless a token provided via the \code{X-CSRF-Token} header
+rejected with \strong{403 Forbidden} unless a token provided via the \code{X-CSRF-Token} header
 or a \code{csrf_token} field in the parsed request body matches the CSRF cookie.
 }
+
+This middleware installs freshwater request context.
 }
 \examples{
 #* @plumber

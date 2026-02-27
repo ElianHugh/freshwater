@@ -3,16 +3,18 @@
 #' Installs CSRF middleware on a plumber2 API using the double-submit cookie pattern.
 #'
 #' When installed:
-#' - Any `form` element inside [freshwater::template] automatically
-#' include a CSRF token.
+#' - Any `form` element inside [template] automatically
+#' includes a CSRF token.
 #' - If working in JavaScript contexts, the `csrf_token()` helper is also accessible inside templates.
 #'
 #' Middleware behaviour:
 #' - On **safe** methods (`GET`, `HEAD`, `OPTIONS`), if the CSRF cookie is missing,
 #'   a new token is generated and set as a cookie.
 #' - On **unsafe** methods (`POST`, `PUT`, `DELETE`, `PATCH`), the request is
-#'   rejected with **403** unless a token provided via the `X-CSRF-Token` header
+#'   rejected with **403 Forbidden** unless a token provided via the `X-CSRF-Token` header
 #'   or a `csrf_token` field in the parsed request body matches the CSRF cookie.
+#'
+#' This middleware installs freshwater request context.
 #'
 #' @param api a plumber2 API object
 #' @param secure if `TRUE`, sets the CSRF cookie to "__Host-csrf" and marks the cookie as

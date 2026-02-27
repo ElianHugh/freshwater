@@ -15,6 +15,8 @@ utils::globalVariables(c("error", "request"))
 #' the default error templates. See [freshwater_error_templates] for
 #' the relevant template signatures required.
 #'
+#' This middleware installs freshwater request context.
+#'
 #' @param api a [plumber2] api object.
 #' @param handlers optional list of named error templates. Supported keys
 #' are: "403", "404", "500". If omitted, freshwater installs default templates.
