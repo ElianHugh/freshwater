@@ -3,16 +3,18 @@
 #' Installs CSRF middleware on a plumber2 API using the double-submit cookie pattern.
 #'
 #' When installed:
-#' - Any `form` element inside [freshwater::template] automatically
-#' include a CSRF token.
+#' - Any `form` element inside [template] automatically
+#' includes a CSRF token.
 #' - If working in JavaScript contexts, the `csrf_token()` helper is also accessible inside templates.
 #'
 #' Middleware behaviour:
 #' - On **safe** methods (`GET`, `HEAD`, `OPTIONS`), if the CSRF cookie is missing,
 #'   a new token is generated and set as a cookie.
 #' - On **unsafe** methods (`POST`, `PUT`, `DELETE`, `PATCH`), the request is
-#'   rejected with **403** unless a token provided via the `X-CSRF-Token` header
+#'   rejected with **403 Forbidden** unless a token provided via the `X-CSRF-Token` header
 #'   or a `csrf_token` field in the parsed request body matches the CSRF cookie.
+#'
+#' This middleware installs freshwater request context.
 #'
 #' @param api a plumber2 API object
 #' @param secure if `TRUE`, sets the CSRF cookie to "__Host-csrf" and marks the cookie as
@@ -37,6 +39,7 @@ api_csrf <- function(api, secure = TRUE) {
 
     attr(api, "csrf_installed") <- TRUE
 
+    api <- api_context(api)
     unsafe_methods <- c("post", "put", "delete", "patch")
     safe_methods <- c("get", "head", "options")
     cookie_name <- if (isTRUE(secure)) "__Host-csrf" else "csrf"
@@ -46,94 +49,97 @@ api_csrf <- function(api, secure = TRUE) {
         "/__docs__/"
     )
 
-    csrf_handler <- function(request, response, body) {
-        if (startsWith(request$path, ignored_paths)) {
-            return(plumber2::Next)
-        }
-
-        cookie_token <- request$cookies[[cookie_name]] %||% ""
-
-        method <- request$method
-
-        if (method %in% safe_methods && !nzchar(cookie_token)) {
-            cookie_token <- csrf_new_token()
-            response$set_cookie(
-                name = cookie_name,
-                value = cookie_token,
-                path = "/",
-                http_only = FALSE,
-                secure = secure,
-                same_site = "Lax"
-            )
-        }
-
-        plumber2::Next
-    }
-
-    csrf_validator <- function(request, response, body) {
-        if (startsWith(request$path, ignored_paths)) {
-            return(plumber2::Next)
-        }
-
-        cookie_token <- request$cookies[[cookie_name]] %||% ""
-        method <- request$method
-
-        if (method %in% unsafe_methods) {
-            token <- request$get_header("x-csrf-token") %||%
-                body$csrf_token
-
-            if (is.null(token) || !identical(token, cookie_token)) {
-                response$status <- 403L
-                # response$set_header("Content-Type", "text/html")
-                response$body <- "Invalid CSRF token"
-
-                return(plumber2::Break)
-            }
-        }
-        plumber2::Next
-    }
-
-    plumber2::api_add_route(api, "csrf", header = TRUE, after = 0L)
-    plumber2::api_add_route(api, "csrf_req", header = FALSE, after = 0L)
-    plumber2::api_any_header(api, path = "/*", handler = csrf_handler, route = "csrf")
-    plumber2::api_any(api, path = "/*", handler = csrf_validator, route = "csrf_req")
-
     plumber2::api_on(api, "start", function(...) {
         api$trigger("freshwater_csrf")
     })
 
     # separate event for testing purposes
     plumber2::api_on(api, "freshwater_csrf", function(...) {
-         if (isTRUE(attr(api, "csrf_hooked", exact = TRUE))) {
+        if (isTRUE(attr(api, "csrf_hooked", exact = TRUE))) {
             return(invisible(NULL))
         }
         attr(api, "csrf_hooked") <- TRUE
         enhook_routes(
             api,
-            hook(
-                id = "freshwater::csrf",
-                function(api, args, next_call) {
-                    request <- args$request
+            list(
+                hook(
+                    id = "freshwater::csrf",
+                    function(api, args, next_call) {
+                        request <- args$request
+                        response <- args$response
+                        body <- args$body
 
-                    if (is.null(request)) {
-                        return(next_call())
+                        if (is.null(request) || startsWith(request$path, ignored_paths)) {
+                            return(next_call())
+                        }
+
+                        cookie_token <- request$cookies[[cookie_name]] %||% ""
+
+                        if (
+                            request$method %in%
+                                safe_methods &&
+                                !nzchar(cookie_token)
+                        ) {
+                            cookie_token <- csrf_new_token()
+                            response$set_cookie(
+                                name = cookie_name,
+                                value = cookie_token,
+                                path = "/",
+                                http_only = FALSE,
+                                secure = secure,
+                                same_site = "Lax"
+                            )
+                        }
+
+                        if (request$method %in% unsafe_methods) {
+                            token <- request$get_header("x-csrf-token") %||%
+                                body$csrf_token
+                            if (
+                                is.null(token) ||
+                                    !identical(token, cookie_token)
+                            ) {
+                                response$status <- 403L
+                                response$body <- "Invalid CSRF token"
+
+                                api$trigger(
+                                    "error_code",
+                                    status = 403L,
+                                    request = request,
+                                    response = response,
+                                    message = NULL
+                                )
+
+                                return(plumber2::Break)
+                            }
+                        }
+
+                        next_call()
                     }
+                ),
+                hook(
+                    id = "freshwater::csrf_context",
+                    function(api, args, next_call) {
+                        request <- args$request
 
-                    cookie_name <- freshwater$csrf_cookie_name %||% "csrf"
-                    token <- request$cookies[[cookie_name]] %||% ""
+                        if (is.null(request)) {
+                            return(next_call())
+                        }
 
-                    # set current req context
-                    # todo, see if this is async compat
-                    ctx <- new.env(parent = emptyenv())
-                    ctx$csrf_token <- function() token
-                    ctx$request <- request
+                        cookie_name <- freshwater$csrf_cookie_name %||% "csrf"
+                        token <- request$cookies[[cookie_name]] %||% ""
 
-                    old <- set_fw_context(ctx)
-                    on.exit(set_fw_context(old), add = TRUE)
+                        # set current req context
+                        # todo, see if this is async compat
+                        ctx <- get_fw_context()
+                        ctx$csrf_token <- function() token
+                        ctx$request <- request
 
-                    next_call()
-                }
-            )
+
+                        next_call()
+                    }
+                )
+            ),
+            .where = "append"
         )
     })
 
@@ -143,40 +149,49 @@ api_csrf <- function(api, secure = TRUE) {
 csrf_new_token <- function() {
     openssl::rand_bytes(64) |>
         format() |>
-        paste0(collapse="")
-}
-
-set_fw_context <- function(ctx) {
-    old <- freshwater$request_context %||% NULL
-    freshwater$request_context <- ctx
-    old
-}
-
-get_fw_context <- function() {
-    freshwater$request_context %||% NULL
+        paste0(collapse = "")
 }
 
 csrf_token <- function() {
     ctx <- get_fw_context()
-    if (is.null(ctx)) return("")
+    if (is.null(ctx) || is.null(ctx$csrf_token)) {
+        return("")
+    }
     ctx$csrf_token()
 }
 
-form <- function(...) {
+form <- function(..., method = "get") {
     ctx <- get_fw_context()
+    children <- list(...)
+    method <- tolower(method)
+
+    valid <- c("get", "post", "put", "patch", "delete")
+    if (!method %in% valid) {
+        rlang::abort(paste0("Unsupported form method: ", method))
+    }
+
     if (!is.null(ctx)) {
-        children <- list(
-            htmltools::tags$input(
+        if (!is.null(ctx$csrf_token)) {
+            token_input <- htmltools::tags$input(
                 type = "hidden",
                 name = "csrf_token",
                 value = csrf_token()
-            ),
-            ...
-        )
-    } else {
-        children <- list(...)
+            )
+            children <- c(list(token_input), children)
+        }
     }
-    do.call(htmltools::tags$form, args = children)
+    if (method %in% c("put", "patch", "delete")) {
+        faux_method <- htmltools::tags$input(
+            type = "hidden",
+            name = "_method",
+            value = toupper(method)
+        )
+        children <- c(list(faux_method), children)
+        method <- "post"
+    }
+
+    do.call(
+        htmltools::tags$form,
+        c(list(method = method), children)
+    )
 }
-
-

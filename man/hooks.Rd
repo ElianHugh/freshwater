@@ -42,4 +42,8 @@ they are installed.
 \item The function is idempotent (with respect to either a computed hash of the hook or a
 provided id), and only new hooks will be installed.
 }
+
+When using asynchronous routes via \code{async=TRUE}
+programatically, or via \verb{@async}, hooks are attached to
+the \code{then} handlers, rather than main handler itself.
 }

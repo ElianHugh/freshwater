@@ -35,6 +35,8 @@ Custom error page templates can be supplied via the
 created via \code{\link[=template]{template()}}, and should match the call signatures of
 the default error templates. See \link{freshwater_error_templates} for
 the relevant template signatures required.
+
+This middleware installs freshwater request context.
 }
 \examples{
 #* @plumber

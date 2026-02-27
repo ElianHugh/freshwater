@@ -23,6 +23,35 @@ validate_hook <- function(hook) {
   invisible(TRUE)
 }
 
+is_system_hook <- function(h) {
+  startsWith(hook_id(h), "freshwater::")
+}
+
+
+order_hooks <- function(hooks) {
+  system_order <- c(
+    "freshwater::context",
+    "freshwater::error_pages",
+    "freshwater::csrf",
+    "freshwater::csrf_context"
+  )
+
+  ids <- vapply(hooks, hook_id, character(1), USE.NAMES = FALSE)
+  pos <- match(ids, system_order)
+  is_sys <- startsWith(ids, "freshwater::")
+
+  rank <- ifelse(
+    !is.na(pos),
+    pos,
+    ifelse(is_sys, Inf, Inf + 1)
+  )
+  hooks[order(rank)]
+}
+
+hook_id <- function(h) {
+  attr(h, "freshwater_hook_id", exact = TRUE) %||%
+    paste0("user::", rlang::hash(h))
+}
 
 add_hook <- function(handler, hook, .where = c("append", "prepend")) {
   .where <- match.arg(.where)
@@ -44,7 +73,9 @@ add_hook <- function(handler, hook, .where = c("append", "prepend")) {
     prepend = c(incoming, current)
   )
 
-  attr(handler, "freshwater_hooks") <- dedupe_hooks(hooks)
+  hooks <- dedupe_hooks(hooks)
+  hooks <- order_hooks(hooks)
+  attr(handler, "freshwater_hooks") <- hooks
 
   handler
 }
@@ -89,24 +120,58 @@ invoke_hooks <- function(api, handler) {
     fn
 }
 
+unwrap_handler <- function(fn) {
+  if (isTRUE(attr(fn, "freshwater_hook_wrapper", exact = TRUE))) {
+    base <- attr(fn, "freshwater_hook_base", exact = TRUE)
+    if (is.function(base)) {
+      return(base)
+    }
+  }
+  fn
+}
+
+map_handlers <- function(handlers, f) {
+  if (is.function(handlers)) return(f(handlers))
+   if (is.list(handlers) && all(vapply(handlers, is.function, logical(1)))) {
+    return(lapply(handlers, f))
+  }
+  handlers
+}
+
 patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("append","prepend")) {
     .where <- match.arg(.where)
 
     plumber_env <- environment(plumber_handler)
+    is_async <- "async" %in% names(plumber_env)
+
+    if (is_async) {
+      chain <- plumber_env[["then"]]
+      old_cl <- class(chain)
+
+      if (is.null(chain) || !is.list(chain)) {
+        return(plumber_handler)
+      }
+
+      chain <- map_handlers(chain, unwrap_handler)
+      chain <- lapply(chain, add_hook, hook = hooks, .where = .where)
+
+      chain <- lapply(chain, \(fn) invoke_hooks(api, fn))
+      plumber_env[["then"]] <- chain
+      class(plumber_env[["then"]]) <- old_cl
+
+      return(plumber_handler)
+
+    }
+
     user_function <- plumber_env[["handler"]]
 
     if (!is.function(user_function)) {
         return(plumber_handler)
     }
 
-    if (isTRUE(attr(user_function, "freshwater_hook_wrapper", exact = TRUE))) {
-        base <- attr(user_function, "freshwater_hook_base", exact = TRUE)
-        if (is.function(base)) {
-            user_function <- base
-        }
-    }
-
+    user_function <- unwrap_handler(user_function)
     user_function <- add_hook(user_function, hooks, .where = .where)
+
     plumber_env[["handler"]] <- invoke_hooks(api, user_function)
     plumber_handler
 }
@@ -127,6 +192,10 @@ patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("appen
 #' they are installed.
 #' - The function is idempotent (with respect to either a computed hash of the hook or a
 #' provided id), and only new hooks will be installed.
+#'
+#' When using asynchronous routes via `async=TRUE`
+#' programatically, or via `@async`, hooks are attached to
+#' the `then` handlers, rather than main handler itself.
 #'
 #' @param api a [plumber2] api object.
 #' @param hooks a single hook or list of hooks that take the signature

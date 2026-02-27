@@ -15,6 +15,8 @@ utils::globalVariables(c("error", "request"))
 #' the default error templates. See [freshwater_error_templates] for
 #' the relevant template signatures required.
 #'
+#' This middleware installs freshwater request context.
+#'
 #' @param api a [plumber2] api object.
 #' @param handlers optional list of named error templates. Supported keys
 #' are: "403", "404", "500". If omitted, freshwater installs default templates.
@@ -61,6 +63,8 @@ api_error_pages <- function(
 
     attr(api, "error_pages_installed") <- TRUE
 
+    api <- api_context(api)
+
     plumber2::api_on(api, "start", function(...) {
         api$trigger("freshwater_error_pages")
     })
@@ -78,12 +82,14 @@ api_error_pages <- function(
                 function(api, args, next_call) {
                     response <- args$response %||% NULL
                     request <- args$request %||% NULL
-
                     tryCatch(
                         next_call(),
                         error = function(e) {
-                            if (!should_freshwater_handle(request, response, e)) {
-                               return(plumber2::Next)
+
+                            if (
+                                !should_freshwater_handle(request, response, e)
+                            ) {
+                                return(plumber2::Next)
                             }
 
                             if (!inherits(e, "reqres_problem")) {
@@ -104,8 +110,8 @@ api_error_pages <- function(
                         }
                     )
                 }
-            ),
-            .where = "prepend"
+
+            )
         )
     })
 
@@ -117,7 +123,6 @@ api_error_pages <- function(
         }
 
         status <- response$status
-
 
         if (!status %in% c(403L, 404L, 500L)) {
             return(plumber2::Next)
@@ -166,7 +171,6 @@ api_error_pages <- function(
             } else {
                 plumber2::get_serializers("text")[[1L]]
             }
-
 
             switch(
                 status,

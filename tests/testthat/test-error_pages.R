@@ -6,10 +6,13 @@ get_user_handler_from_route <- function(api, path) {
 }
 
 test_that("error page installation is idempotent", {
-	api <- plumber2::api()
-	api <- plumber2::api_get(api, "/", function() {
-        	"foo"
+	suppressMessages({
+		api <- plumber2::api()
+		api <- plumber2::api_get(api, "/", function() {
+			"foo"
+		})
 	})
+
 
 	api <- api_error_pages(api)
 	api$trigger("freshwater_error_pages")
@@ -28,13 +31,16 @@ test_that("error page installation is idempotent", {
 test_that("error pages render upon user error", {
 	testthat::skip_if_not_installed("cli")
 
-	api <- plumber2::api()
-	api <- plumber2::api_get(api, "/foo", function() {
-		"foo"
+	suppressMessages({
+		api <- plumber2::api()
+		api <- plumber2::api_get(api, "/foo", function() {
+			"foo"
+		})
+		api <- plumber2::api_get(api, "/bar", function() {
+			stop("bar")
+		})
 	})
-	api <- plumber2::api_get(api, "/bar", function() {
-		stop("bar")
-	})
+
 	api <- api_error_pages(api, debug = TRUE)
 	api$trigger("freshwater_error_pages")
 
@@ -90,12 +96,15 @@ test_that("error pages render upon user error", {
 test_that("manual user 404s are respected", {
 	testthat::skip_if_not_installed("cli")
 
-	api <- plumber2::api()
-	api <- plumber2::api_get(api, "/foo", function(response) {
-		response$status <- 404L
-		response$body <- "Foo"
+	suppressMessages({
+		api <- plumber2::api()
+		api <- plumber2::api_get(api, "/foo", function(response) {
+			response$status <- 404L
+			response$body <- "Foo"
+		})
+		api <- api_error_pages(api, debug = TRUE)
 	})
-	api <- api_error_pages(api, debug = TRUE)
+
 	api$trigger("freshwater_error_pages")
 
 	req <- fiery::fake_request(
@@ -117,14 +126,17 @@ test_that("manual user 404s are respected", {
 test_that("other methods return error pages", {
 	testthat::skip_if_not_installed("cli")
 
-	api <- plumber2::api()
-	api <- plumber2::api_post(api, "/foo", function() {
-		"foo"
+	suppressMessages({
+		api <- plumber2::api()
+		api <- plumber2::api_post(api, "/foo", function() {
+			"foo"
+		})
+		api <- plumber2::api_post(api, "/bar", function() {
+			stop("bar")
+		})
+		api <- api_error_pages(api, debug = TRUE)
 	})
-	api <- plumber2::api_post(api, "/bar", function() {
-		stop("bar")
-	})
-	api <- api_error_pages(api, debug = TRUE)
+
 	api$trigger("freshwater_error_pages")
 
 
@@ -169,14 +181,18 @@ test_that("other methods return error pages", {
 test_that("error pages only occur for HTML", {
 	testthat::skip_if_not_installed("cli")
 
-	api <- plumber2::api()
-	api <- plumber2::api_get(api, "/foo", function() {
-		"foo"
+	suppressMessages({
+		api <- plumber2::api()
+		api <- plumber2::api_get(api, "/foo", function() {
+			"foo"
+		})
+		api <- plumber2::api_get(api, "/bar", function() {
+			stop("bar")
+		})
+		api <- api_error_pages(api, debug = TRUE)
 	})
-	api <- plumber2::api_get(api, "/bar", function() {
-		stop("bar")
-	})
-	api <- api_error_pages(api, debug = TRUE)
+
+
 	api$trigger("freshwater_error_pages")
 
 	# Error page
@@ -203,4 +219,37 @@ test_that("error pages only occur for HTML", {
 	expect_identical(res$status, 404L)
 	expect_identical(res$body, "Not Found")
 
+})
+
+
+test_that("error pages function for `then` handlers", {
+	suppressMessages({
+		api <- plumber2::api()
+		api <- plumber2::api_get(
+			api,
+			"/",
+			function() {
+				"foo"
+			},
+			async = TRUE,
+			then = list(
+				function() {
+					TRUE
+				},
+				function() {
+					stop("Bad handler")
+				}
+			)
+		)
+
+		api <- api_error_pages(api, debug = TRUE)
+	})
+
+	api$trigger("freshwater_error_pages")
+
+	res <- faux_request(api, accept = "text/html; charset=utf-8") |>
+		wait_for_resolve()
+
+	expect_identical(res$status, 500L)
+	expect_match(res$body, "Bad handler", fixed = TRUE)
 })

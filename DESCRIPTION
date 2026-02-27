@@ -18,15 +18,18 @@ Suggests:
     fiery,
     openssl,
     cli,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    promises,
+    later
 Config/testthat/edition: 3
 URL: https://elianhugh.github.io/freshwater/
-Collate: 
+Collate:
     'cget.R'
+    'handler_hooks.R'
+    'context.R'
     'security.R'
     'template.R'
     'errors.R'
-    'handler_hooks.R'
     'redirect.R'
     'serialisers.R'
     'template_cache.R'
