@@ -16,8 +16,13 @@ reference:
       - invalidate_cache
       - invalidate_cache_here
 
+  - title: "Context"
+    contents:
+      - current_path
+
   - title: "Middleware"
     contents:
+      - api_freshwater
       - api_error_pages
       - api_csrf
       - api_cget

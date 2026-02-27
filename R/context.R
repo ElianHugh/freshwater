@@ -1,12 +1,19 @@
 #' @include handler_hooks.R
 
-#' Freshwater defaults for plumber2 APIs
+#' @title Freshwater defaults for plumber2 APIs
 #'
-#' This is a convenience wrapper around [register_html_serialiser()],
-#' [api_csrf()], and [api_error_pages()].
+#' @description
+#' This is a convenience wrapper around
+#' [register_html_serialiser()], [api_csrf()], and
+#' [api_error_pages()].
+#'
+#' @param api a [plumber2] api object.
+#' @param csrf whether to enable CSRF protection
+#' @param error_pages whether to enable error pages
+#' @param ... args passed to either [api_csrf()] or
+#' [api_error_pages()]
 #'
 #' @export
-#'
 api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
     register_html_serialiser()
 
@@ -119,6 +126,18 @@ get_fw_context <- function() {
     freshwater$request_context %||% NULL
 }
 
+#' @title
+#' Get current request path from context
+#'
+#' @description
+#' Return the URL path of the current HTTP request,
+#' as captured in the freshwater request context. If
+#' called outside of an active context, an empty string
+#' is returned.
+#'
+#' This is primarily intended for use inside templates
+#' where the request context has been established.
+#'
 #' @export
 current_path <- function() {
     ctx <- get_fw_context()
