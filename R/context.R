@@ -12,9 +12,6 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
     invisible(api)
 }
 
-# todo
-readonly_view <- function(env) {}
-
 #' @keywords internal
 api_context <- function(api) {
     if (isTRUE(attr(api, "context_installed", exact = TRUE))) {
@@ -80,7 +77,7 @@ with_fw_context <- function(ctx, expr) {
     old <- set_fw_context(ctx)
     on.exit(set_fw_context(old), add = TRUE)
 
-     res <- force(expr)
+    res <- force(expr)
 
     if (inherits(res, "promise")) {
         res <- promises::with_promise_domain(
@@ -103,7 +100,6 @@ with_fw_context <- function(ctx, expr) {
             res
         )
     }
-
     res
 }
 
