@@ -26,7 +26,7 @@ When installed:
 
 - Any `form` element inside
   [template](https://elianhugh.github.io/freshwater/reference/templating.md)
-  automatically include a CSRF token.
+  automatically includes a CSRF token.
 
 - If working in JavaScript contexts, the `csrf_token()` helper is also
   accessible inside templates.
@@ -37,9 +37,11 @@ Middleware behaviour:
   missing, a new token is generated and set as a cookie.
 
 - On **unsafe** methods (`POST`, `PUT`, `DELETE`, `PATCH`), the request
-  is rejected with **403** unless a token provided via the
+  is rejected with **403 Forbidden** unless a token provided via the
   `X-CSRF-Token` header or a `csrf_token` field in the parsed request
   body matches the CSRF cookie.
+
+This middleware installs freshwater request context.
 
 ## Examples
 
@@ -53,5 +55,5 @@ function(api) {
 #> {
 #>     api_csrf(api, secure = FALSE)
 #> }
-#> <environment: 0x55d0436299f0>
+#> <environment: 0x5559e59c4068>
 ```

@@ -53,3 +53,7 @@ are prepended), culminating in the final user handler.
 
 - The function is idempotent (with respect to either a computed hash of
   the hook or a provided id), and only new hooks will be installed.
+
+When using asynchronous routes via `async=TRUE` programatically, or via
+`@async`, hooks are attached to the `then` handlers, rather than main
+handler itself.

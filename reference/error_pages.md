@@ -48,6 +48,8 @@ and should match the call signatures of the default error templates. See
 [freshwater_error_templates](https://elianhugh.github.io/freshwater/reference/freshwater_error_templates.md)
 for the relevant template signatures required.
 
+This middleware installs freshwater request context.
+
 ## See also
 
 [freshwater_error_templates](https://elianhugh.github.io/freshwater/reference/freshwater_error_templates.md),
@@ -65,5 +67,5 @@ function(api) {
 #> {
 #>     api_error_pages(api, debug = TRUE)
 #> }
-#> <environment: 0x55d041e398e0>
+#> <environment: 0x5559dfcc2370>
 ```
