@@ -18,8 +18,8 @@ Suggests:
     fiery,
     openssl,
     cli,
-    testthat (>= 3.0.0)
-    promises
+    testthat (>= 3.0.0),
+    promises,
     later
 Config/testthat/edition: 3
 URL: https://elianhugh.github.io/freshwater/
