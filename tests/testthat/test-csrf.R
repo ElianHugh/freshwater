@@ -1,22 +1,27 @@
 testthat::skip_if_not_installed("openssl")
 
 test_that("csrf works", {
-    api <- plumber2::api()
 
-    api <- plumber2::api_get(api, "/", function() {
-        "foo"
-    })
-    api <- plumber2::api_post(api, "/bar", function() {
-        "bar"
-    })
-    api <- plumber2::api_delete(api, "/bar", function() {
-        "bar"
+    suppressMessages({
+        api <- plumber2::api()
+
+        api <- plumber2::api_get(api, "/", function() {
+            "foo"
+        })
+        api <- plumber2::api_post(api, "/bar", function() {
+            "bar"
+        })
+        api <- plumber2::api_delete(api, "/bar", function() {
+            "bar"
+        })
+        api <- api_csrf(api, secure = FALSE)
+        api <- plumber2::api_security_headers(api)
+        api <- plumber2::api_security_cors(api)
+        api <- plumber2::api_security_resource_isolation(api)
     })
 
-    api <- api_csrf(api, secure = FALSE)
-    api <- plumber2::api_security_headers(api)
-    api <- plumber2::api_security_cors(api)
-    api <- plumber2::api_security_resource_isolation(api)
+
+
 
     api$trigger("freshwater_csrf")
 
