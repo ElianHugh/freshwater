@@ -1,6 +1,12 @@
 #' @include handler_hooks.R
 
+#' Freshwater defaults for plumber2 APIs
+#'
+#' This is a convenience wrapper around [register_html_serialiser()],
+#' [api_csrf()], and [api_error_pages()].
+#'
 #' @export
+#'
 api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
     register_html_serialiser()
 

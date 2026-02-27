@@ -2,3 +2,34 @@ url: https://elianhugh.github.io/freshwater/
 template:
   bootstrap: 5
 
+reference:
+  - title: "Rendering"
+    contents:
+      - template
+      - fragment
+      - register_html_serialiser
+
+  - title: "Rendering Performance"
+    contents:
+      - cache
+      - clear_cache
+      - invalidate_cache
+      - invalidate_cache_here
+
+  - title: "Middleware"
+    contents:
+      - api_error_pages
+      - api_csrf
+      - api_cget
+      - enhook_routes
+      - hook
+
+  - title: "Response Helpers"
+    contents:
+      - redirect
+
+  - title: "Defaults"
+    contents:
+      - freshwater_error_templates
+
+
