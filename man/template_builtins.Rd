@@ -4,7 +4,7 @@
 \alias{template_builtins}
 \title{Template Built-ins}
 \description{
-The following helpers are automatically available inside \code{\link[=template]{template()}} bodies.
+The following helpers are automatically injected inside \code{\link[=template]{template()}} bodies.
 \subsection{form(...)}{
 
 Wraps \code{htmltools::tags$form()}.
