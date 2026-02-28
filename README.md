@@ -20,6 +20,7 @@ freshwater provides server-side rendering utilities for plumber2 backends:
 - weak ETag caching
 - shiny tag serialisation[^1]
 - CSRF protection
+- ... and more!
 
 [^1]: differs to base plumber2 implementation in that we render the entire tag tree, allowing for emitting head tags amongst others.
 
@@ -251,5 +252,3 @@ function(api) {
   api |>
     api_error_pages(debug=TRUE)
 }
-
-

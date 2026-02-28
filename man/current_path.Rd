@@ -9,8 +9,8 @@ current_path()
 \description{
 Return the URL path of the current HTTP request,
 as captured in the freshwater request context. If
-called outside of an active context, an empty string
-is returned.
+called outside of an active context, an error is
+raised.
 
 This is primarily intended for use inside templates
 where the request context has been established.

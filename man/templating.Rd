@@ -54,6 +54,17 @@ e.g.
 converted to \code{htmltools::div(data_foo="bar")}.
 }
 
+\section{Built-in Helpers}{
+Template bodies are evaluated in a freshwater environment that provides
+the following helpers:
+\itemize{
+\item \code{form()} — form helper with optional CSRF injection and method spoofing.
+\item \code{csrf_token()} — returns the current CSRF token string
+}
+
+See \link{template_builtins} for details.
+}
+
 \examples{
 # Example Fragment Usage
 page_main <- template(

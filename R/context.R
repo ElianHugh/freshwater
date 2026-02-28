@@ -134,8 +134,8 @@ get_fw_context <- function() {
 #' @description
 #' Return the URL path of the current HTTP request,
 #' as captured in the freshwater request context. If
-#' called outside of an active context, an empty string
-#' is returned.
+#' called outside of an active context, an error is
+#' raised.
 #'
 #' This is primarily intended for use inside templates
 #' where the request context has been established.
@@ -149,6 +149,13 @@ get_fw_context <- function() {
 #' @export
 current_path <- function() {
     ctx <- get_fw_context()
-    if (is.null(ctx)) return("")
+    if (is.null(ctx)) {
+        rlang::abort(
+            "freshwater context missing",
+            i = "Did you forget to install freshwater middleware via `api_freshwater()`?",
+            i = "Helpers like `current_path()` can only be used during a request.",
+            class = "freshwater_context_missing"
+        )
+    }
     ctx$request$path
 }
