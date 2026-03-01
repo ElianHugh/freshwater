@@ -61,6 +61,11 @@ context it is executed in.
 Caching occurs a small overhead for first-time usage, but is faster in
 proceeding calls.
 
+Caching is powered by
+[memoise::memoise](https://memoise.r-lib.org/reference/memoise.html).
+Cache storage limits, eviction, and persistence are controlled via the
+underlying memoise/cache backend.
+
 Note: invalidation affects future renders only. Calling this within the
 `cache()` block that is being targeted will not result in an
 invalidation of the cache.
@@ -68,7 +73,8 @@ invalidation of the cache.
 ## See also
 
 [template](https://elianhugh.github.io/freshwater/reference/templating.md),
-[api_cget](https://elianhugh.github.io/freshwater/reference/api_cget.md)
+[api_cget](https://elianhugh.github.io/freshwater/reference/api_cget.md),
+[memoise::memoise](https://memoise.r-lib.org/reference/memoise.html)
 
 ## Examples
 
@@ -122,6 +128,17 @@ dashboard()
 #> </div>
 #>   <div></div>
 #> </div>
+
+# TTL-caching (time-based invalidation)
+page <- template({
+  cache(
+    name = "clock",
+    vary = memoise::timeout(60L),
+    div(sprintf("Generated at %s", Sys.time()))
+  )
+})
+page()
+#> <div>Generated at 2026-03-01 10:49:14.686276</div>
 
 # Invalidate the current cache
 # during rendering

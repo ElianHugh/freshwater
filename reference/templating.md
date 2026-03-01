@@ -58,6 +58,26 @@ attributes. You may use double underscores, which will be converted to
 single underscores e.g. `htmltools::div(data__foo="bar")` which is
 converted to `htmltools::div(data_foo="bar")`.
 
+## Built-in Helpers
+
+Template bodies are evaluated in a freshwater environment that provides
+the following helpers:
+
+- `form()` — form helper with optional CSRF injection and method
+  spoofing.
+
+- `csrf_token()` — returns the current CSRF token string
+
+See
+[template_builtins](https://elianhugh.github.io/freshwater/reference/template_builtins.md)
+for details.
+
+## Template Context
+
+A template render context is maintained during evaluation which is used
+for fragment extraction and cache scoping. The template context is
+separate from the request context defined elsewhere.
+
 ## See also
 
 [cache](https://elianhugh.github.io/freshwater/reference/template-caching.md)

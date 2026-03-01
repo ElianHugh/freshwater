@@ -55,5 +55,5 @@ function(api) {
 #> {
 #>     api_csrf(api, secure = FALSE)
 #> }
-#> <environment: 0x5559e59c4068>
+#> <environment: 0x5653acf9faa8>
 ```

@@ -8,12 +8,16 @@
 <url><loc>https://elianhugh.github.io/freshwater/reference/api_freshwater.html</loc></url>
 <url><loc>https://elianhugh.github.io/freshwater/reference/current_path.html</loc></url>
 <url><loc>https://elianhugh.github.io/freshwater/reference/error_pages.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/reference/freshwater_context.html</loc></url>
 <url><loc>https://elianhugh.github.io/freshwater/reference/freshwater_error_templates.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/reference/get_cache_backend.html</loc></url>
 <url><loc>https://elianhugh.github.io/freshwater/reference/hooks.html</loc></url>
 <url><loc>https://elianhugh.github.io/freshwater/reference/index.html</loc></url>
 <url><loc>https://elianhugh.github.io/freshwater/reference/redirect.html</loc></url>
 <url><loc>https://elianhugh.github.io/freshwater/reference/register_html_serialiser.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/reference/set_cache_backend.html</loc></url>
 <url><loc>https://elianhugh.github.io/freshwater/reference/template-caching.html</loc></url>
+<url><loc>https://elianhugh.github.io/freshwater/reference/template_builtins.html</loc></url>
 <url><loc>https://elianhugh.github.io/freshwater/reference/templating.html</loc></url>
 </urlset>
 

@@ -11,6 +11,7 @@ backends:
 - weak ETag caching
 - shiny tag serialisation[¹](#fn1)
 - CSRF protection
+- … and more!
 
 For autoreloading support, consider
 [hotwater](https://github.com/ElianHugh/hotwater).

@@ -124,6 +124,19 @@ e.g.
 converted to <code>htmltools::div(data_foo="bar")</code>.</p>
     </div>
     <div class="section level2">
+    <h2 id="built-in-helpers">Built-in Helpers<a class="anchor" aria-label="anchor" href="#built-in-helpers"></a></h2>
+    <p>Template bodies are evaluated in a freshwater environment that provides
+the following helpers:</p><ul><li><p><code>form()</code> — form helper with optional CSRF injection and method spoofing.</p></li>
+<li><p><code>csrf_token()</code> — returns the current CSRF token string</p></li>
+</ul><p>See <a href="template_builtins.html">template_builtins</a> for details.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="template-context">Template Context<a class="anchor" aria-label="anchor" href="#template-context"></a></h2>
+    <p>A template render context is maintained during evaluation which is
+used for fragment extraction and cache scoping. The template context is
+separate from the request context defined elsewhere.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><a href="template-caching.html">cache</a></p></div>
     </div>

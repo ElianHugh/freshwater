@@ -11,6 +11,7 @@ backends:
 - weak ETag caching
 - shiny tag serialisation[¹](#fn1)
 - CSRF protection
+- … and more!
 
 For autoreloading support, consider
 [hotwater](https://github.com/ElianHugh/hotwater).
@@ -253,6 +254,8 @@ function(api) {
 - [`template()`](https://elianhugh.github.io/freshwater/reference/templating.md)
   [`fragment()`](https://elianhugh.github.io/freshwater/reference/templating.md)
   : Create a reusable HTML template
+- [`template_builtins`](https://elianhugh.github.io/freshwater/reference/template_builtins.md)
+  : Template Built-ins
 - [`register_html_serialiser()`](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md)
   : Register HTML Serialiser
 
@@ -263,11 +266,17 @@ function(api) {
   [`invalidate_cache()`](https://elianhugh.github.io/freshwater/reference/template-caching.md)
   [`invalidate_cache_here()`](https://elianhugh.github.io/freshwater/reference/template-caching.md)
   : Cache a rendered partial within a template
+- [`set_cache_backend()`](https://elianhugh.github.io/freshwater/reference/set_cache_backend.md)
+  : Configure freshwater's cache backend
+- [`get_cache_backend()`](https://elianhugh.github.io/freshwater/reference/get_cache_backend.md)
+  : Get freshwater's current cache backend
 
 ## Context
 
 - [`current_path()`](https://elianhugh.github.io/freshwater/reference/current_path.md)
   : Get current request path from context
+- [`freshwater_context`](https://elianhugh.github.io/freshwater/reference/freshwater_context.md)
+  : Freshwater Request Context
 
 ## Middleware
 

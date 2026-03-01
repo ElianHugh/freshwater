@@ -6,7 +6,7 @@ This is a convenience wrapper around
 and
 [`api_error_pages()`](https://elianhugh.github.io/freshwater/reference/error_pages.md).
 
-This middleware installs freshwater request context.
+This installs freshwater request context.
 
 ## Usage
 
