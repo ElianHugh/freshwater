@@ -37,6 +37,7 @@ reference:
   - title: "Context"
     contents:
       - current_path
+      - freshwater_context
 
   - title: "Middleware"
     contents:
