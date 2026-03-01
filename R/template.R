@@ -41,6 +41,11 @@
 #'
 #' See [template_builtins] for details.
 #'
+#' # Template Context
+#' A template render context is maintained during evaluation which is
+#' used for fragment extraction and cache scoping. The template context is
+#' separate from the request context defined elsewhere.
+#'
 #' @examples
 #' # Example Fragment Usage
 #' page_main <- template(
@@ -225,7 +230,7 @@ template <- function(..., .envir = rlang::caller_env()) {
 #' - If CSRF middleware is active, a hidden `csrf_token` input is automatically injected.
 #' - If `method` is one of "put", "patch", or "delete", a hidden `_method`
 #'   input is added and the HTML form method is set to "post".
-#'   - Browsers only support GET and POST. When method is "put", "patch", or "delete", freshwater renders a POST form with a hidden _method field. Middleware interprets this as the effective HTTP method.
+#'   - Browsers only support GET and POST. When method is "put", "patch", or "delete", freshwater renders a POST form with a hidden _method field. Middleware interprets this as the effective HTTP method. Requires context-enabled middleware.
 #'
 #' ## csrf_token()
 #' - Returns the current CSRF token string for the active request

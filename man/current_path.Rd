@@ -15,11 +15,9 @@ raised.
 This is primarily intended for use inside templates
 where the request context has been established.
 
-Context is Available when freshwater context middleware is
+Context is available when freshwater context middleware is
 active (installed automatically by \code{\link[=api_csrf]{api_csrf()}},
-\code{\link[=api_error_pages]{api_error_pages()}}, or [api_freshwater())].
-
-[api_freshwater())]: R:api_freshwater())
+\code{\link[=api_error_pages]{api_error_pages()}}, or \code{\link[=api_freshwater]{api_freshwater()}}).
 }
 \seealso{
 \code{\link[=api_freshwater]{api_freshwater()}}, \code{\link[=api_csrf]{api_csrf()}}, \code{\link[=api_error_pages]{api_error_pages()}}

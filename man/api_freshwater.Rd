@@ -21,5 +21,5 @@ This is a convenience wrapper around
 \code{\link[=register_html_serialiser]{register_html_serialiser()}}, \code{\link[=api_csrf]{api_csrf()}}, and
 \code{\link[=api_error_pages]{api_error_pages()}}.
 
-This middleware installs freshwater request context.
+This installs freshwater request context.
 }

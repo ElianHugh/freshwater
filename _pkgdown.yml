@@ -22,6 +22,7 @@ reference:
     contents:
       - template
       - fragment
+      - template_builtins
       - register_html_serialiser
 
   - title: "Rendering Performance"
@@ -30,6 +31,8 @@ reference:
       - clear_cache
       - invalidate_cache
       - invalidate_cache_here
+      - set_cache_backend
+      - get_cache_backend
 
   - title: "Context"
     contents:

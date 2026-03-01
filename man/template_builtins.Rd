@@ -13,7 +13,7 @@ Wraps \code{htmltools::tags$form()}.
 \item If \code{method} is one of "put", "patch", or "delete", a hidden \verb{_method}
 input is added and the HTML form method is set to "post".
 \itemize{
-\item Browsers only support GET and POST. When method is "put", "patch", or "delete", freshwater renders a POST form with a hidden _method field. Middleware interprets this as the effective HTTP method.
+\item Browsers only support GET and POST. When method is "put", "patch", or "delete", freshwater renders a POST form with a hidden _method field. Middleware interprets this as the effective HTTP method. Requires context-enabled middleware.
 }
 }
 }

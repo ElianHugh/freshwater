@@ -65,6 +65,12 @@ the following helpers:
 See \link{template_builtins} for details.
 }
 
+\section{Template Context}{
+A template render context is maintained during evaluation which is
+used for fragment extraction and cache scoping. The template context is
+separate from the request context defined elsewhere.
+}
+
 \examples{
 # Example Fragment Usage
 page_main <- template(
