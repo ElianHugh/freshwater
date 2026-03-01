@@ -1,14 +1,26 @@
-#' @keywords internal
-store <- memoise::memoise(
-  function(key, fn) fn(),
-  hash = function(args) args$key
-)
+ensure_cache_state <- function() {
+  if (is.null(freshwater$cache)) {
+    freshwater$cache <- new.env(parent = emptyenv())
+  }
+  if (is.null(freshwater$cache$backend)) {
+    freshwater$cache$backend <- cachem::cache_mem(max_size = 1024 * 1024^2)
+  }
+  if (is.null(freshwater$cache$store)) {
+    set_cache_backend(freshwater$cache$backend)
+  }
+}
 
 #' @keywords internal
-has_store <- memoise::has_cache(store)
+has_store <- function(...) {
+  ensure_cache_state()
+  freshwater$cache$has_store(...)
+}
 
 #' @keywords internal
-drop_store <- memoise::drop_cache(store)
+drop_store <- function(...) {
+  ensure_cache_state()
+  freshwater$cache$drop_store(...)
+}
 
 cache_key <- function(name, vary, id, fragment) {
   rlang::hash(
@@ -21,6 +33,46 @@ cache_key <- function(name, vary, id, fragment) {
   )
 }
 
+#' Configure freshwater's cache backend
+#'
+#' `set_cache_backend()` replaces the cache backend used by [cache()].
+#'
+#' This function allows controlling cache persistence (memory vs disk),
+#' eviction policies, and storage limits via the backend object.
+#'
+#' @param backend cache backend accepted by [memoise::memoise]
+#'
+#' @seealso [cache()], [clear_cache()], [memoise::memoise]
+#' @export
+set_cache_backend <- function(backend) {
+  freshwater$cache$backend <- backend
+  freshwater$cache$store <- memoise::memoise(
+    function(key, fn) fn(),
+    hash = function(args) args$key,
+    cache = freshwater$cache$backend
+  )
+  freshwater$cache$has_store <- memoise::has_cache(freshwater$cache$store)
+  freshwater$cache$drop_store <- memoise::drop_cache(freshwater$cache$store)
+
+  invisible(NULL)
+}
+
+#' Get freshwater's current cache backend
+#'
+#' Returns the cache backend currently used by [cache()].
+#'
+#' @return A cache backend object (typically from `cachem`), or `NULL` if the
+#'   cache has not yet been initialised.
+#'
+#' @examples
+#' get_cache_backend()
+#'
+#' @seealso [set_cache_backend()], [cache()]
+#' @export
+get_cache_backend <- function() {
+  freshwater$cache$backend
+}
+
 #' Cache a rendered partial within a template
 #'
 #' `cache()` memoises a portion of HTML output within a freshwater template.
@@ -31,6 +83,12 @@ cache_key <- function(name, vary, id, fragment) {
 #' context it is executed in.
 #'
 #' Caching occurs a small overhead for first-time usage, but is faster in proceeding calls.
+#'
+#' @details
+#'
+#' Caching is powered by [memoise]. Cache storage limits,
+#' eviction, and persistence are controlled via the underlying
+#' memoise/cache backend.
 #'
 #' @export
 #' @param name unique name for the cached partial template
@@ -75,9 +133,21 @@ cache_key <- function(name, vary, id, fragment) {
 #' })
 #' dashboard()
 #'
-#' @seealso [template], [api_cget]
+#' # TTL-caching (time-based invalidation)
+#' page <- template({
+#'   cache(
+#'     name = "clock",
+#'     vary = memoise::timeout(60L),
+#'     div(sprintf("Generated at %s", Sys.time()))
+#'   )
+#' })
+#' page()
+#'
+#' @seealso [template], [api_cget], [memoise::memoise]
 #' @rdname template-caching
 cache <- function(name, vary = NULL, ...) {
+  ensure_cache_state()
+
   context <- current_template(parent.frame())
   vary <- force(vary)
 
@@ -106,7 +176,7 @@ cache <- function(name, vary = NULL, ...) {
   )
 
   hit <- has_store(key)
-  res <- store(key, fn)
+  res <- freshwater$cache$store(key, fn)
 
   if (hit) {
     class(res) <- c("freshwater_cached_partial", class(res))
@@ -122,7 +192,7 @@ cache <- function(name, vary = NULL, ...) {
 #' @export
 #' @rdname template-caching
 clear_cache <- function() {
-  memoise::forget(store)
+  memoise::forget(freshwater$cache$store)
   invisible(TRUE)
 }
 

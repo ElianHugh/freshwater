@@ -4,4 +4,5 @@
     if (is.null(ns[["freshwater"]])) {
         ns[["freshwater"]] <- new.env(parent = ns)
     }
+    ensure_cache_state()
 }

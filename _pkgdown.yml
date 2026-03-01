@@ -2,8 +2,8 @@ url: https://elianhugh.github.io/freshwater/
 template:
   bootstrap: 5
   light-switch: true
-  theme: gruvbox-light
-  theme-dark: gruvbox-dark
+  theme: github-light
+  theme-dark: github-dark
   bslib:
     bg: "#f4f9fb"
     fg: "#163a45"
@@ -22,6 +22,7 @@ reference:
     contents:
       - template
       - fragment
+      - template_builtins
       - register_html_serialiser
 
   - title: "Rendering Performance"
@@ -30,10 +31,13 @@ reference:
       - clear_cache
       - invalidate_cache
       - invalidate_cache_here
+      - set_cache_backend
+      - get_cache_backend
 
   - title: "Context"
     contents:
       - current_path
+      - freshwater_context
 
   - title: "Middleware"
     contents:

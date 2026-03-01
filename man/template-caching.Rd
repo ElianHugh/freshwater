@@ -48,6 +48,10 @@ context it is executed in.
 
 Caching occurs a small overhead for first-time usage, but is faster in proceeding calls.
 
+Caching is powered by \link[memoise:memoise]{memoise::memoise}. Cache storage limits,
+eviction, and persistence are controlled via the underlying
+memoise/cache backend.
+
 Note: invalidation affects future renders only. Calling this within the \code{cache()} block
 that is being targeted will not result in an invalidation of the cache.
 }
@@ -90,6 +94,16 @@ dashboard <- template(page = list(), stats = list(), recent = list(), {
 })
 dashboard()
 
+# TTL-caching (time-based invalidation)
+page <- template({
+  cache(
+    name = "clock",
+    vary = memoise::timeout(60L),
+    div(sprintf("Generated at \%s", Sys.time()))
+  )
+})
+page()
+
 # Invalidate the current cache
 # during rendering
 
@@ -117,5 +131,5 @@ page(list(id = 1, refresh = TRUE))
 
 }
 \seealso{
-\link{template}, \link{api_cget}
+\link{template}, \link{api_cget}, \link[memoise:memoise]{memoise::memoise}
 }

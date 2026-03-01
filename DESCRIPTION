@@ -13,7 +13,8 @@ Imports:
     htmltools,
     memoise,
     plumber2,
-    rlang
+    rlang,
+    cachem
 Suggests:
     fiery,
     openssl,

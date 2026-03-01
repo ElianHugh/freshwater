@@ -54,6 +54,23 @@ e.g.
 converted to \code{htmltools::div(data_foo="bar")}.
 }
 
+\section{Built-in Helpers}{
+Template bodies are evaluated in a freshwater environment that provides
+the following helpers:
+\itemize{
+\item \code{form()} — form helper with optional CSRF injection and method spoofing.
+\item \code{csrf_token()} — returns the current CSRF token string
+}
+
+See \link{template_builtins} for details.
+}
+
+\section{Template Context}{
+A template render context is maintained during evaluation which is
+used for fragment extraction and cache scoping. The template context is
+separate from the request context defined elsewhere.
+}
+
 \examples{
 # Example Fragment Usage
 page_main <- template(

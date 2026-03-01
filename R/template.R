@@ -31,6 +31,21 @@
 #' `htmltools::div(data__foo="bar")` which is
 #' converted to `htmltools::div(data_foo="bar")`.
 #'
+#' # Built-in Helpers
+#'
+#' Template bodies are evaluated in a freshwater environment that provides
+#' the following helpers:
+#'
+#' - `form()` — form helper with optional CSRF injection and method spoofing.
+#' - `csrf_token()` — returns the current CSRF token string
+#'
+#' See [template_builtins] for details.
+#'
+#' # Template Context
+#' A template render context is maintained during evaluation which is
+#' used for fragment extraction and cache scoping. The template context is
+#' separate from the request context defined elsewhere.
+#'
 #' @examples
 #' # Example Fragment Usage
 #' page_main <- template(
@@ -204,6 +219,25 @@ template <- function(..., .envir = rlang::caller_env()) {
         class = c("freshwater_template", "function")
     )
 }
+
+#' Template Built-ins
+#' @description
+#' The following helpers are automatically injected inside [template()] bodies.
+#'
+#' ## form(...)
+#'
+#' Wraps `htmltools::tags$form()`.
+#' - If CSRF middleware is active, a hidden `csrf_token` input is automatically injected.
+#' - If `method` is one of "put", "patch", or "delete", a hidden `_method`
+#'   input is added and the HTML form method is set to "post".
+#'   - Browsers only support GET and POST. When method is "put", "patch", or "delete", freshwater renders a POST form with a hidden _method field. Middleware interprets this as the effective HTTP method. Requires context-enabled middleware.
+#'
+#' ## csrf_token()
+#' - Returns the current CSRF token string for the active request
+#' - Intended for custom forms / custom token placement (meta tags, JS fetch, etc).
+#'
+#' @name template_builtins
+NULL
 
 
 format_template_tree <- function(stack) {

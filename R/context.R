@@ -1,5 +1,29 @@
 #' @include handler_hooks.R
 
+#' @title Freshwater Request Context
+#' @description
+#' freshwater installs a per-request execution context that allows
+#' [current_path()], csrf_token(), and [template()]
+#' helpers to access the active HTTP request.
+#' The context itself is stored in freshwater's internal state and is
+#' set/unset with each request.
+#'
+#' Context is created automatically when
+#' [api_freshwater()], [api_csrf()], or [api_error_pages()] is installed.
+#'
+#' Method spoofing is applied during the `before-request` phase by rewriting
+#' `REQUEST_METHOD` when a hidden `_method` field is present.
+#'
+#' @section Lifecycle:
+#' The context exists only during an active HTTP request.
+#' Calling context-dependent helpers outside a request will raise
+#' a `freshwater_context_missing` error.
+#'
+#' @seealso [api_freshwater()], [current_path()]
+#' @name freshwater_context
+NULL
+
+
 #' @title Freshwater defaults for plumber2 APIs
 #'
 #' @description
@@ -7,7 +31,7 @@
 #' [register_html_serialiser()], [api_csrf()], and
 #' [api_error_pages()].
 #'
-#' This middleware installs freshwater request context.
+#' This installs freshwater request context.
 #'
 #' @param api a [plumber2] api object.
 #' @param csrf whether to enable CSRF protection
@@ -69,7 +93,6 @@ api_context <- function(api) {
             list(
                 hook("freshwater::context", function(api, args, next_call) {
                     request <- args$request
-                    response <- request$response
 
                     if (is.null(request)) {
                         return(next_call())
@@ -134,21 +157,28 @@ get_fw_context <- function() {
 #' @description
 #' Return the URL path of the current HTTP request,
 #' as captured in the freshwater request context. If
-#' called outside of an active context, an empty string
-#' is returned.
+#' called outside of an active context, an error is
+#' raised.
 #'
 #' This is primarily intended for use inside templates
 #' where the request context has been established.
 #'
-#' Context is Available when freshwater context middleware is
+#' Context is available when freshwater context middleware is
 #' active (installed automatically by [api_csrf()],
-#' [api_error_pages()], or [api_freshwater())].
+#' [api_error_pages()], or [api_freshwater()]).
 #'
 #' @family context helpers
 #' @seealso [api_freshwater()], [api_csrf()], [api_error_pages()]
 #' @export
 current_path <- function() {
     ctx <- get_fw_context()
-    if (is.null(ctx)) return("")
+    if (is.null(ctx)) {
+        rlang::abort(
+            "freshwater context missing",
+            i = "Did you forget to install freshwater middleware via `api_freshwater()`?",
+            i = "Helpers like `current_path()` can only be used during a request.",
+            class = "freshwater_context_missing"
+        )
+    }
     ctx$request$path
 }
