@@ -2,8 +2,8 @@ url: https://elianhugh.github.io/freshwater/
 template:
   bootstrap: 5
   light-switch: true
-  theme: gruvbox-light
-  theme-dark: gruvbox-dark
+  theme: github-light
+  theme-dark: github-dark
   bslib:
     bg: "#f4f9fb"
     fg: "#163a45"
