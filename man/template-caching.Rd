@@ -94,6 +94,16 @@ dashboard <- template(page = list(), stats = list(), recent = list(), {
 })
 dashboard()
 
+# TTL-caching (time-based invalidation)
+page <- template({
+  cache(
+    name = "clock",
+    vary = memoise::timeout(60L),
+    div(sprintf("Generated at \%s", Sys.time()))
+  )
+})
+page()
+
 # Invalidate the current cache
 # during rendering
 

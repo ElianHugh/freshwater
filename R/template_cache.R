@@ -6,17 +6,19 @@ ensure_cache_state <- function() {
     freshwater$cache$backend <- cachem::cache_mem(max_size = 1024 * 1024^2)
   }
   if (is.null(freshwater$cache$store)) {
-    set_cache_backend(freshwater$cache$backend, clear = FALSE)
+    set_cache_backend(freshwater$cache$backend)
   }
 }
 
 #' @keywords internal
 has_store <- function(...) {
+  ensure_cache_state()
   freshwater$cache$has_store(...)
 }
 
 #' @keywords internal
 drop_store <- function(...) {
+  ensure_cache_state()
   freshwater$cache$drop_store(...)
 }
 
@@ -39,14 +41,10 @@ cache_key <- function(name, vary, id, fragment) {
 #' eviction policies, and storage limits via the backend object.
 #'
 #' @param backend cache backend accepted by [memoise::memoise]
-#' @param clear If `TRUE`, clears the current cache before switching backends.
-#'
 #'
 #' @seealso [cache()], [clear_cache()], [memoise::memoise]
 #' @export
-set_cache_backend <- function(backend, clear = TRUE) {
-  if (clear) clear_cache()
-
+set_cache_backend <- function(backend) {
   freshwater$cache$backend <- backend
   freshwater$cache$store <- memoise::memoise(
     function(key, fn) fn(),
@@ -135,9 +133,21 @@ get_cache_backend <- function() {
 #' })
 #' dashboard()
 #'
+#' # TTL-caching (time-based invalidation)
+#' page <- template({
+#'   cache(
+#'     name = "clock",
+#'     vary = memoise::timeout(60L),
+#'     div(sprintf("Generated at %s", Sys.time()))
+#'   )
+#' })
+#' page()
+#'
 #' @seealso [template], [api_cget], [memoise::memoise]
 #' @rdname template-caching
 cache <- function(name, vary = NULL, ...) {
+  ensure_cache_state()
+
   context <- current_template(parent.frame())
   vary <- force(vary)
 

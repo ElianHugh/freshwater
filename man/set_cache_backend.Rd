@@ -4,12 +4,10 @@
 \alias{set_cache_backend}
 \title{Configure freshwater's cache backend}
 \usage{
-set_cache_backend(backend, clear = TRUE)
+set_cache_backend(backend)
 }
 \arguments{
 \item{backend}{cache backend accepted by \link[memoise:memoise]{memoise::memoise}}
-
-\item{clear}{If \code{TRUE}, clears the current cache before switching backends.}
 }
 \description{
 \code{set_cache_backend()} replaces the cache backend used by \code{\link[=cache]{cache()}}.
