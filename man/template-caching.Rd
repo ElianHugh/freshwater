@@ -131,5 +131,5 @@ page(list(id = 1, refresh = TRUE))
 
 }
 \seealso{
-\link{template}, \link{api_cget}, \link[memoise:memoise]{memoise::memoise}
+\link{template}, \link{set_cache_backend}, \link{get_cache_backend}, \link{api_cget}, \link[memoise:memoise]{memoise::memoise}
 }

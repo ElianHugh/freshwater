@@ -43,25 +43,29 @@ api_error_pages <- function(
         rlang::abort("cli is required to enable error pages.")
     }
 
+    fw_env <- get_freshwater_env(api)
+
     if (!is.null(handlers)) {
         if (!is.null(handlers[["403"]])) {
-            freshwater$forbidden_handler <- handlers[["403"]]
+            fw_env$error_pages$handlers[["403"]] <- handlers[["403"]]
         }
 
         if (!is.null(handlers[["404"]])) {
-            freshwater$missing_handler <- handlers[["404"]]
+            fw_env$error_pages$handlers[["404"]] <- handlers[["404"]]
         }
 
         if (!is.null(handlers[["500"]])) {
-            freshwater$error_handler <- handlers[["500"]]
+             fw_env$error_pages$handlers[["500"]] <- handlers[["500"]]
         }
     }
 
-    if (isTRUE(attr(api, "error_pages_installed", exact = TRUE))) {
+
+    if (isTRUE(fw_env$error_pages$installed)) {
         return(api)
     }
 
-    attr(api, "error_pages_installed") <- TRUE
+    fw_env$error_pages$installed <- TRUE
+    fw_env$error_pages$debug <- debug
 
     api <- api_context(api)
 
@@ -70,10 +74,10 @@ api_error_pages <- function(
     })
 
     plumber2::api_on(api, "freshwater_error_pages", function(...) {
-        if (isTRUE(attr(api, "error_hooked", exact = TRUE))) {
+        if (isTRUE(fw_env$error_pages$hooked)) {
             return(invisible(NULL))
         }
-        attr(api, "error_hooked") <- TRUE
+        fw_env$error_pages$hooked <- TRUE
 
         enhook_routes(
             api,
@@ -176,7 +180,7 @@ api_error_pages <- function(
                 status,
                 "403" = {
                     if (use_html) {
-                        response$body <- formatter(get_error_template(403)(
+                        response$body <- formatter(get_error_template(api, 403)(
                             message,
                             request
                         ))
@@ -187,7 +191,7 @@ api_error_pages <- function(
                 },
                 "404" = {
                     if (use_html) {
-                        response$body <- formatter(get_error_template(404)(
+                        response$body <- formatter(get_error_template(api, 404)(
                             message,
                             request
                         ))
@@ -197,10 +201,10 @@ api_error_pages <- function(
                 },
                 "500" = {
                     if (use_html) {
-                        response$body <- formatter(get_error_template(500)(
+                        response$body <- formatter(get_error_template(api, 500)(
                             message,
                             request,
-                            is_debug = debug
+                            is_debug = fw_env$error_pages$debug
                         ))
                         response$set_data("freshwater_handled", TRUE)
                     } else {
@@ -243,27 +247,29 @@ should_freshwater_handle <- function(request, response, message = NULL) {
 
 # error templates
 
-get_error_template <- function(error_code) {
+get_error_template <- function(api, error_code) {
+    fw_env <- get_freshwater_env(api)
     error_code <- as.character(error_code)
+
     switch(
         error_code,
         "403" = {
-            if (is.null(freshwater$forbidden_handler)) {
-                freshwater$forbidden_handler <- default_error_403_template
+            if (is.null(fw_env$error_pages$handlers[["403"]])) {
+                fw_env$error_pages$handlers[["403"]] <- default_error_403_template
             }
-            freshwater$forbidden_handler
+            fw_env$error_pages$handlers[["403"]]
         },
         "404" = {
-            if (is.null(freshwater$missing_handler)) {
-                freshwater$missing_handler <- default_error_404_template
+            if (is.null(fw_env$error_pages$handlers[["404"]])) {
+                fw_env$error_pages$handlers[["404"]] <- default_error_404_template
             }
-            freshwater$missing_handler
+            fw_env$error_pages$handlers[["404"]]
         },
         "500" = {
-            if (is.null(freshwater$error_handler)) {
-                freshwater$error_handler <- default_error_500_template
+            if (is.null(fw_env$error_pages$handlers[["500"]])) {
+                fw_env$error_pages$handlers[["500"]] <- default_error_500_template
             }
-            freshwater$error_handler
+            fw_env$error_pages$handlers[["500"]]
         },
         NULL
     )

@@ -12,8 +12,22 @@ the active request when used within a \code{\link[=template]{template()}}.
 Intended for custom forms / custom token placement
 (meta tags, JS fetch, etc).
 
-Do not call the \code{csrf_token()} function directly, it is a stub.
+Do not call the \code{freshwater::csrf_token()}
+function directly, it is a stub.
+}
+\examples{
+page <- template({
+    html(
+        head(
+            meta(name = "csrf-token", content = csrf_token())
+        ),
+        body(
+            div("App content")
+        )
+    )
+})
+page()
 }
 \seealso{
-api_csrf
+\link{api_csrf}
 }

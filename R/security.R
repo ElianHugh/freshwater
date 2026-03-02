@@ -28,23 +28,27 @@
 #'        api_csrf(secure = FALSE)
 #' }
 #'
+#' @seealso [form], [api_freshwater]
 #' @export
 api_csrf <- function(api, secure = TRUE) {
     if (!requireNamespace("openssl", quietly = TRUE)) {
         rlang::abort("openssl is required to enable CSRF protection.")
     }
 
-    if (isTRUE(attr(api, "csrf_installed", exact = TRUE))) {
+    fw_env <- get_freshwater_env(api)
+
+    if (isTRUE(fw_env$csrf$installed)) {
         return(api)
     }
 
-    attr(api, "csrf_installed") <- TRUE
+    fw_env$csrf$installed <- TRUE
 
     api <- api_context(api)
     unsafe_methods <- c("post", "put", "delete", "patch")
     safe_methods <- c("get", "head", "options")
     cookie_name <- if (isTRUE(secure)) "__Host-csrf" else "csrf"
-    freshwater$csrf_cookie_name <- cookie_name
+
+    fw_env$csrf$cookie_name <- cookie_name
 
     ignored_paths <- c(
         "/__docs__/"
@@ -56,10 +60,10 @@ api_csrf <- function(api, secure = TRUE) {
 
     # separate event for testing purposes
     plumber2::api_on(api, "freshwater_csrf", function(...) {
-        if (isTRUE(attr(api, "csrf_hooked", exact = TRUE))) {
+        if (isTRUE(fw_env$csrf$hooked)) {
             return(invisible(NULL))
         }
-        attr(api, "csrf_hooked") <- TRUE
+        fw_env$csrf$hooked <- TRUE
         enhook_routes(
             api,
             list(
@@ -126,15 +130,12 @@ api_csrf <- function(api, secure = TRUE) {
                             return(next_call())
                         }
 
-                        cookie_name <- freshwater$csrf_cookie_name %||% "csrf"
+                        cookie_name <- fw_env$csrf$cookie_name %||% "csrf"
                         token <- request$cookies[[cookie_name]] %||% ""
 
-                        # set current req context
-                        # todo, see if this is async compat
                         ctx <- get_fw_context()
                         ctx$csrf_token <- function() token
                         ctx$request <- request
-
 
                         next_call()
                     }
@@ -161,57 +162,6 @@ csrf_new_token <- function() {
     ctx$csrf_token()
 }
 
-#' Form
-#'
-#' When used within a [template()], a form implementation is injected that
-#' wraps `htmltools::tags$form()`. This provides additional functionalities
-#' when a request context is available.
-#'
-#' Do not call the exported function directly, it is a stub.
-#'
-#' ## CSRF
-#'
-#' - If CSRF middleware is active, a hidden `csrf_token` input is
-#' automatically injected.
-#'
-#' ## Method Spoofing
-#' If `method` is one of "put", "patch", or "delete", a hidden `_method`
-#' input is added and the HTML form method is set to "post".
-#'
-#' Browsers only support GET and POST.
-#' When method is "put", "patch", or "delete", freshwater renders a POST form
-#' with a hidden _method field. Middleware interprets this as the
-#' effective HTTP method. Requires freshwater context-enabled middleware.
-#'
-#'
-#' @param ... tag attributes and children passed to the `htmltools::tags$form()` function
-#' @param method character scalar denoting the HTTP
-#' method to perform.
-#' One of:
-#' - "get"
-#' - "post"
-#' - "put"
-#' - "patch"
-#' - "delete"
-#' @return (When injected) An `htmltools::tag` object.
-#' @seealso [template], [api_csrf], [api_freshwater], [htmltools::tags]
-#' @examples
-#' page <- template({
-#'      form(method = "delete")
-#' })
-#' page()
-#' @export
-form <- function(..., method = "get") {
-    rlang::abort(
-        c(
-            "freshwater::form is a stub and cannot be called directly.",
-            i = "Use form() inside `template()` rendering",
-            i = "For a plain form tag in normal R code, consider `htmltools::tags$form()`."
-        ),
-        class = "freshwater_fbuiltin_stub"
-    )
-}
-
 #' CSRF Token
 #' @description
 #' `csrf_token()` returns the current CSRF token string for
@@ -219,50 +169,28 @@ form <- function(..., method = "get") {
 #' Intended for custom forms / custom token placement
 #' (meta tags, JS fetch, etc).
 #'
-#' Do not call the `csrf_token()` function directly, it is a stub.
-#' @seealso api_csrf
+#' Do not call the `freshwater::csrf_token()`
+#' function directly, it is a stub.
+#' @examples
+#' page <- template({
+#'     html(
+#'         head(
+#'             meta(name = "csrf-token", content = csrf_token())
+#'         ),
+#'         body(
+#'             div("App content")
+#'         )
+#'     )
+#' })
+#' page()
+#' @seealso [api_csrf]
 #' @export
 csrf_token <- function() {
     rlang::abort(
         c(
             "freshwater::csrf_token is a stub and cannot be called directly",
             i = "Use csrf_token() inside `template()` rendering when `api_csrf` is installed"
-        )
-    )
-}
-
-.form_impl <- function(..., method = "get") {
-    ctx <- get_fw_context()
-    children <- list(...)
-    method <- tolower(method)
-
-    valid <- c("get", "post", "put", "patch", "delete")
-    if (!method %in% valid) {
-        rlang::abort(paste0("Unsupported form method: ", method))
-    }
-
-    if (!is.null(ctx)) {
-        if (!is.null(ctx$csrf_token)) {
-            token_input <- htmltools::tags$input(
-                type = "hidden",
-                name = "csrf_token",
-                value = csrf_token()
-            )
-            children <- c(list(token_input), children)
-        }
-    }
-    if (method %in% c("put", "patch", "delete")) {
-        faux_method <- htmltools::tags$input(
-            type = "hidden",
-            name = "_method",
-            value = toupper(method)
-        )
-        children <- c(list(faux_method), children)
-        method <- "post"
-    }
-
-    do.call(
-        htmltools::tags$form,
-        c(list(method = method), children)
+        ),
+        class = "freshwater_builtin_stub"
     )
 }

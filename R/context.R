@@ -3,7 +3,7 @@
 #' @title Freshwater Request Context
 #' @description
 #' freshwater installs a per-request execution context that allows
-#' [current_path()], csrf_token(), and [template()]
+#' [current_path()], [csrf_token()], and [template()]
 #' helpers to access the active HTTP request.
 #' The context itself is stored in freshwater's internal state and is
 #' set/unset with each request.
@@ -54,11 +54,12 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
 #' @keywords internal
 #' @noRd
 api_context <- function(api) {
-    if (isTRUE(attr(api, "context_installed", exact = TRUE))) {
+    fw_env <- get_freshwater_env(api)
+    if (isTRUE(fw_env$context$installed)) {
         return(api)
     }
 
-    attr(api, "context_installed") <- TRUE
+    fw_env$context$installed <- TRUE
 
     plumber2::api_on(api, "start", function(...) {
         api$trigger("freshwater_context")
@@ -84,10 +85,10 @@ api_context <- function(api) {
     })
 
     plumber2::api_on(api, "freshwater_context", function(...) {
-        if (isTRUE(attr(api, "context_hooked", exact = TRUE))) {
+        if (isTRUE(fw_env$context$hooked)) {
             return(invisible(NULL))
         }
-        attr(api, "context_hooked") <- TRUE
+        fw_env$context$hooked <- TRUE
         enhook_routes(
             api,
             list(
@@ -110,6 +111,26 @@ api_context <- function(api) {
     })
 
     invisible(api)
+}
+
+#' env is stored in the plumber2 api object via
+#' an attribute, used for storing freshwater data
+#' on a per-api basis (e.g. if fns are hooked or not)
+#' @noRd
+get_freshwater_env <- function(api) {
+    # mark as a freshwater-plumber2 api so
+    # we can add some things to print
+    cls <- class(api)
+    if (!("freshwater_api" %in% cls)) {
+        class(api) <- c("freshwater_api", cls)
+    }
+
+    e <- attr(api, "freshwater", exact = TRUE)
+    if (is.null(e)) {
+        e <- new.env()
+        attr(api, "freshwater") <- e
+    }
+    e
 }
 
 with_fw_context <- function(ctx, expr) {
@@ -142,6 +163,10 @@ with_fw_context <- function(ctx, expr) {
     res
 }
 
+# this is per-session based atm
+# ideally this is per-api scoped (and store it on the fw_env attr)
+# but we can't make context injection "magic" otherwise
+# (or haven't figured out how to yet)
 set_fw_context <- function(ctx) {
     old <- freshwater$request_context %||% NULL
     freshwater$request_context <- ctx
@@ -181,4 +206,33 @@ current_path <- function() {
         )
     }
     ctx$request$path
+}
+
+
+#' @exportS3Method
+print.freshwater_api <- function(x, ...) {
+    NextMethod()
+
+    fw <- attr(x, "freshwater", exact = TRUE)
+    if (is.null(fw)) {
+        return(invisible(x))
+    }
+    cat("\n<freshwater>\n")
+    if (isTRUE(fw$context$installed)) {
+        cat("  - context: installed\n")
+    }
+    if (isTRUE(fw$error_pages$installed)) {
+        extras <- character(0)
+
+        # for futur flags
+        if (isTRUE(fw$error_pages$debug)) {
+            extras <- c(extras, " (debug)")
+        }
+        out <- sprintf("  - error pages: installed%s\n", extras)
+        cat(out)
+    }
+    if (isTRUE(fw$csrf$installed)) {
+        cat("  - csrf: installed\n")
+    }
+    invisible(x)
 }
