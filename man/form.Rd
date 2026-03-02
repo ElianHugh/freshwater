@@ -25,11 +25,14 @@ One of:
 }
 \description{
 When used within a \code{\link[=template]{template()}}, a form implementation is injected that
-wraps \code{htmltools::tags$form()}. This provides additional functionalities
-when a request context is available.
+wraps \code{htmltools::tags$form()}.
 }
 \details{
-Do not call the exported function directly, it is a stub.
+When a request context is available, freshwater adds optional behaviors such as
+CSRF token insertion and HTTP method spoofing.
+
+Calling \code{form()} outside of \code{\link[=template]{template()}} rendering will result in an error.
+For a plain form tag in normal R code, use \link[htmltools:builder]{htmltools::tags}\verb{$form()}.
 \subsection{CSRF}{
 \itemize{
 \item If CSRF middleware is active, a hidden \code{csrf_token} input is

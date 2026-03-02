@@ -123,6 +123,16 @@ demo <- template(result = "", {
             ),
 
             div(
+                class = "good_form",
+                h2("freshwater form(): Exempt Route"),
+                form(
+                    action = "/no_csrf",
+                    method = "post",
+                    input(type = "submit", value = "Exempt OK")
+                )
+            ),
+
+            div(
                 class = "bad_form",
                 h2("Tokenless POST"),
                 htmltools::tags$form(
@@ -163,5 +173,11 @@ function(response) {
 #' @delete /delete
 function(response) {
     result <<- "Authenticated (DELETE)"
+    redirect(response, "/form")
+}
+
+#' @post /no_csrf
+function(response) {
+    result <<- "No authentication needed (POST)"
     redirect(response, "/form")
 }
