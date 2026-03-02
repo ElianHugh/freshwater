@@ -61,8 +61,6 @@ the following helpers:
 \item \code{form()} — form helper with optional CSRF injection and method spoofing.
 \item \code{csrf_token()} — returns the current CSRF token string
 }
-
-See \link{template_builtins} for details.
 }
 
 \section{Template Context}{
@@ -133,5 +131,5 @@ layout(htmltools::div("content"))
 
 }
 \seealso{
-\link{cache}
+\link{cache}, \link{form}, \link{csrf_token}, \link{api_freshwater}
 }

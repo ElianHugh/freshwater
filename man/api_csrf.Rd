@@ -13,7 +13,8 @@ api_csrf(api, secure = TRUE)
 secure. If false, uses "csrf".}
 }
 \description{
-Installs CSRF middleware on a plumber2 API using the double-submit cookie pattern.
+\code{api_csrf() }installs CSRF middleware on a plumber2 API using
+the double-submit cookie pattern.
 }
 \details{
 When installed:

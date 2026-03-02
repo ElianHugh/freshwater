@@ -245,7 +245,7 @@ function(api) {
 
 ## Error Pages
 
-> Provide pretty error-pags for common HTTP error codes (403, 404, and 500)
+> Provide pretty error-pages for common HTTP error codes (403, 404, and 500)
 
 ```r
 function(api) {

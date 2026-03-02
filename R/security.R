@@ -1,6 +1,7 @@
 #' Apply CSRF Protection to a plumber2 API
 #'
-#' Installs CSRF middleware on a plumber2 API using the double-submit cookie pattern.
+#' `api_csrf() `installs CSRF middleware on a plumber2 API using
+#' the double-submit cookie pattern.
 #'
 #' When installed:
 #' - Any `form` element inside [template] automatically
@@ -152,7 +153,7 @@ csrf_new_token <- function() {
         paste0(collapse = "")
 }
 
-csrf_token <- function() {
+.csrf_token_impl <- function() {
     ctx <- get_fw_context()
     if (is.null(ctx) || is.null(ctx$csrf_token)) {
         return("")
@@ -160,7 +161,77 @@ csrf_token <- function() {
     ctx$csrf_token()
 }
 
+#' Form
+#'
+#' When used within a [template()], a form implementation is injected that
+#' wraps `htmltools::tags$form()`. This provides additional functionalities
+#' when a request context is available.
+#'
+#' Do not call the exported function directly, it is a stub.
+#'
+#' ## CSRF
+#'
+#' - If CSRF middleware is active, a hidden `csrf_token` input is
+#' automatically injected.
+#'
+#' ## Method Spoofing
+#' If `method` is one of "put", "patch", or "delete", a hidden `_method`
+#' input is added and the HTML form method is set to "post".
+#'
+#' Browsers only support GET and POST.
+#' When method is "put", "patch", or "delete", freshwater renders a POST form
+#' with a hidden _method field. Middleware interprets this as the
+#' effective HTTP method. Requires freshwater context-enabled middleware.
+#'
+#'
+#' @param ... tag attributes and children passed to the `htmltools::tags$form()` function
+#' @param method character scalar denoting the HTTP
+#' method to perform.
+#' One of:
+#' - "get"
+#' - "post"
+#' - "put"
+#' - "patch"
+#' - "delete"
+#' @return (When injected) An `htmltools::tag` object.
+#' @seealso [template], [api_csrf], [api_freshwater], [htmltools::tags]
+#' @examples
+#' page <- template({
+#'      form(method = "delete")
+#' })
+#' page()
+#' @export
 form <- function(..., method = "get") {
+    rlang::abort(
+        c(
+            "freshwater::form is a stub and cannot be called directly.",
+            i = "Use form() inside `template()` rendering",
+            i = "For a plain form tag in normal R code, consider `htmltools::tags$form()`."
+        ),
+        class = "freshwater_fbuiltin_stub"
+    )
+}
+
+#' CSRF Token
+#' @description
+#' `csrf_token()` returns the current CSRF token string for
+#' the active request when used within a [template()].
+#' Intended for custom forms / custom token placement
+#' (meta tags, JS fetch, etc).
+#'
+#' Do not call the `csrf_token()` function directly, it is a stub.
+#' @seealso api_csrf
+#' @export
+csrf_token <- function() {
+    rlang::abort(
+        c(
+            "freshwater::csrf_token is a stub and cannot be called directly",
+            i = "Use csrf_token() inside `template()` rendering when `api_csrf` is installed"
+        )
+    )
+}
+
+.form_impl <- function(..., method = "get") {
     ctx <- get_fw_context()
     children <- list(...)
     method <- tolower(method)

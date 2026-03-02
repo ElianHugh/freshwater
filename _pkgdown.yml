@@ -22,7 +22,8 @@ reference:
     contents:
       - template
       - fragment
-      - template_builtins
+      - form
+      - csrf_token
       - register_html_serialiser
 
   - title: "Rendering Performance"

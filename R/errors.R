@@ -78,7 +78,7 @@ api_error_pages <- function(
         enhook_routes(
             api,
             hook(
-                id = "freshwater::error_page",
+                id = "freshwater::error_pages",
                 function(api, args, next_call) {
                     response <- args$response %||% NULL
                     request <- args$request %||% NULL
