@@ -56,4 +56,6 @@ are prepended), culminating in the final user handler.
 
 When using asynchronous routes via `async=TRUE` programatically, or via
 `@async`, hooks are attached to the `then` handlers, rather than main
-handler itself.
+handler itself. This is because `request`, `response`, and `server`
+arguments are not available to the main async handler, and hooks depend
+on the full handler signature being available.

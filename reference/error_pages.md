@@ -67,5 +67,5 @@ function(api) {
 #> {
 #>     api_error_pages(api, debug = TRUE)
 #> }
-#> <environment: 0x562b5107eed8>
+#> <environment: 0x5560857cee18>
 ```

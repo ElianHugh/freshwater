@@ -93,7 +93,11 @@ they are installed.</p></li>
 provided id), and only new hooks will be installed.</p></li>
 </ul><p>When using asynchronous routes via <code>async=TRUE</code>
 programatically, or via <code>@async</code>, hooks are attached to
-the <code>then</code> handlers, rather than main handler itself.</p>
+the <code>then</code> handlers, rather than main handler itself. This is because
+<code>request</code>, <code>response</code>, and <code>server</code> arguments
+are not available to the main async
+handler, and hooks depend on the
+full handler signature being available.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
