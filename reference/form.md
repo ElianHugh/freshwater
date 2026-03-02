@@ -3,8 +3,6 @@
 When used within a
 [`template()`](https://elianhugh.github.io/freshwater/reference/templating.md),
 a form implementation is injected that wraps `htmltools::tags$form()`.
-This provides additional functionalities when a request context is
-available.
 
 ## Usage
 
@@ -41,7 +39,14 @@ object.
 
 ## Details
 
-Do not call the exported function directly, it is a stub.
+When a request context is available, freshwater adds optional behaviors
+such as CSRF token insertion and HTTP method spoofing.
+
+Calling `form()` outside of
+[`template()`](https://elianhugh.github.io/freshwater/reference/templating.md)
+rendering will result in an error. For a plain form tag in normal R
+code, use
+[htmltools::tags](https://rstudio.github.io/htmltools/reference/builder.html)`$form()`.
 
 ### CSRF
 

@@ -1,12 +1,12 @@
 # Apply CSRF Protection to a plumber2 API
 
-`api_csrf() `installs CSRF middleware on a plumber2 API using the
+`api_csrf()` installs CSRF middleware on a plumber2 API using the
 double-submit cookie pattern.
 
 ## Usage
 
 ``` r
-api_csrf(api, secure = TRUE)
+api_csrf(api, secure = TRUE, exemptions = character())
 ```
 
 ## Arguments
@@ -19,6 +19,10 @@ api_csrf(api, secure = TRUE)
 
   if `TRUE`, sets the CSRF cookie to "\_\_Host-csrf" and marks the
   cookie as secure. If false, uses "csrf".
+
+- exemptions:
+
+  character vector of route patterns to exempt from CSRF checks
 
 ## Details
 
@@ -44,6 +48,20 @@ Middleware behaviour:
 
 This middleware installs freshwater request context.
 
+## Annotation Reference
+
+CSRF exemptions can be specified by `@csrf`:
+
+- `"on"`: (default) CSRF checks are enforced
+
+- `"off"` or `"exempt"`: CSRF checks are skipped for the route
+
+    #* @post /foo/*/bar
+    #* @csrf exempt
+    function() {
+     print("No checking!")
+    }
+
 ## See also
 
 [form](https://elianhugh.github.io/freshwater/reference/form.md),
@@ -55,11 +73,12 @@ This middleware installs freshwater request context.
 #* @plumber
 function(api) {
   api |>
-       api_csrf(secure = FALSE)
+       api_csrf(secure = FALSE, exemptions = c("/foo/*", "/bar"))
 }
 #> function (api) 
 #> {
-#>     api_csrf(api, secure = FALSE)
+#>     api_csrf(api, secure = FALSE, exemptions = c("/foo/*", "/bar"))
 #> }
-#> <environment: 0x55d136221b90>
+#> <environment: 0x562b4f64df60>
+
 ```

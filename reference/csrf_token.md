@@ -3,11 +3,13 @@
 `csrf_token()` returns the current CSRF token string for the active
 request when used within a
 [`template()`](https://elianhugh.github.io/freshwater/reference/templating.md).
-Intended for custom forms / custom token placement (meta tags, JS fetch,
-etc).
+Calling it outside of a
+[`template()`](https://elianhugh.github.io/freshwater/reference/templating.md)
+context will result in an error.
 
-Do not call the `freshwater::csrf_token()` function directly, it is a
-stub.
+In most cases, CSRF tokens are inserted automatically for standard form
+helpers. Intended for custom forms / custom token placement (meta tags,
+JS fetch, etc).
 
 ## Usage
 
