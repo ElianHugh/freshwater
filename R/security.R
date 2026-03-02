@@ -168,7 +168,20 @@ csrf_new_token <- function() {
 #' Intended for custom forms / custom token placement
 #' (meta tags, JS fetch, etc).
 #'
-#' Do not call the `csrf_token()` function directly, it is a stub.
+#' Do not call the `freshwater::csrf_token()`
+#' function directly, it is a stub.
+#' @examples
+#' page <- template({
+#'     html(
+#'         head(
+#'             meta(name = "csrf-token", content = csrf_token())
+#'         ),
+#'         body(
+#'             div("App content")
+#'         )
+#'     )
+#' })
+#' page()
 #' @seealso [api_csrf]
 #' @export
 csrf_token <- function() {
