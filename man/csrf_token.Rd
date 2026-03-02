@@ -15,5 +15,5 @@ Intended for custom forms / custom token placement
 Do not call the \code{csrf_token()} function directly, it is a stub.
 }
 \seealso{
-api_csrf
+\link{api_csrf}
 }

@@ -65,6 +65,7 @@ api_error_pages <- function(
     }
 
     fw_env$error_pages$installed <- TRUE
+    fw_env$error_pages$debug <- debug
 
     api <- api_context(api)
 
@@ -203,7 +204,7 @@ api_error_pages <- function(
                         response$body <- formatter(get_error_template(api, 500)(
                             message,
                             request,
-                            is_debug = debug
+                            is_debug = fw_env$error_pages$debug
                         ))
                         response$set_data("freshwater_handled", TRUE)
                     } else {
