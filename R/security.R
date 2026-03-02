@@ -46,9 +46,7 @@ api_csrf <- function(api, secure = TRUE) {
     }
 
     fw_env$csrf$installed <- TRUE
-
-    fw_env$csrf$exempt <- waysign::signpost()
-    fw_env$csrf$exempt$add_path("/__docs__/", TRUE)
+    fw_env$csrf$exempt <- ensure_csrf_exempt_router(api)
 
     api <- api_context(api)
     unsafe_methods <- c("post", "put", "delete", "patch")
@@ -156,6 +154,21 @@ api_csrf <- function(api, secure = TRUE) {
     api
 }
 
+ensure_csrf_exempt_router <- function(api) {
+    fw_env <- get_freshwater_env(api)
+    if (is.null(fw_env$csrf$exempt)) {
+        fw_env$csrf$exempt <- waysign::signpost()
+        fw_env$csrf$exempt$add_path("/__docs__/*", TRUE)
+    }
+    fw_env$csrf$exempt
+}
+
+csrf_exempt_add <- function(api, pattern) {
+  router <- ensure_csrf_exempt_router(api)
+  router$add_path(pattern, TRUE)
+  invisible(TRUE)
+}
+
 csrf_new_token <- function() {
     openssl::rand_bytes(64) |>
         format() |>
@@ -235,8 +248,7 @@ apply_plumber2_block.csrf <- function(
     for (i in seq_along(block$endpoints)) {
         for (path in block$endpoints[[i]]$path) {
             if (identical(block$csrf_mode, "exempt")) {
-                fw_env <- get_freshwater_env(api)
-                fw_env$csrf$exempt$add_path(paste0(root, path), TRUE)
+                csrf_exempt_add(api, paste0(root, path))
             }
         }
     }
