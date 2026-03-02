@@ -35,6 +35,10 @@ api_csrf <- function(api, secure = TRUE) {
         rlang::abort("openssl is required to enable CSRF protection.")
     }
 
+    if (!requireNamespace("waysign", quietly = TRUE)) {
+        rlang::abort("waysign is required to enable CSRF protection.")
+    }
+
     fw_env <- get_freshwater_env(api)
 
     if (isTRUE(fw_env$csrf$installed)) {
