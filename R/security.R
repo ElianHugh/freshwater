@@ -28,6 +28,7 @@
 #'        api_csrf(secure = FALSE)
 #' }
 #'
+#' @seealso [form], [api_freshwater]
 #' @export
 api_csrf <- function(api, secure = TRUE) {
     if (!requireNamespace("openssl", quietly = TRUE)) {

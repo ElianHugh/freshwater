@@ -143,7 +143,7 @@ get_cache_backend <- function() {
 #' })
 #' page()
 #'
-#' @seealso [template], [api_cget], [memoise::memoise]
+#' @seealso [template], [set_cache_backend], [get_cache_backend], [api_cget], [memoise::memoise]
 #' @rdname template-caching
 cache <- function(name, vary = NULL, ...) {
   ensure_cache_state()
