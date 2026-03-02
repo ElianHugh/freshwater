@@ -1,7 +1,7 @@
 # Apply CSRF Protection to a plumber2 API
 
-Installs CSRF middleware on a plumber2 API using the double-submit
-cookie pattern.
+`api_csrf() `installs CSRF middleware on a plumber2 API using the
+double-submit cookie pattern.
 
 ## Usage
 
@@ -28,8 +28,9 @@ When installed:
   [template](https://elianhugh.github.io/freshwater/reference/templating.md)
   automatically includes a CSRF token.
 
-- If working in JavaScript contexts, the `csrf_token()` helper is also
-  accessible inside templates.
+- If working in JavaScript contexts, the
+  [`csrf_token()`](https://elianhugh.github.io/freshwater/reference/csrf_token.md)
+  helper is also accessible inside templates.
 
 Middleware behaviour:
 
@@ -55,5 +56,5 @@ function(api) {
 #> {
 #>     api_csrf(api, secure = FALSE)
 #> }
-#> <environment: 0x5653acf9faa8>
+#> <environment: 0x55f9c25d3728>
 ```

@@ -63,14 +63,11 @@ converted to `htmltools::div(data_foo="bar")`.
 Template bodies are evaluated in a freshwater environment that provides
 the following helpers:
 
-- `form()` — form helper with optional CSRF injection and method
-  spoofing.
+- [`form()`](https://elianhugh.github.io/freshwater/reference/form.md) —
+  form helper with optional CSRF injection and method spoofing.
 
-- `csrf_token()` — returns the current CSRF token string
-
-See
-[template_builtins](https://elianhugh.github.io/freshwater/reference/template_builtins.md)
-for details.
+- [`csrf_token()`](https://elianhugh.github.io/freshwater/reference/csrf_token.md)
+  — returns the current CSRF token string
 
 ## Template Context
 
@@ -80,7 +77,10 @@ separate from the request context defined elsewhere.
 
 ## See also
 
-[cache](https://elianhugh.github.io/freshwater/reference/template-caching.md)
+[cache](https://elianhugh.github.io/freshwater/reference/template-caching.md),
+[form](https://elianhugh.github.io/freshwater/reference/form.md),
+[csrf_token](https://elianhugh.github.io/freshwater/reference/csrf_token.md),
+[api_freshwater](https://elianhugh.github.io/freshwater/reference/api_freshwater.md)
 
 ## Examples
 

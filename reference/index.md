@@ -5,8 +5,10 @@
 - [`template()`](https://elianhugh.github.io/freshwater/reference/templating.md)
   [`fragment()`](https://elianhugh.github.io/freshwater/reference/templating.md)
   : Create a reusable HTML template
-- [`template_builtins`](https://elianhugh.github.io/freshwater/reference/template_builtins.md)
-  : Template Built-ins
+- [`form()`](https://elianhugh.github.io/freshwater/reference/form.md) :
+  Form
+- [`csrf_token()`](https://elianhugh.github.io/freshwater/reference/csrf_token.md)
+  : CSRF Token
 - [`register_html_serialiser()`](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md)
   : Register HTML Serialiser
 
