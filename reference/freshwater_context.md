@@ -2,7 +2,8 @@
 
 freshwater installs a per-request execution context that allows
 [`current_path()`](https://elianhugh.github.io/freshwater/reference/current_path.md),
-csrf_token(), and
+[`csrf_token()`](https://elianhugh.github.io/freshwater/reference/csrf_token.md),
+and
 [`template()`](https://elianhugh.github.io/freshwater/reference/templating.md)
 helpers to access the active HTTP request. The context itself is stored
 in freshwater's internal state and is set/unset with each request.

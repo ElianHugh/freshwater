@@ -3,11 +3,13 @@
 the active request when used within a template().
 Intended for custom forms / custom token placement
 (meta tags, JS fetch, etc).
-Do not call the csrf_token() function directly, it is a stub."><meta property="og:description" content="csrf_token() returns the current CSRF token string for
+Do not call the freshwater::csrf_token()
+function directly, it is a stub."><meta property="og:description" content="csrf_token() returns the current CSRF token string for
 the active request when used within a template().
 Intended for custom forms / custom token placement
 (meta tags, JS fetch, etc).
-Do not call the csrf_token() function directly, it is a stub."></head><body>
+Do not call the freshwater::csrf_token()
+function directly, it is a stub."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -50,7 +52,8 @@ Do not call the csrf_token() function directly, it is a stub."></head><body>
 the active request when used within a <code><a href="templating.html">template()</a></code>.
 Intended for custom forms / custom token placement
 (meta tags, JS fetch, etc).</p>
-<p>Do not call the <code>csrf_token()</code> function directly, it is a stub.</p>
+<p>Do not call the <code>freshwater::csrf_token()</code>
+function directly, it is a stub.</p>
     </div>
 
     <div class="section level2">
@@ -60,9 +63,29 @@ Intended for custom forms / custom token placement
 
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p>api_csrf</p></div>
+    <div class="dont-index"><p><a href="api_csrf.html">api_csrf</a></p></div>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">page</span> <span class="op">&lt;-</span> <span class="fu"><a href="templating.html">template</a></span><span class="op">(</span><span class="op">{</span></span></span>
+<span class="r-in"><span>    <span class="fu">html</span><span class="op">(</span></span></span>
+<span class="r-in"><span>        <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>            <span class="fu">meta</span><span class="op">(</span>name <span class="op">=</span> <span class="st">"csrf-token"</span>, content <span class="op">=</span> <span class="fu">csrf_token</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>        <span class="op">)</span>,</span></span>
+<span class="r-in"><span>        <span class="fu"><a href="https://rdrr.io/r/base/body.html" class="external-link">body</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>            <span class="fu">div</span><span class="op">(</span><span class="st">"App content"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>        <span class="op">)</span></span></span>
+<span class="r-in"><span>    <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/page.html" class="external-link">page</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;html&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;body&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;div&gt;App content&lt;/div&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;/body&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/html&gt;</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

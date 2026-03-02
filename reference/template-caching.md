@@ -73,6 +73,8 @@ invalidation of the cache.
 ## See also
 
 [template](https://elianhugh.github.io/freshwater/reference/templating.md),
+[set_cache_backend](https://elianhugh.github.io/freshwater/reference/set_cache_backend.md),
+[get_cache_backend](https://elianhugh.github.io/freshwater/reference/get_cache_backend.md),
 [api_cget](https://elianhugh.github.io/freshwater/reference/api_cget.md),
 [memoise::memoise](https://memoise.r-lib.org/reference/memoise.html)
 
@@ -138,7 +140,7 @@ page <- template({
   )
 })
 page()
-#> <div>Generated at 2026-03-02 00:26:49.337577</div>
+#> <div>Generated at 2026-03-02 04:22:04.40052</div>
 
 # Invalidate the current cache
 # during rendering

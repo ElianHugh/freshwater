@@ -6,7 +6,8 @@ request when used within a
 Intended for custom forms / custom token placement (meta tags, JS fetch,
 etc).
 
-Do not call the `csrf_token()` function directly, it is a stub.
+Do not call the `freshwater::csrf_token()` function directly, it is a
+stub.
 
 ## Usage
 
@@ -16,4 +17,25 @@ csrf_token()
 
 ## See also
 
-api_csrf
+[api_csrf](https://elianhugh.github.io/freshwater/reference/api_csrf.md)
+
+## Examples
+
+``` r
+page <- template({
+    html(
+        head(
+            meta(name = "csrf-token", content = csrf_token())
+        ),
+        body(
+            div("App content")
+        )
+    )
+})
+page()
+#> <html>
+#>   <body>
+#>     <div>App content</div>
+#>   </body>
+#> </html>
+```

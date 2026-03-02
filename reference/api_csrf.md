@@ -44,6 +44,11 @@ Middleware behaviour:
 
 This middleware installs freshwater request context.
 
+## See also
+
+[form](https://elianhugh.github.io/freshwater/reference/form.md),
+[api_freshwater](https://elianhugh.github.io/freshwater/reference/api_freshwater.md)
+
 ## Examples
 
 ``` r
@@ -56,5 +61,5 @@ function(api) {
 #> {
 #>     api_csrf(api, secure = FALSE)
 #> }
-#> <environment: 0x55f9c25d3728>
+#> <environment: 0x5642db76f1f0>
 ```
