@@ -4,16 +4,18 @@
 \alias{api_csrf}
 \title{Apply CSRF Protection to a plumber2 API}
 \usage{
-api_csrf(api, secure = TRUE)
+api_csrf(api, secure = TRUE, exemptions = character())
 }
 \arguments{
 \item{api}{a plumber2 API object}
 
 \item{secure}{if \code{TRUE}, sets the CSRF cookie to "__Host-csrf" and marks the cookie as
 secure. If false, uses "csrf".}
+
+\item{exemptions}{character vector of route patterns to exempt from CSRF checks}
 }
 \description{
-\code{api_csrf() }installs CSRF middleware on a plumber2 API using
+\code{api_csrf()} installs CSRF middleware on a plumber2 API using
 the double-submit cookie pattern.
 }
 \details{
@@ -35,12 +37,28 @@ or a \code{csrf_token} field in the parsed request body matches the CSRF cookie.
 
 This middleware installs freshwater request context.
 }
+\section{Annotation Reference}{
+CSRF exemptions can be specified by \verb{@csrf}:
+\itemize{
+\item \code{"on"}: (default) CSRF checks are enforced
+\item \code{"off"} or \code{"exempt"}: CSRF checks are skipped for the route
+}
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{#* @post /foo/*/bar
+#* @csrf exempt
+function() \{
+ print("No checking!")
+\}
+}\if{html}{\out{</div>}}
+}
+
 \examples{
 #* @plumber
 function(api) {
   api |>
-       api_csrf(secure = FALSE)
+       api_csrf(secure = FALSE, exemptions = c("/foo/*", "/bar"))
 }
+
 
 }
 \seealso{

@@ -1,6 +1,6 @@
 #' Apply CSRF Protection to a plumber2 API
 #'
-#' `api_csrf() `installs CSRF middleware on a plumber2 API using
+#' `api_csrf()` installs CSRF middleware on a plumber2 API using
 #' the double-submit cookie pattern.
 #'
 #' When installed:
@@ -17,26 +17,49 @@
 #'
 #' This middleware installs freshwater request context.
 #'
+#' @details
+#' # Annotation Reference
+#'
+#' CSRF exemptions can be specified by `@csrf`:
+#' - `"on"`: (default) CSRF checks are enforced
+#' - `"off"` or `"exempt"`: CSRF checks are skipped for the route
+#'
+#' ```r
+#' #* @post /foo/*/bar
+#' #* @csrf exempt
+#' function() {
+#'  print("No checking!")
+#' }
+#' ```
+#'
 #' @param api a plumber2 API object
 #' @param secure if `TRUE`, sets the CSRF cookie to "__Host-csrf" and marks the cookie as
 #' secure. If false, uses "csrf".
+#' @param exemptions character vector of route patterns to exempt from CSRF checks
 #'
 #' @examples
 #' #* @plumber
 #' function(api) {
 #'   api |>
-#'        api_csrf(secure = FALSE)
+#'        api_csrf(secure = FALSE, exemptions = c("/foo/*", "/bar"))
 #' }
+#'
 #'
 #' @seealso [form], [api_freshwater]
 #' @export
-api_csrf <- function(api, secure = TRUE) {
+api_csrf <- function(api, secure = TRUE, exemptions = character()) {
     if (!requireNamespace("openssl", quietly = TRUE)) {
         rlang::abort("openssl is required to enable CSRF protection.")
     }
 
     if (!requireNamespace("waysign", quietly = TRUE)) {
         rlang::abort("waysign is required to enable CSRF protection.")
+    }
+
+    if (!is.character(exemptions)) {
+        rlang::abort(
+            "`exemptions` must be a character vector of path patterns."
+        )
     }
 
     fw_env <- get_freshwater_env(api)
@@ -46,7 +69,10 @@ api_csrf <- function(api, secure = TRUE) {
     }
 
     fw_env$csrf$installed <- TRUE
-    fw_env$csrf$exempt <- ensure_csrf_exempt_router(api)
+
+    for (exemption in exemptions) {
+        csrf_exempt_add(api, exemption)
+    }
 
     api <- api_context(api)
     unsafe_methods <- c("post", "put", "delete", "patch")
@@ -230,7 +256,6 @@ csrf_tag_handler <- function(block, call, tags, values, env) {
     if (tag == "off") tag <- "exempt"
 
     block$csrf_mode <- tag
-
 
     block
 }
