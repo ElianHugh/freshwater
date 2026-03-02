@@ -27,11 +27,17 @@ NULL
 #' @title Freshwater defaults for plumber2 APIs
 #'
 #' @description
-#' This is a convenience wrapper around
-#' [register_html_serialiser()], [api_csrf()], and
-#' [api_error_pages()].
+#' Installs freshwater defaults onto a plumber2 API.
 #'
-#' This installs freshwater request context.
+#' This is a convenience wrapper:
+#' - Registers freshwater's HTML serialiser
+#' - Installs freshwater request context
+#' - Optionally enables CSRF protection
+#' - Optionally installs HTML error page handlers
+#'
+#' Arguments in `...` are selectively forwarded to
+#' [api_csrf()] and [api_error_pages()] based on
+#' matching formal parameters.
 #'
 #' @param api a [plumber2] api object.
 #' @param csrf whether to enable CSRF protection
@@ -39,14 +45,33 @@ NULL
 #' @param ... args passed to either [api_csrf()] or
 #' [api_error_pages()]
 #'
+#' @seealso [api_csrf], [api_error_pages], [register_html_serialiser]
 #' @export
 api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
     register_html_serialiser()
 
+    dots <- list(...)
     api <- api_context(api)
 
-    if (csrf) api <- api_csrf(api, ...)
-    if (error_pages) api <- api_error_pages(api, ...)
+    if (csrf) {
+        csrf_fmls <- formals(api_csrf) |>
+            names()
+        csrf_args <- dots[which(names(dots) %in% csrf_fmls)]
+        api <- do.call(
+            api_csrf,
+            args = c(list(api = api), csrf_args)
+        )
+    }
+
+    if (error_pages) {
+        error_pages_fmls <- formals(api_error_pages) |>
+            names()
+        error_page_args <- dots[which(names(dots) %in% error_pages_fmls)]
+        api <- do.call(
+            api_error_pages,
+            args = c(list(api = api), error_page_args)
+        )
+    }
 
     invisible(api)
 }

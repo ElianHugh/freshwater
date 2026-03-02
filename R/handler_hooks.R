@@ -195,7 +195,11 @@ patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("appen
 #'
 #' When using asynchronous routes via `async=TRUE`
 #' programatically, or via `@async`, hooks are attached to
-#' the `then` handlers, rather than main handler itself.
+#' the `then` handlers, rather than main handler itself. This is because
+#' `request`, `response`, and `server` arguments
+#' are not available to the main async
+#' handler, and hooks depend on the
+#' full handler signature being available.
 #'
 #' @param api a [plumber2] api object.
 #' @param hooks a single hook or list of hooks that take the signature

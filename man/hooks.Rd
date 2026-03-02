@@ -45,5 +45,9 @@ provided id), and only new hooks will be installed.
 
 When using asynchronous routes via \code{async=TRUE}
 programatically, or via \verb{@async}, hooks are attached to
-the \code{then} handlers, rather than main handler itself.
+the \code{then} handlers, rather than main handler itself. This is because
+\code{request}, \code{response}, and \code{server} arguments
+are not available to the main async
+handler, and hooks depend on the
+full handler signature being available.
 }
