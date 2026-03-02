@@ -43,16 +43,15 @@ api_csrf <- function(api, secure = TRUE) {
 
     fw_env$csrf$installed <- TRUE
 
+    fw_env$csrf$exempt <- waysign::signpost()
+    fw_env$csrf$exempt$add_path("/__docs__/", TRUE)
+
     api <- api_context(api)
     unsafe_methods <- c("post", "put", "delete", "patch")
     safe_methods <- c("get", "head", "options")
     cookie_name <- if (isTRUE(secure)) "__Host-csrf" else "csrf"
 
     fw_env$csrf$cookie_name <- cookie_name
-
-    ignored_paths <- c(
-        "/__docs__/"
-    )
 
     plumber2::api_on(api, "start", function(...) {
         api$trigger("freshwater_csrf")
@@ -74,8 +73,13 @@ api_csrf <- function(api, secure = TRUE) {
                         response <- args$response
                         body <- args$body
 
-                        if (is.null(request) || startsWith(request$path, ignored_paths)) {
-                            return(next_call())
+                        if (is.null(request)) return(next_call())
+
+                        if (!is.null(fw_env$csrf$exempt)) {
+                            match <- fw_env$csrf$exempt$find_object(
+                                request$path
+                            )
+                            if(!is.null(match)) return(next_call())
                         }
 
                         cookie_token <- request$cookies[[cookie_name]] %||% ""
@@ -165,11 +169,11 @@ csrf_new_token <- function() {
 #' CSRF Token
 #' @description
 #' `csrf_token()` returns the current CSRF token string for
-#' the active request when used within a [template()]. Calling it 
-#' outside of a `template()` context will result in an error. 
+#' the active request when used within a [template()]. Calling it
+#' outside of a `template()` context will result in an error.
 #'
 #' In most cases, CSRF tokens are inserted automatically
-#' for standard form helpers.  Intended for custom forms / custom token 
+#' for standard form helpers.  Intended for custom forms / custom token
 #' placement (meta tags, JS fetch, etc).
 #'
 #' @examples
@@ -194,4 +198,43 @@ csrf_token <- function() {
         ),
         class = "freshwater_builtin_stub"
     )
+}
+
+
+csrf_tag_handler <- function(block, call, tags, values, env) {
+    class(block) <- c("csrf", class(block))
+
+    tag_idx <- which(tags == "csrf")
+    tag <- values[[tag_idx]]
+    if (!tag %in% c("on", "off", "exempt")) {
+        rlang::abort("@csrf must be one of `on`, `off` or `exempt`.")
+    }
+
+    if (tag == "off") tag <- "exempt"
+
+    block$csrf_mode <- tag
+
+
+    block
+}
+
+#' @importFrom plumber2 apply_plumber2_block
+#' @export
+apply_plumber2_block.csrf <- function(
+    block,
+    api,
+    route_name,
+    root,
+    ...
+) {
+    NextMethod()
+    for (i in seq_along(block$endpoints)) {
+        for (path in block$endpoints[[i]]$path) {
+            if (identical(block$csrf_mode, "exempt")) {
+                fw_env <- get_freshwater_env(api)
+                fw_env$csrf$exempt$add_path(paste0(root, path), TRUE)
+            }
+        }
+    }
+    api
 }

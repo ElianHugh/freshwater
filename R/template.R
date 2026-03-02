@@ -336,7 +336,7 @@ fragment <- function(name = NULL, ...) {
 #' Form
 #'
 #' When used within a [template()], a form implementation is injected that
-#' wraps `htmltools::tags$form()`. 
+#' wraps `htmltools::tags$form()`.
 #'
 #' When a request context is available, freshwater adds optional behaviors such as
 #' CSRF token insertion and HTTP method spoofing.
@@ -409,7 +409,7 @@ form <- function(..., method = "get") {
             token_input <- htmltools::tags$input(
                 type = "hidden",
                 name = "csrf_token",
-                value = csrf_token()
+                value = .csrf_token_impl()
             )
             children <- c(list(token_input), children)
         }

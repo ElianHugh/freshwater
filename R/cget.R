@@ -78,7 +78,7 @@ apply_plumber2_block.etag <- function(
     api
 }
 
-tag_handler <- function(block, call, tags, values, env) {
+cget_tag_handler <- function(block, call, tags, values, env) {
     class(block) <- c("etag", class(block))
     stopifnot("get" %in% tags)
 
