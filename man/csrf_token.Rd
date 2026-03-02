@@ -11,7 +11,6 @@ csrf_token()
 the active request when used within a \code{\link[=template]{template()}}. Calling it
 outside of a \code{template()} context will result in an error.
 
-function directly, it is a stub.
 In most cases, CSRF tokens are inserted automatically
 for standard form helpers.  Intended for custom forms / custom token
 placement (meta tags, JS fetch, etc).
