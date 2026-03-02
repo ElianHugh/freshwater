@@ -46,7 +46,8 @@ api_csrf <- function(api, secure = TRUE) {
     unsafe_methods <- c("post", "put", "delete", "patch")
     safe_methods <- c("get", "head", "options")
     cookie_name <- if (isTRUE(secure)) "__Host-csrf" else "csrf"
-    freshwater$csrf_cookie_name <- cookie_name
+
+    fw_env$csrf$cookie_name <- cookie_name
 
     ignored_paths <- c(
         "/__docs__/"
@@ -128,7 +129,7 @@ api_csrf <- function(api, secure = TRUE) {
                             return(next_call())
                         }
 
-                        cookie_name <- freshwater$csrf_cookie_name %||% "csrf"
+                        cookie_name <- fw_env$csrf$cookie_name %||% "csrf"
                         token <- request$cookies[[cookie_name]] %||% ""
 
                         # set current req context

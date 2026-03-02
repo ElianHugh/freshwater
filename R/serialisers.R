@@ -16,6 +16,7 @@
 #'
 #' @export
 register_html_serialiser <- function(force = FALSE) {
+    # i believe this is a global thing(?) so we dont register it per api
     if (!force && isTRUE(freshwater$serialiser_registered)) {
         rlang::warn(
             "freshwater html serialiser has already been registered. Skipping re-registration. Use `force=TRUE` to bypass checks."
