@@ -34,11 +34,13 @@ api_csrf <- function(api, secure = TRUE) {
         rlang::abort("openssl is required to enable CSRF protection.")
     }
 
-    if (isTRUE(attr(api, "csrf_installed", exact = TRUE))) {
+    fw_env <- get_freshwater_env(api)
+
+    if (isTRUE(fw_env$csrf$installed)) {
         return(api)
     }
 
-    attr(api, "csrf_installed") <- TRUE
+    fw_env$csrf$installed <- TRUE
 
     api <- api_context(api)
     unsafe_methods <- c("post", "put", "delete", "patch")
@@ -56,10 +58,10 @@ api_csrf <- function(api, secure = TRUE) {
 
     # separate event for testing purposes
     plumber2::api_on(api, "freshwater_csrf", function(...) {
-        if (isTRUE(attr(api, "csrf_hooked", exact = TRUE))) {
+        if (isTRUE(fw_env$csrf$hooked)) {
             return(invisible(NULL))
         }
-        attr(api, "csrf_hooked") <- TRUE
+        fw_env$csrf$hooked <- TRUE
         enhook_routes(
             api,
             list(
@@ -220,7 +222,7 @@ form <- function(..., method = "get") {
 #' (meta tags, JS fetch, etc).
 #'
 #' Do not call the `csrf_token()` function directly, it is a stub.
-#' @seealso api_csrf
+#' @seealso [api_csrf]
 #' @export
 csrf_token <- function() {
     rlang::abort(

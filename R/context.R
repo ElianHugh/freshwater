@@ -54,11 +54,12 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
 #' @keywords internal
 #' @noRd
 api_context <- function(api) {
-    if (isTRUE(attr(api, "context_installed", exact = TRUE))) {
+    fw_env <- get_freshwater_env(api)
+    if (isTRUE(fw_env$context$installed)) {
         return(api)
     }
 
-    attr(api, "context_installed") <- TRUE
+    fw_env$context$installed <- TRUE
 
     plumber2::api_on(api, "start", function(...) {
         api$trigger("freshwater_context")
@@ -84,10 +85,10 @@ api_context <- function(api) {
     })
 
     plumber2::api_on(api, "freshwater_context", function(...) {
-        if (isTRUE(attr(api, "context_hooked", exact = TRUE))) {
+        if (isTRUE(fw_env$context$hooked)) {
             return(invisible(NULL))
         }
-        attr(api, "context_hooked") <- TRUE
+        fw_env$context$hooked <- TRUE
         enhook_routes(
             api,
             list(
@@ -111,6 +112,19 @@ api_context <- function(api) {
 
     invisible(api)
 }
+
+#' env is stored in the plumber2 api object via
+#' an attribute, used for storing freshwater data
+#' on a per-api basis (e.g. if fns are hooked or not)
+get_freshwater_env <- function(api) {
+    e <- attr(api, "freshwater", exact = TRUE)
+    if (is.null(e)) {
+        e <- new.env()
+        attr(api, "freshwater") <- e
+    }
+    e
+}
+
 
 with_fw_context <- function(ctx, expr) {
     old <- set_fw_context(ctx)

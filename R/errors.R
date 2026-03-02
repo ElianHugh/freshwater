@@ -57,11 +57,12 @@ api_error_pages <- function(
         }
     }
 
-    if (isTRUE(attr(api, "error_pages_installed", exact = TRUE))) {
+    fw_env <- get_freshwater_env(api)
+    if (isTRUE(fw_env$error_pages$installed)) {
         return(api)
     }
 
-    attr(api, "error_pages_installed") <- TRUE
+    fw_env$error_pages$installed <- TRUE
 
     api <- api_context(api)
 
@@ -70,10 +71,10 @@ api_error_pages <- function(
     })
 
     plumber2::api_on(api, "freshwater_error_pages", function(...) {
-        if (isTRUE(attr(api, "error_hooked", exact = TRUE))) {
+        if (isTRUE(fw_env$error_pages$hooked)) {
             return(invisible(NULL))
         }
-        attr(api, "error_hooked") <- TRUE
+        fw_env$error_pages$hooked <- TRUE
 
         enhook_routes(
             api,

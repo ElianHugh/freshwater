@@ -160,7 +160,6 @@ cache <- function(name, vary = NULL, ...) {
   fn <- function() {
     res <- eval(expr, env) |>
       htmltools::as.tags()
-
       if (is.null(context$fragment)) {
         htmltools::doRenderTags(res)
       } else {
