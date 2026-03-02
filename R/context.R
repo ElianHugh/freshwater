@@ -3,7 +3,7 @@
 #' @title Freshwater Request Context
 #' @description
 #' freshwater installs a per-request execution context that allows
-#' [current_path()], csrf_token(), and [template()]
+#' [current_path()], [csrf_token()], and [template()]
 #' helpers to access the active HTTP request.
 #' The context itself is stored in freshwater's internal state and is
 #' set/unset with each request.

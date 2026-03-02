@@ -5,7 +5,7 @@
 \title{Freshwater Request Context}
 \description{
 freshwater installs a per-request execution context that allows
-\code{\link[=current_path]{current_path()}}, csrf_token(), and \code{\link[=template]{template()}}
+\code{\link[=current_path]{current_path()}}, \code{\link[=csrf_token]{csrf_token()}}, and \code{\link[=template]{template()}}
 helpers to access the active HTTP request.
 The context itself is stored in freshwater's internal state and is
 set/unset with each request.
