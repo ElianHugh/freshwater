@@ -336,10 +336,13 @@ fragment <- function(name = NULL, ...) {
 #' Form
 #'
 #' When used within a [template()], a form implementation is injected that
-#' wraps `htmltools::tags$form()`. This provides additional functionalities
-#' when a request context is available.
+#' wraps `htmltools::tags$form()`. 
 #'
-#' Do not call the exported function directly, it is a stub.
+#' When a request context is available, freshwater adds optional behaviors such as
+#' CSRF token insertion and HTTP method spoofing.
+#'
+#' Calling `form()` outside of [template()] rendering will result in an error.
+#' For a plain form tag in normal R code, use [htmltools::tags]`$form()`.
 #'
 #' ## CSRF
 #'
@@ -387,23 +390,10 @@ form <- function(..., method = "get") {
 .form_impl <- function(..., method = "get") {
     ctx <- get_fw_context()
     children <- list(...)
+
     method <- tolower(method)
+    method <- match.arg(method, c("get", "post", "put", "patch", "delete"))
 
-    valid <- c("get", "post", "put", "patch", "delete")
-    if (!method %in% valid) {
-        rlang::abort(paste0("Unsupported form method: ", method))
-    }
-
-    if (!is.null(ctx)) {
-        if (!is.null(ctx$csrf_token)) {
-            token_input <- htmltools::tags$input(
-                type = "hidden",
-                name = "csrf_token",
-                value = csrf_token()
-            )
-            children <- c(list(token_input), children)
-        }
-    }
     if (method %in% c("put", "patch", "delete")) {
         faux_method <- htmltools::tags$input(
             type = "hidden",
@@ -412,6 +402,17 @@ form <- function(..., method = "get") {
         )
         children <- c(list(faux_method), children)
         method <- "post"
+    }
+
+    if (!is.null(ctx)) {
+        if (!is.null(ctx$csrf_token) && method != "get") {
+            token_input <- htmltools::tags$input(
+                type = "hidden",
+                name = "csrf_token",
+                value = csrf_token()
+            )
+            children <- c(list(token_input), children)
+        }
     }
 
     do.call(
