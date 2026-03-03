@@ -23,7 +23,7 @@ test_that("csrf works", {
 
 
 
-    api$trigger("freshwater_csrf")
+    api$trigger("freshwater::hook")
 
     req <- fiery::fake_request("https://localhost:8080/", method = "get")
     res <- api$test_request(req)

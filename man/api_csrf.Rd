@@ -62,5 +62,5 @@ function(api) {
 
 }
 \seealso{
-\link{form}, \link{api_freshwater}
+\link{form}, \link{api_freshwater}, \link{api_hooks}
 }

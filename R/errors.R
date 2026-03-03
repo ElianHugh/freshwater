@@ -32,7 +32,7 @@ utils::globalVariables(c("error", "request"))
 #' }
 #'
 #' @export
-#' @seealso [freshwater_error_templates], [enhook_routes]
+#' @seealso [freshwater_error_templates], [api_hooks]
 #' @rdname error_pages
 api_error_pages <- function(
     api,
@@ -69,55 +69,40 @@ api_error_pages <- function(
 
     api <- api_context(api)
 
-    plumber2::api_on(api, "start", function(...) {
-        api$trigger("freshwater_error_pages")
-    })
-
-    plumber2::api_on(api, "freshwater_error_pages", function(...) {
-        if (isTRUE(fw_env$error_pages$hooked)) {
-            return(invisible(NULL))
-        }
-        fw_env$error_pages$hooked <- TRUE
-
-        enhook_routes(
-            api,
-            hook(
-                id = "freshwater::error_pages",
-                function(api, args, next_call) {
-                    response <- args$response %||% NULL
-                    request <- args$request %||% NULL
-                    tryCatch(
-                        next_call(),
-                        error = function(e) {
-
-                            if (
-                                !should_freshwater_handle(request, response, e)
-                            ) {
-                                return(plumber2::Next)
-                            }
-
-                            if (!inherits(e, "reqres_problem")) {
-                                response$status <- 500L
-                            } else {
-                                response$status <- e$status
-                            }
-
-                            api$trigger(
-                                "error_code",
-                                status = response$status,
-                                request = request,
-                                response = response,
-                                message = e
-                            )
-
-                            plumber2::Next
+    api <- api_hooks(
+        api,
+        hook(
+            id = "freshwater::error_pages",
+            function(api, args, next_call) {
+                response <- args$response %||% NULL
+                request <- args$request %||% NULL
+                tryCatch(
+                    next_call(),
+                    error = function(e) {
+                        if (!should_freshwater_handle(request, response, e)) {
+                            return(plumber2::Next)
                         }
-                    )
-                }
 
-            )
+                        if (!inherits(e, "reqres_problem")) {
+                            response$status <- 500L
+                        } else {
+                            response$status <- e$status
+                        }
+
+                        api$trigger(
+                            "error_code",
+                            status = response$status,
+                            request = request,
+                            response = response,
+                            message = e
+                        )
+
+                        plumber2::Next
+                    }
+                )
+            }
         )
-    })
+    )
 
     plumber2::api_on(api, "request", function(server, id, request, arg_list) {
         response <- request$response %||% NULL

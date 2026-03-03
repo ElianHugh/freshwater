@@ -11,10 +11,12 @@ test_that("304 is returned on matching etag", {
             api_cget("/", \() x)
     })
 
+    expected_etag <- new_etag(x)
+
     req <- fiery::fake_request(
         "http://localhost:8080/",
         headers = list(
-            `If-None-Match` = "W/\"1\""
+            `If-None-Match` = expected_etag
         )
     )
     res <- pa$test_request(req)

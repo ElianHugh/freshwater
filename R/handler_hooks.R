@@ -27,14 +27,14 @@ is_system_hook <- function(h) {
   startsWith(hook_id(h), "freshwater::")
 }
 
+system_order <- c(
+  "freshwater::context",
+  "freshwater::error_pages",
+  "freshwater::csrf",
+  "freshwater::csrf_context"
+)
 
 order_hooks <- function(hooks) {
-  system_order <- c(
-    "freshwater::context",
-    "freshwater::error_pages",
-    "freshwater::csrf",
-    "freshwater::csrf_context"
-  )
 
   ids <- vapply(hooks, hook_id, character(1), USE.NAMES = FALSE)
   pos <- match(ids, system_order)
@@ -176,14 +176,39 @@ patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("appen
     plumber_handler
 }
 
+enhook_routes <- function(api, hooks, .where = c("append", "prepend")) {
+  .where <- match.arg(.where)
+
+  rr <- api$request_router
+  routes <- rr$routes
+  for (route in routes) {
+    r <- rr$get_route(route)
+    r$remap_handlers(function(method, path, handler) {
+      handler <- patch_plumber_handler(api, handler, hooks, .where = .where)
+      r$add_handler(method, path, handler)
+    })
+  }
+  api
+}
+
 #' Route handler hooks
 #'
-#' Add middleware-style hooks to *all
-#' existing routes* in a [plumber2] API.
+#' Add beforeware-style hooks to *all
+#' existing user handlers* in a [plumber2] API.
+#' Hooks execute in a deterministic order prior to the user handler,
+#' and can mutate/intercept requests and responses,
+#' as well as short-circuit handlers. This allows for middleware-type
+#' behaviour without registering additional routes.
 #'
-#' Hooks are called iteratively in order of
-#' installation (barring if they are prepended), culminating in the
-#' final user handler.
+#' System hooks are installed in the following order:
+#'
+#' \itemize{
+#' `r paste0("\\item \\code{", system_order, "}", collapse = "\n")`
+#' }
+#'
+#' User hooks are called iteratively in order of
+#' installation (barring if they are appended/prepended),
+#' culminating in the final user handler.
 #'
 #' @details
 #'
@@ -212,21 +237,60 @@ patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("appen
 #' @param .where whether the hooks should be appended or prepended to the
 #' list of installed hooks
 #'
+#' @examples
+#' api <- plumber2::api() |>
+#'   plumber2::api_get(path = "/", function() {
+#'     "Foo"
+#'   })
+#'
+#' log_hook <- hook(
+#'   "logger",
+#'   function(api, args, next_call) {
+#'     msg <- sprintf(
+#'       "[%s] %s %s",
+#'       format(Sys.time(), "%H:%M:%S"),
+#'       args$request$method,
+#'       args$request$path
+#'     )
+#'     print(msg)
+#'     next_call()
+#'   }
+#' )
+#' api <- api_hooks(api, hooks = log_hook)
+#'
 #' @rdname hooks
 #' @export
-enhook_routes <- function(api, hooks, .where = c("append", "prepend")) {
+api_hooks <- function(api, hooks, .where = c("append", "prepend")) {
   .where <- match.arg(.where)
+  fw_env <- get_freshwater_env(api)
 
-  rr <- api$request_router
-  routes <- rr$routes
-  for (route in routes) {
-    r <- rr$get_route(route)
-    r$remap_handlers(function(method, path, handler) {
-      handler <- patch_plumber_handler(api, handler, hooks, .where = .where)
-      r$add_handler(method, path, handler)
+  hooks <- if (inherits(hooks, "freshwater_hook")) list(hooks) else hooks
+
+  fw_env$hooks$queue <- fw_env$hooks$queue %||% list()
+  fw_env$hooks$queue[[length(fw_env$hooks$queue) + 1L]] <- list(
+    hooks = hooks,
+    where = .where
+  )
+
+  if (!isTRUE(fw_env$hooks$registered)) {
+    fw_env$hooks$registered <- TRUE
+
+    plumber2::api_on(api, "start", function(...) api$trigger("freshwater::hook"))
+
+    plumber2::api_on(api, "freshwater::hook", function(...) {
+      queue <- fw_env$hooks$queue %||% list()
+      if (!length(queue)) return(invisible(NULL))
+
+      for (item in queue) {
+        enhook_routes(api, hooks = item$hooks, .where = item$where)
+      }
+
+      fw_env$hooks$queue <- list()
+      invisible(NULL)
     })
   }
-  api
+
+  invisible(api)
 }
 
 
