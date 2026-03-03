@@ -14,11 +14,8 @@ hook(id = NULL, fn)
 
 \item{hooks}{a single hook or list of hooks that take the signature
 \code{fn(api, args, next_call)}, where \code{args}
-is the list of handler arguments.
-The return value of the hook should be
-\code{next_call()} to facilitate calling of subsequent hooks &
-the user handler function. Not calling next_call() will
-short-circuit the handler chain.}
+is the list of handler arguments. If a hook returns without calling \code{next_call()}, the
+remaining hooks and user handler are skipped, and the return value becomes the handler result.}
 
 \item{.where}{whether the hooks should be appended or prepended to the
 list of installed hooks}
@@ -28,7 +25,7 @@ list of installed hooks}
 \item{fn}{function with signature \code{fn(api, args, next_call)}}
 }
 \description{
-Add beforeware-style hooks to \emph{all
+Add middleware-style hooks to \emph{all
 existing user handlers} in a \link[plumber2:plumber2-package]{plumber2::plumber2} API.
 Hooks execute in a deterministic order prior to the user handler,
 and can mutate/intercept requests and responses,
@@ -44,10 +41,22 @@ System hooks are installed in the following order:
 \item \code{freshwater::csrf}
 \item \code{freshwater::csrf_context}
 }
+\subsection{Control Flow}{
 
-User hooks are called iteratively in order of
-installation (barring if they are appended/prepended),
-culminating in the final user handler.
+Hooks control whether subsequent hooks should execute.
+Concretely:
+\itemize{
+\item To continue to the next hook (and eventual user handler), call \code{next_call()}.
+\item To short-circuit the chain, return a value without calling \code{next_call()}.
+\item To bubble up to plumber2 routing control flow, return either \code{plumber2::Next}
+or \code{plumber2::Break} (and don't call \code{next_call()}).
+}
+
+Hooks can also wrap later hooks and the user handler by calling \code{next_call()},
+and then doing work after.
+}
+
+\subsection{Hook Installation}{
 \itemize{
 \item Routing is managed by \link[plumber2:plumber2-package]{plumber2::plumber2} -- this function does not change
 routing precedence. Within the handler itself, however, hooks run in the order
@@ -55,14 +64,18 @@ they are installed.
 \item The function is idempotent (with respect to either a computed hash of the hook or a
 provided id), and only new hooks will be installed.
 }
+}
+
+\subsection{Asynchronous Routes}{
 
 When using asynchronous routes via \code{async=TRUE}
-programatically, or via \verb{@async}, hooks are attached to
+programmatically, or via \verb{@async}, hooks are attached to
 the \code{then} handlers, rather than main handler itself. This is because
 \code{request}, \code{response}, and \code{server} arguments
 are not available to the main async
 handler, and hooks depend on the
 full handler signature being available.
+}
 }
 \examples{
 api <- plumber2::api() |>
@@ -83,6 +96,13 @@ log_hook <- hook(
     next_call()
   }
 )
-api <- api_hooks(api, hooks = log_hook)
+
+timer_hook <- hook("timer", function(api, args, next_call) {
+  t0 <- Sys.time()
+  out <- next_call()
+  print(sprintf("time: \%s", Sys.time() - t0))
+  out
+})
+api <- api_hooks(api, hooks = list(log_hook, timer_hook))
 
 }
