@@ -36,6 +36,9 @@
 #' @param etag_fn a function that takes no arguments and returns a single value used to derive the ETag.
 #' @export
 api_cget <- function(api, path, etag_fn) {
+    if (!requireNamespace("openssl", quietly = TRUE)) {
+        rlang::abort("openssl is required for hashing ETags.")
+    }
     handler <- function(request, response) {
         inm <- request$get_header("If-None-Match")
 
