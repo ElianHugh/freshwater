@@ -46,7 +46,7 @@ reference:
       - api_error_pages
       - api_csrf
       - api_cget
-      - enhook_routes
+      - api_hooks
       - hook
 
   - title: "Response Helpers"

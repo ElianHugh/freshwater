@@ -47,5 +47,5 @@ function(api) {
 
 }
 \seealso{
-\link{freshwater_error_templates}, \link{enhook_routes}
+\link{freshwater_error_templates}, \link{api_hooks}
 }

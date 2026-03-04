@@ -15,18 +15,17 @@ test_that("error page installation is idempotent", {
 
 
 	api <- api_error_pages(api)
-	api$trigger("freshwater_error_pages")
+	api$trigger("freshwater::hook")
 	handler <- get_user_handler_from_route(api, "/")
 	hooks <- attr(handler, "freshwater_hooks", exact = TRUE)
-	expect_length(hooks, 1L)
+	expect_length(hooks, 2L)
 
 	api <- api_error_pages(api)
-	api$trigger("freshwater_error_pages")
+	api$trigger("freshwater::hook")
 	handler <- get_user_handler_from_route(api, "/")
 	hooks <- attr(handler, "freshwater_hooks", exact = TRUE)
-	expect_length(hooks, 1L)
+	expect_length(hooks, 2L)
 })
-
 
 test_that("error pages render upon user error", {
 	testthat::skip_if_not_installed("cli")
@@ -42,7 +41,7 @@ test_that("error pages render upon user error", {
 	})
 
 	api <- api_error_pages(api, debug = TRUE)
-	api$trigger("freshwater_error_pages")
+	api$trigger("freshwater::hook")
 
 	# 200
 
@@ -105,7 +104,7 @@ test_that("manual user 404s are respected", {
 		api <- api_error_pages(api, debug = TRUE)
 	})
 
-	api$trigger("freshwater_error_pages")
+	api$trigger("freshwater::hook")
 
 	req <- fiery::fake_request(
 		"http://localhost:8080/foo",
@@ -137,7 +136,7 @@ test_that("other methods return error pages", {
 		api <- api_error_pages(api, debug = TRUE)
 	})
 
-	api$trigger("freshwater_error_pages")
+	api$trigger("freshwater::hook")
 
 
 	# 500L
@@ -193,7 +192,7 @@ test_that("error pages only occur for HTML", {
 	})
 
 
-	api$trigger("freshwater_error_pages")
+	api$trigger("freshwater::hook")
 
 	# Error page
 	req <- fiery::fake_request(
@@ -245,7 +244,7 @@ test_that("error pages function for `then` handlers", {
 		api <- api_error_pages(api, debug = TRUE)
 	})
 
-	api$trigger("freshwater_error_pages")
+	api$trigger("freshwater::hook")
 
 	res <- faux_request(api, accept = "text/html; charset=utf-8") |>
 		wait_for_resolve()

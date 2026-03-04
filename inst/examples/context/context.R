@@ -7,14 +7,16 @@ function(api) {
 }
 
 page <- template({
-    print(current_root())
-    print(current_path())
     div(
-        p("Project root is :", current_root()),
         p("Current path is :", current_path())
     )
 
 })
+
+#' @get
+function(response) {
+    redirect(response, "/foo")
+}
 
 #' @get /foo
 #' @serializer html

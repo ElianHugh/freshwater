@@ -86,10 +86,6 @@ api_context <- function(api) {
 
     fw_env$context$installed <- TRUE
 
-    plumber2::api_on(api, "start", function(...) {
-        api$trigger("freshwater_context")
-    })
-
     plumber2::api_on(api, "before-request", function(server, id, request, arg_list) {
         if (is.null(request)) {
             return(TRUE)
@@ -109,31 +105,23 @@ api_context <- function(api) {
         TRUE
     })
 
-    plumber2::api_on(api, "freshwater_context", function(...) {
-        if (isTRUE(fw_env$context$hooked)) {
-            return(invisible(NULL))
-        }
-        fw_env$context$hooked <- TRUE
-        enhook_routes(
-            api,
-            list(
-                hook("freshwater::context", function(api, args, next_call) {
-                    request <- args$request
+    api_hooks(
+        api,
+        list(
+            hook("freshwater::context", function(api, args, next_call) {
+                request <- args$request
 
-                    if (is.null(request)) {
-                        return(next_call())
-                    }
+                if (is.null(request)) {
+                    return(next_call())
+                }
 
-                    ctx <- new.env(parent = emptyenv())
-                    ctx$request <- request
-                    with_fw_context(ctx, next_call())
-
-                })
-            ),
-
-            .where = "prepend"
-        )
-    })
+                ctx <- new.env(parent = emptyenv())
+                ctx$request <- request
+                with_fw_context(ctx, next_call())
+            })
+        ),
+        .where = "prepend"
+    )
 
     invisible(api)
 }
@@ -164,27 +152,6 @@ with_fw_context <- function(ctx, expr) {
 
     res <- force(expr)
 
-    if (inherits(res, "promise")) {
-        res <- promises::with_promise_domain(
-            promises::new_promise_domain(
-                wrapOnFulfilled = function(onFulfilled) {
-                    function(value) {
-                        old <- set_fw_context(ctx)
-                        on.exit(set_fw_context(old), add = TRUE)
-                        onFulfilled(value)
-                    }
-                },
-                wrapOnRejected = function(onRejected) {
-                    function(reason) {
-                        old <- set_fw_context(ctx)
-                        on.exit(set_fw_context(old), add = TRUE)
-                        onRejected(reason)
-                    }
-                }
-            ),
-            res
-        )
-    }
     res
 }
 

@@ -27,14 +27,14 @@ is_system_hook <- function(h) {
   startsWith(hook_id(h), "freshwater::")
 }
 
+system_order <- c(
+  "freshwater::context",
+  "freshwater::error_pages",
+  "freshwater::csrf",
+  "freshwater::csrf_context"
+)
 
 order_hooks <- function(hooks) {
-  system_order <- c(
-    "freshwater::context",
-    "freshwater::error_pages",
-    "freshwater::csrf",
-    "freshwater::csrf_context"
-  )
 
   ids <- vapply(hooks, hook_id, character(1), USE.NAMES = FALSE)
   pos <- match(ids, system_order)
@@ -100,14 +100,15 @@ invoke_hooks <- function(api, handler) {
 
     fn <- function(...) {
         args <- list(...)
+        hooks <- attr(handler, "freshwater_hooks", exact = TRUE)
         i <- 0L
         next_call <- \() {
-            hooks <- attr(handler, "freshwater_hooks", exact = TRUE)
+
             if (is.null(hooks)) hooks <- list()
 
             i <<- i + 1L
             if (i <= length(hooks)) {
-                return(hooks[[i]](api, args, next_call))
+              return(hooks[[i]](api, args, next_call))
             }
 
             do.call(handler, args)
@@ -176,47 +177,7 @@ patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("appen
     plumber_handler
 }
 
-#' Route handler hooks
-#'
-#' Add middleware-style hooks to *all
-#' existing routes* in a [plumber2] API.
-#'
-#' Hooks are called iteratively in order of
-#' installation (barring if they are prepended), culminating in the
-#' final user handler.
-#'
-#' @details
-#'
-#' - Routing is managed by [plumber2] -- this function does not change
-#' routing precedence. Within the handler itself, however, hooks run in the order
-#' they are installed.
-#' - The function is idempotent (with respect to either a computed hash of the hook or a
-#' provided id), and only new hooks will be installed.
-#'
-#' When using asynchronous routes via `async=TRUE`
-#' programatically, or via `@async`, hooks are attached to
-#' the `then` handlers, rather than main handler itself. This is because
-#' `request`, `response`, and `server` arguments
-#' are not available to the main async
-#' handler, and hooks depend on the
-#' full handler signature being available.
-#'
-#' @param api a [plumber2] api object.
-#' @param hooks a single hook or list of hooks that take the signature
-#' `fn(api, args, next_call)`, where `args`
-#' is the list of handler arguments.
-#' The return value of the hook should be
-#' `next_call()` to facilitate calling of subsequent hooks &
-#' the user handler function. Not calling next_call() will
-#' short-circuit the handler chain.
-#' @param .where whether the hooks should be appended or prepended to the
-#' list of installed hooks
-#'
-#' @rdname hooks
-#' @export
 enhook_routes <- function(api, hooks, .where = c("append", "prepend")) {
-  .where <- match.arg(.where)
-
   rr <- api$request_router
   routes <- rr$routes
   for (route in routes) {
@@ -227,6 +188,124 @@ enhook_routes <- function(api, hooks, .where = c("append", "prepend")) {
     })
   }
   api
+}
+
+#' Route handler hooks
+#'
+#' Add middleware-style hooks to *all
+#' existing user handlers* in a [plumber2] API.
+#' Hooks execute in a deterministic order prior to the user handler,
+#' and can mutate/intercept requests and responses,
+#' as well as short-circuit handlers. This allows for middleware-type
+#' behaviour without registering additional routes.
+#'
+#' System hooks are installed in the following order:
+#'
+#' \itemize{
+#' `r paste0("\\item \\code{", system_order, "}", collapse = "\n")`
+#' }
+#'
+#' @details
+#'
+#' ## Control Flow
+#'
+#' Hooks control whether subsequent hooks should execute.
+#' Concretely:
+#' - To continue to the next hook (and eventual user handler), call `next_call()`.
+#' - To short-circuit the chain, return a value without calling `next_call()`.
+#' - To bubble up to plumber2 routing control flow, return either `plumber2::Next`
+#' or `plumber2::Break` (and don't call `next_call()`).
+#'
+#' Hooks can also wrap later hooks and the user handler by calling `next_call()`,
+#' and then doing work after.
+#'
+#' ## Hook Installation
+#'
+#' - Routing is managed by [plumber2] -- this function does not change
+#' routing precedence. Within the handler itself, however, hooks run in the order
+#' they are installed.
+#' - The function is idempotent (with respect to either a computed hash of the hook or a
+#' provided id), and only new hooks will be installed.
+#'
+#' ## Asynchronous Routes
+#'
+#' When using asynchronous routes via `async=TRUE`
+#' programmatically, or via `@async`, hooks are attached to
+#' the `then` handlers, rather than main handler itself. This is because
+#' `request`, `response`, and `server` arguments
+#' are not available to the main async
+#' handler, and hooks depend on the
+#' full handler signature being available.
+#'
+#' @param api a [plumber2] api object.
+#' @param hooks a single hook or list of hooks that take the signature
+#' `fn(api, args, next_call)`, where `args`
+#' is the list of handler arguments. If a hook returns without calling `next_call()`, the
+#' remaining hooks and user handler are skipped, and the return value becomes the handler result.
+#' @param .where whether the hooks should be appended or prepended to the
+#' list of installed hooks
+#'
+#' @examples
+#' api <- plumber2::api() |>
+#'   plumber2::api_get(path = "/", function() {
+#'     "Foo"
+#'   })
+#'
+#' log_hook <- hook(
+#'   "logger",
+#'   function(api, args, next_call) {
+#'     msg <- sprintf(
+#'       "[%s] %s %s",
+#'       format(Sys.time(), "%H:%M:%S"),
+#'       args$request$method,
+#'       args$request$path
+#'     )
+#'     print(msg)
+#'     next_call()
+#'   }
+#' )
+#'
+#' timer_hook <- hook("timer", function(api, args, next_call) {
+#'   t0 <- Sys.time()
+#'   out <- next_call()
+#'   print(sprintf("time: %s", Sys.time() - t0))
+#'   out
+#' })
+#' api <- api_hooks(api, hooks = list(log_hook, timer_hook))
+#'
+#' @rdname hooks
+#' @export
+api_hooks <- function(api, hooks, .where = c("append", "prepend")) {
+  .where <- match.arg(.where)
+  fw_env <- get_freshwater_env(api)
+
+  hooks <- if (inherits(hooks, "freshwater_hook")) list(hooks) else hooks
+
+  fw_env$hooks$queue <- fw_env$hooks$queue %||% list()
+  fw_env$hooks$queue[[length(fw_env$hooks$queue) + 1L]] <- list(
+    hooks = hooks,
+    where = .where
+  )
+
+  if (!isTRUE(fw_env$hooks$registered)) {
+    fw_env$hooks$registered <- TRUE
+
+    plumber2::api_on(api, "start", function(...) api$trigger("freshwater::hook"))
+
+    plumber2::api_on(api, "freshwater::hook", function(...) {
+      queue <- fw_env$hooks$queue %||% list()
+      if (!length(queue)) return(invisible(NULL))
+
+      for (item in queue) {
+        enhook_routes(api, hooks = item$hooks, .where = item$where)
+      }
+
+      fw_env$hooks$queue <- list()
+      invisible(NULL)
+    })
+  }
+
+  invisible(api)
 }
 
 

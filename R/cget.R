@@ -95,7 +95,9 @@ cget_tag_handler <- function(block, call, tags, values, env) {
 
 new_etag <- function(x) {
     stopifnot(length(x) == 1L, !is.null(x), !is.na(x))
-    sprintf('W/"%s"', as.character(x))
+
+    hash <- openssl::sha1(charToRaw(as.character(x)))
+    sprintf('W/"%s"', hash)
 }
 
 strip_weak_prefix <- function(x) {
