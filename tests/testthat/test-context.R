@@ -94,4 +94,9 @@ test_that("current path works", {
 
     res <- faux_request(api, path = "foo", accept = "text/html; charset=utf-8")
     expect_identical(res$body, "/foo")
+
+    expect_error(
+        current_path(),
+        class = "freshwater_context_missing"
+    )
 })

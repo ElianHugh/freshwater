@@ -90,7 +90,12 @@ cget_tag_handler <- function(block, call, tags, values, env) {
     # and returns a single value that can be interpreted as a string
     tag_fn <- eval(parse(text = values[[tag_idx]] %||% ""), envir = env)
 
-    stopifnot(is.function(tag_fn))
+    if (!is.function(tag_fn)) {
+        rlang::abort(
+            sprintf("etag value should be a function. Got `%s` instead.", class(tag_fn))
+        )
+    }
+
     block$etag_fn <- tag_fn
     block
 }
