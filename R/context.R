@@ -48,15 +48,49 @@ NULL
 #' @seealso [api_csrf], [api_error_pages], [register_html_serialiser]
 #' @export
 api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
-    register_html_serialiser()
+    args_from_fmls <- function(fn, dots) {
+        fml_names <- formals(fn) |>
+            names()
+        dots[which(names(dots) %in% fml_names)]
+    }
 
     dots <- list(...)
+
+    all_fml_names <- names(c(
+        formals(api_csrf),
+        formals(api_error_pages),
+        formals(register_html_serialiser)
+    ))
+
+    if (any(!names(dots) %in% all_fml_names)) {
+        idx <- which(!names(dots) %in% all_fml_names)
+        fmls <- sprintf("`%s`", names(dots)[idx]) |>
+            paste0(collapse =", ")
+
+        fmls <- sprintf(
+            "%s %s",
+            fmls,
+            if (length(idx) == 1) "is" else "are"
+        )
+
+        rlang::abort(
+            c(
+                "Unexpected argument passed.",
+                sprintf(
+                    "%s invalid to pass to `api_csrf`, `api_error_pages`, and `register_html_serialiser`.",
+                    fmls
+                )
+            )
+        )
+    }
+
+    serialiser_args <- args_from_fmls(register_html_serialiser, dots)
+    do.call(register_html_serialiser, args = serialiser_args)
+
     api <- api_context(api)
 
     if (csrf) {
-        csrf_fmls <- formals(api_csrf) |>
-            names()
-        csrf_args <- dots[which(names(dots) %in% csrf_fmls)]
+        csrf_args <- args_from_fmls(api_csrf, dots)
         api <- do.call(
             api_csrf,
             args = c(list(api = api), csrf_args)
@@ -64,14 +98,14 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
     }
 
     if (error_pages) {
-        error_pages_fmls <- formals(api_error_pages) |>
-            names()
-        error_page_args <- dots[which(names(dots) %in% error_pages_fmls)]
+        error_page_args <- args_from_fmls(api_error_pages, dots)
         api <- do.call(
             api_error_pages,
             args = c(list(api = api), error_page_args)
         )
     }
+
+
 
     invisible(api)
 }
@@ -191,9 +225,11 @@ current_path <- function() {
     ctx <- get_fw_context()
     if (is.null(ctx)) {
         rlang::abort(
-            "freshwater context missing",
-            i = "Did you forget to install freshwater middleware via `api_freshwater()`?",
-            i = "Helpers like `current_path()` can only be used during a request.",
+            c(
+                "freshwater context missing",
+                i = "Did you forget to install freshwater middleware via `api_freshwater()`?",
+                i = "Helpers like `current_path()` can only be used during a request."
+            ),
             class = "freshwater_context_missing"
         )
     }

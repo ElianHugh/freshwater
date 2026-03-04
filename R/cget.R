@@ -36,6 +36,9 @@
 #' @param etag_fn a function that takes no arguments and returns a single value used to derive the ETag.
 #' @export
 api_cget <- function(api, path, etag_fn) {
+    if (!requireNamespace("openssl", quietly = TRUE)) {
+        rlang::abort("openssl is required for hashing ETags.")
+    }
     handler <- function(request, response) {
         inm <- request$get_header("If-None-Match")
 
@@ -87,7 +90,12 @@ cget_tag_handler <- function(block, call, tags, values, env) {
     # and returns a single value that can be interpreted as a string
     tag_fn <- eval(parse(text = values[[tag_idx]] %||% ""), envir = env)
 
-    stopifnot(is.function(tag_fn))
+    if (!is.function(tag_fn)) {
+        rlang::abort(
+            sprintf("etag value should be a function. Got `%s` instead.", class(tag_fn))
+        )
+    }
+
     block$etag_fn <- tag_fn
     block
 }

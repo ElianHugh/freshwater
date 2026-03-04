@@ -78,3 +78,44 @@ test_that("404s still occur with CSRF on", {
 
     expect_identical(res$status, 404L)
 })
+
+
+test_that("constant time comparison doesn't leak", {
+    flip_first <- function(s) {
+        substr(s, 1, 1) <- if (substr(s, 1, 1) == "A") "B" else "A"
+        s
+    }
+    flip_last <- function(s) {
+        n <- nchar(s)
+        substr(s, n, n) <- if (substr(s, n, n) == "A") "B" else "A"
+        s
+    }
+    time_batch <- function(fun, a, b, reps = 5000L) {
+        gc()
+        t0 <- proc.time()[["elapsed"]]
+        for (i in seq_len(reps)) {
+            fun(a, b)
+        }
+        proc.time()[["elapsed"]] - t0
+    }
+
+    token1 <- csrf_new_token()
+    token2 <- csrf_new_token()
+    token1_late <- flip_last(token1)
+    token1_early <- flip_first(token1)
+
+    expect_true(constant_time_identical(token1, token1))
+    expect_false(constant_time_identical(token1, token2))
+    expect_false(constant_time_identical(token1, token1_late))
+    expect_false(constant_time_identical(token1, token1_early))
+
+    skip_if_not(nzchar(Sys.getenv("FW_TIMING_TESTS")))
+
+    times <- c(
+        time_batch(constant_time_identical, token1, token1),
+        time_batch(constant_time_identical, token1, token2),
+        time_batch(constant_time_identical, token1, token1_late),
+        time_batch(constant_time_identical, token1, token1_early)
+    )
+    expect_lt(max(times) / min(times), 1.25)
+})
