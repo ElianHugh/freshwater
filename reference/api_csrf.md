@@ -3,29 +3,6 @@
 `api_csrf()` installs CSRF middleware on a plumber2 API using the
 double-submit cookie pattern.
 
-## Usage
-
-``` r
-api_csrf(api, secure = TRUE, exemptions = character())
-```
-
-## Arguments
-
-- api:
-
-  a plumber2 API object
-
-- secure:
-
-  if `TRUE`, sets the CSRF cookie to "\_\_Host-csrf" and marks the
-  cookie as secure. If false, uses "csrf".
-
-- exemptions:
-
-  character vector of route patterns to exempt from CSRF checks
-
-## Details
-
 When installed:
 
 - Any `form` element inside
@@ -48,6 +25,27 @@ Middleware behaviour:
 
 This middleware installs freshwater request context.
 
+## Usage
+
+``` r
+api_csrf(api, secure = TRUE, exemptions = character())
+```
+
+## Arguments
+
+- api:
+
+  a plumber2 API object
+
+- secure:
+
+  if `TRUE`, sets the CSRF cookie to "\_\_Host-csrf" and marks the
+  cookie as secure. If false, uses "csrf".
+
+- exemptions:
+
+  character vector of route patterns to exempt from CSRF checks
+
 ## Annotation Reference
 
 CSRF exemptions can be specified by `@csrf`:
@@ -61,6 +59,16 @@ CSRF exemptions can be specified by `@csrf`:
     function() {
      print("No checking!")
     }
+
+## Background
+
+Cross-site request forgery (CSRF) refers to attacks that trick user
+browsers into making unintended unsafe HTTP requests to trusted sites –
+often through piggybacking on existing authenticated user sessions.
+
+In general, clients are most vulnerable when only cookies are used to
+validate requests from authenticated users. Read more:
+<https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF>
 
 ## See also
 
@@ -80,6 +88,6 @@ function(api) {
 #> {
 #>     api_csrf(api, secure = FALSE, exemptions = c("/foo/*", "/bar"))
 #> }
-#> <environment: 0x55b24c028a68>
+#> <environment: 0x558a67fef460>
 
 ```
