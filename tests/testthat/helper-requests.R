@@ -27,3 +27,15 @@ wait_for_resolve <- function(promise) {
     }
     invisible(private$value)
 }
+
+get_user_handler_from_route <- function(
+    api,
+    path,
+    route = "default",
+    method = "get"
+) {
+    rr <- api$request_router
+    r <- rr$get_route(route)
+    e <- environment(r$get_handler(method, path))
+    attr(e$handler, "freshwater_hook_base", exact = TRUE)
+}

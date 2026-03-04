@@ -152,27 +152,6 @@ with_fw_context <- function(ctx, expr) {
 
     res <- force(expr)
 
-    if (inherits(res, "promise")) {
-        res <- promises::with_promise_domain(
-            promises::new_promise_domain(
-                wrapOnFulfilled = function(onFulfilled) {
-                    function(value) {
-                        old <- set_fw_context(ctx)
-                        on.exit(set_fw_context(old), add = TRUE)
-                        onFulfilled(value)
-                    }
-                },
-                wrapOnRejected = function(onRejected) {
-                    function(reason) {
-                        old <- set_fw_context(ctx)
-                        on.exit(set_fw_context(old), add = TRUE)
-                        onRejected(reason)
-                    }
-                }
-            ),
-            res
-        )
-    }
     res
 }
 
