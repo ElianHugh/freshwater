@@ -1,5 +1,6 @@
 #' Apply CSRF Protection to a plumber2 API
 #'
+#' @description
 #' `api_csrf()` installs CSRF middleware on a plumber2 API using
 #' the double-submit cookie pattern.
 #'
@@ -31,6 +32,16 @@
 #'  print("No checking!")
 #' }
 #' ```
+#'
+#' # Background
+#' Cross-site request forgery (CSRF) refers to attacks that
+#' trick user browsers into making unintended unsafe HTTP requests
+#' to trusted sites -- often through piggybacking on existing
+#' authenticated user sessions.
+#'
+#' In general, clients are most vulnerable when only cookies are used to
+#' validate requests from authenticated users.
+#' Read more: <https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF>
 #'
 #' @param api a plumber2 API object
 #' @param secure if `TRUE`, sets the CSRF cookie to "__Host-csrf" and marks the cookie as
@@ -125,7 +136,7 @@ api_csrf <- function(api, secure = TRUE, exemptions = character()) {
                             body$csrf_token
                         if (
                             is.null(token) ||
-                                !identical(token, cookie_token)
+                            !constant_time_identical(token, cookie_token)
                         ) {
                             response$status <- 403L
                             response$body <- "Invalid CSRF token"
@@ -184,6 +195,16 @@ csrf_exempt_add <- function(api, pattern) {
   router <- ensure_csrf_exempt_router(api)
   router$add_path(pattern, TRUE)
   invisible(TRUE)
+}
+
+constant_time_identical <- function(x, y) {
+    x <- charToRaw(x)
+    y <- charToRaw(y)
+
+    if (length(x) != length(y)) return(FALSE)
+
+    bits <- bitwXor(as.integer(x), as.integer(y))
+    Reduce(bitwOr, bits, init = 0L) == 0L
 }
 
 csrf_new_token <- function() {

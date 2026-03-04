@@ -17,8 +17,7 @@ secure. If false, uses "csrf".}
 \description{
 \code{api_csrf()} installs CSRF middleware on a plumber2 API using
 the double-submit cookie pattern.
-}
-\details{
+
 When installed:
 \itemize{
 \item Any \code{form} element inside \link{template} automatically
@@ -50,6 +49,17 @@ function() \{
  print("No checking!")
 \}
 }\if{html}{\out{</div>}}
+}
+
+\section{Background}{
+Cross-site request forgery (CSRF) refers to attacks that
+trick user browsers into making unintended unsafe HTTP requests
+to trusted sites -- often through piggybacking on existing
+authenticated user sessions.
+
+In general, clients are most vulnerable when only cookies are used to
+validate requests from authenticated users.
+Read more: \url{https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/CSRF}
 }
 
 \examples{
