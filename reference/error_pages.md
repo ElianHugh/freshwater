@@ -53,7 +53,7 @@ This middleware installs freshwater request context.
 ## See also
 
 [freshwater_error_templates](https://elianhugh.github.io/freshwater/reference/freshwater_error_templates.md),
-[enhook_routes](https://elianhugh.github.io/freshwater/reference/hooks.md)
+[api_hooks](https://elianhugh.github.io/freshwater/reference/hooks.md)
 
 ## Examples
 
@@ -67,5 +67,5 @@ function(api) {
 #> {
 #>     api_error_pages(api, debug = TRUE)
 #> }
-#> <environment: 0x5560857cee18>
+#> <environment: 0x55b24dd80750>
 ```

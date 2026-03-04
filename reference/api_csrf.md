@@ -65,7 +65,8 @@ CSRF exemptions can be specified by `@csrf`:
 ## See also
 
 [form](https://elianhugh.github.io/freshwater/reference/form.md),
-[api_freshwater](https://elianhugh.github.io/freshwater/reference/api_freshwater.md)
+[api_freshwater](https://elianhugh.github.io/freshwater/reference/api_freshwater.md),
+[api_hooks](https://elianhugh.github.io/freshwater/reference/hooks.md)
 
 ## Examples
 
@@ -79,6 +80,6 @@ function(api) {
 #> {
 #>     api_csrf(api, secure = FALSE, exemptions = c("/foo/*", "/bar"))
 #> }
-#> <environment: 0x556083b61208>
+#> <environment: 0x55b24c028a68>
 
 ```

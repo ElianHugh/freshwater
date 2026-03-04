@@ -41,7 +41,7 @@
   : Apply CSRF Protection to a plumber2 API
 - [`api_cget()`](https://elianhugh.github.io/freshwater/reference/api_cget.md)
   : Conditional GET
-- [`enhook_routes()`](https://elianhugh.github.io/freshwater/reference/hooks.md)
+- [`api_hooks()`](https://elianhugh.github.io/freshwater/reference/hooks.md)
   [`hook()`](https://elianhugh.github.io/freshwater/reference/hooks.md)
   : Route handler hooks
 
