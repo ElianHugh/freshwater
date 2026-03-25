@@ -274,7 +274,7 @@ rewrite_attrs <- function(tag) {
         return(tag)
     }
 
-    if (inherits(tag, "shiny.tag.list")) {
+    if (inherits(tag, "shiny.tag.list") || inherits(tag, "list")) {
 
         for (i in seq_along(tag)) {
             tag[[i]] <- rewrite_attrs(tag[[i]])

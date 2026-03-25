@@ -169,35 +169,48 @@ test_that("template dots work", {
 test_that("template attribute norming", {
   t <- template({
     div(
-      data_attribute="foo",
-      data__attribute="bar",
-      `_data_attribute`="baz"
+      data_attribute = "foo",
+      data__attribute = "bar",
+      `_data_attribute` = "baz"
     )
   })
 
   expect_identical_when_rendered(
     t(),
     htmltools::div(
-      `data-attribute`="foo",
+      `data-attribute` = "foo",
       data_attribute = "bar",
-      `_data-attribute`="baz"
+      `_data-attribute` = "baz"
     )
   )
-
 
   t <- template({
     div(
-      span(data_attribute_foo="bar")
+      span(data_attribute_foo = "bar")
     )
   })
 
   expect_identical_when_rendered(
     t(),
     htmltools::div(
-      htmltools::span(`data-attribute-foo`="bar")
+      htmltools::span(`data-attribute-foo` = "bar")
+    )
+  )
+
+  t <- template({
+    div(
+      lapply(seq(1), \(i) div(foo_bar = 1))
+    )
+  })
+
+  expect_identical_when_rendered(
+    t(),
+    htmltools::div(
+      htmltools::div(`foo-bar` = "1")
     )
   )
 })
+
 
 
 test_that("template scoping works", {
