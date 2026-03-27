@@ -11,7 +11,8 @@ passes ...  to the containing HTML nodes
 defined in the template.
 fragments: named subtemplates that can be optionally extracted from
 the template upon rendering by supplying fragment = "name". Fragment names
-are required.
+are required. If multiple fragment names are specified, fragments will be extracted
+and collated into a htmltools::tagList, in the order of names provided.
 
 '><meta property="og:description" content='template() is a function factory that captures a template expression and
 returns a callable HTML renderer. The expression is evaluated
@@ -25,7 +26,8 @@ passes ...  to the containing HTML nodes
 defined in the template.
 fragments: named subtemplates that can be optionally extracted from
 the template upon rendering by supplying fragment = "name". Fragment names
-are required.
+are required. If multiple fragment names are specified, fragments will be extracted
+and collated into a htmltools::tagList, in the order of names provided.
 
 '></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -77,7 +79,8 @@ passes <code>...</code>  to the containing HTML nodes
 defined in the template.</p></li>
 <li><p><strong>fragments</strong>: named subtemplates that can be optionally extracted from
 the template upon rendering by supplying <code>fragment = "name"</code>. Fragment names
-are required.</p></li>
+are required. If multiple fragment names are specified, fragments will be extracted
+and collated into a <a href="https://rstudio.github.io/htmltools/reference/tagList.html" class="external-link">htmltools::tagList</a>, in the order of names provided.</p></li>
 </ul></div>
 
     <div class="section level2">

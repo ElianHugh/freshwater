@@ -1,7 +1,7 @@
 # Freshwater Request Context
 
 freshwater installs a per-request execution context that allows
-[`current_path()`](https://elianhugh.github.io/freshwater/reference/current_path.md),
+[`current_path()`](https://elianhugh.github.io/freshwater/reference/current_context.md),
 [`csrf_token()`](https://elianhugh.github.io/freshwater/reference/csrf_token.md),
 and
 [`template()`](https://elianhugh.github.io/freshwater/reference/templating.md)
@@ -27,4 +27,4 @@ context-dependent helpers outside a request will raise a
 ## See also
 
 [`api_freshwater()`](https://elianhugh.github.io/freshwater/reference/api_freshwater.md),
-[`current_path()`](https://elianhugh.github.io/freshwater/reference/current_path.md)
+[`current_path()`](https://elianhugh.github.io/freshwater/reference/current_context.md)

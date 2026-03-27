@@ -27,8 +27,8 @@ api_cget(api, path, etag_fn)
 
 - etag_fn:
 
-  a function that takes no arguments and returns a single value used to
-  derive the ETag.
+  a function that takes either zero or one argument, and returns a
+  single value used to derive the ETag.
 
 ## Details
 

@@ -275,8 +275,11 @@ function(api) {
 
 ## Context
 
-- [`current_path()`](https://elianhugh.github.io/freshwater/reference/current_path.md)
-  : Get current request path from context
+- [`current_path()`](https://elianhugh.github.io/freshwater/reference/current_context.md)
+  [`current_method()`](https://elianhugh.github.io/freshwater/reference/current_context.md)
+  [`current_query()`](https://elianhugh.github.io/freshwater/reference/current_context.md)
+  [`current_cookie()`](https://elianhugh.github.io/freshwater/reference/current_context.md)
+  : Get request data from current context
 - [`freshwater_context`](https://elianhugh.github.io/freshwater/reference/freshwater_context.md)
   : Freshwater Request Context
 

@@ -139,11 +139,13 @@ that is being targeted will not result in an invalidation of the cache.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">nav</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span>, is_admin <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;&lt;ul&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;li&gt;Home&lt;/li&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;li&gt;Profile&lt;/li&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;li&gt;Admin&lt;/li&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/ul&gt;&lt;/div&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;ul&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;li&gt;Home&lt;/li&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;li&gt;Profile&lt;/li&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;li&gt;Admin&lt;/li&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;/ul&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/div&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Nested Caches</span></span></span>
 <span class="r-in"><span><span class="va">dashboard</span> <span class="op">&lt;-</span> <span class="fu"><a href="templating.html">template</a></span><span class="op">(</span>page <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, recent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, <span class="op">{</span></span></span>
@@ -169,8 +171,8 @@ that is being targeted will not result in an invalidation of the cache.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;h1&gt;Dashboard&lt;/h1&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;div&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;p&gt;&lt;/p&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/div&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     &lt;p&gt;&lt;/p&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;/div&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;div&gt;&lt;/div&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/div&gt;</span>
 <span class="r-in"><span></span></span>
@@ -183,7 +185,7 @@ that is being targeted will not result in an invalidation of the cache.</p>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/page.html" class="external-link">page</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;Generated at 2026-03-25 00:38:54.317417&lt;/div&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;Generated at 2026-03-27 14:21:52.344566&lt;/div&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Invalidate the current cache</span></span></span>
 <span class="r-in"><span><span class="co"># during rendering</span></span></span>
@@ -207,16 +209,20 @@ that is being targeted will not result in an invalidation of the cache.</p>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/page.html" class="external-link">page</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span>, refresh <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;&lt;p&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Hello </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/p&gt;&lt;/div&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;p&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Hello </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;/p&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/div&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/page.html" class="external-link">page</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fl">1</span>, refresh <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;&lt;p&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Hello </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/p&gt;&lt;/div&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;div&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;p&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Hello </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   &lt;/p&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;/div&gt;</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

@@ -16,7 +16,10 @@ Templates may define:
 
 - **fragments**: named subtemplates that can be optionally extracted
   from the template upon rendering by supplying `fragment = "name"`.
-  Fragment names are required.
+  Fragment names are required. If multiple fragment names are specified,
+  fragments will be extracted and collated into a
+  [htmltools::tagList](https://rstudio.github.io/htmltools/reference/tagList.html),
+  in the order of names provided.
 
 ## Usage
 

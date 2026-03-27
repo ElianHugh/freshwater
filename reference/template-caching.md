@@ -96,11 +96,13 @@ nav <- template(user, {
   )
 })
 nav(list(id = 1, is_admin = TRUE))
-#> <div><ul>
-#>   <li>Home</li>
-#>   <li>Profile</li>
-#>   <li>Admin</li>
-#> </ul></div>
+#> <div>
+#>   <ul>
+#>     <li>Home</li>
+#>     <li>Profile</li>
+#>     <li>Admin</li>
+#>   </ul>
+#> </div>
 
 # Nested Caches
 dashboard <- template(page = list(), stats = list(), recent = list(), {
@@ -126,8 +128,8 @@ dashboard()
 #> <div>
 #>   <h1>Dashboard</h1>
 #>   <div>
-#>   <p></p>
-#> </div>
+#>     <p></p>
+#>   </div>
 #>   <div></div>
 #> </div>
 
@@ -140,7 +142,7 @@ page <- template({
   )
 })
 page()
-#> <div>Generated at 2026-03-25 00:38:54.317417</div>
+#> <div>Generated at 2026-03-27 14:21:52.344566</div>
 
 # Invalidate the current cache
 # during rendering
@@ -164,14 +166,18 @@ page <- template(user, {
 })
 
 page(list(id = 1, refresh = FALSE))
-#> <div><p>
-#>   Hello 
-#>   1
-#> </p></div>
+#> <div>
+#>   <p>
+#>     Hello 
+#>     1
+#>   </p>
+#> </div>
 
 page(list(id = 1, refresh = TRUE))
-#> <div><p>
-#>   Hello 
-#>   1
-#> </p></div>
+#> <div>
+#>   <p>
+#>     Hello 
+#>     1
+#>   </p>
+#> </div>
 ```
