@@ -271,14 +271,11 @@ new_template_error <- function(template_name, error, call, this, bottom) {
 }
 
 rewrite_attrs <- function(tag) {
-    if (inherits(tag, "html")) {
+    if (is.null(tag)) {
         return(tag)
     }
 
-    if (inherits(tag, "shiny.tag.list") || inherits(tag, "list")) {
-        for (i in seq_along(tag)) {
-            tag[[i]] <- rewrite_attrs(tag[[i]])
-        }
+    if (inherits(tag, "html")) {
         return(tag)
     }
 
@@ -298,6 +295,13 @@ rewrite_attrs <- function(tag) {
             tag$children <- lapply(tag$children, rewrite_attrs)
         }
 
+        return(tag)
+    }
+
+    if (inherits(tag, "shiny.tag.list") || inherits(tag, "list")) {
+        for (i in seq_along(tag)) {
+            tag[[i]] <- list(rewrite_attrs(tag[[i]]))
+        }
         return(tag)
     }
 

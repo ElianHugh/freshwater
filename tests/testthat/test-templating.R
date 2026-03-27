@@ -235,8 +235,21 @@ test_that("template attribute norming", {
       htmltools::div(`foo-bar` = "1")
     )
   )
-})
 
+  # norming works w/ cache
+  t <- template({
+    cache(
+      name = "test",
+      vary = NULL,
+      div(data_class_id = 1L)
+    )
+  })
+  expect_identical_when_rendered(
+    t(),
+      htmltools::div(`data-class-id` = "1")
+  )
+
+})
 
 
 test_that("template scoping works", {
