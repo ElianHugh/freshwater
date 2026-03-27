@@ -38,6 +38,9 @@ reference:
   - title: "Context"
     contents:
       - current_path
+      - current_method
+      - current_query
+      - current_cookie
       - freshwater_context
 
   - title: "Middleware"

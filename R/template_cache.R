@@ -73,9 +73,10 @@ get_cache_backend <- function() {
   freshwater$cache$backend
 }
 
-#' Cache a rendered partial within a template
+#' Cache a partial within a template
 #'
-#' `cache()` memoises a portion of HTML output within a freshwater template.
+#' `cache()` memoises a portion of a template
+#' as an HTML tag subtree.
 #' The contents are computed once per unique cache key, and reused in subsequent calls.
 #' This avoids repeat evaluation of expensive or stable HTML trees.
 #'
@@ -158,13 +159,8 @@ cache <- function(name, vary = NULL, ...) {
   )
 
   fn <- function() {
-    res <- eval(expr, env) |>
+    eval(expr, env) |>
       htmltools::as.tags()
-      if (is.null(context$fragment)) {
-        htmltools::doRenderTags(res)
-      } else {
-        res
-      }
   }
 
   key <- cache_key(
