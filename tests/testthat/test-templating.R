@@ -133,6 +133,32 @@ test_that("template fragments work", {
       htmltools::as.tags(lapply(seq(10), function(i) htmltools::p(i)))
     )
 
+
+    # you can extract multiple fragments
+    t1 <- template({
+      div(
+        fragment(name = "foo", p("foo")),
+        fragment(name = "bar", p("bar")),
+        fragment(name = "baz", p("baz")),
+      )
+    })
+
+    expect_identical_when_rendered(
+      t1(fragment = c("foo", "baz")),
+      htmltools::tagList(
+        htmltools::p("foo"),
+        htmltools::p("baz")
+      )
+    )
+
+     expect_identical_when_rendered(
+      t1(fragment = c("baz", "foo")),
+      htmltools::tagList(
+        htmltools::p("baz"),
+        htmltools::p("foo")
+      )
+    )
+
 })
 
 test_that("template params work", {

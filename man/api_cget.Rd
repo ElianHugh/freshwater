@@ -11,7 +11,8 @@ api_cget(api, path, etag_fn)
 
 \item{path}{the path to short circuit.}
 
-\item{etag_fn}{a function that takes no arguments and returns a single value used to derive the ETag.}
+\item{etag_fn}{a function that takes either zero or one argument,
+and returns a single value used to derive the ETag.}
 }
 \description{
 Creates a conditional GET handler for a specific

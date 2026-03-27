@@ -14,7 +14,8 @@
 #' defined in the template.
 #' - **fragments**: named subtemplates that can be optionally extracted from
 #' the template upon rendering by supplying `fragment = "name"`. Fragment names
-#' are required.
+#' are required. If multiple fragment names are specified, fragments will be extracted
+#' and collated into a [htmltools::tagList], in the order of names provided.
 #'
 #' # Attributes
 #' Attributes with non-leading underscores are
@@ -113,9 +114,9 @@
 #' @export
 template <- function(..., .envir = rlang::caller_env()) {
     dots <- as.list(substitute(list(...)))[-1]
-    body_idx <- lapply(dots, \(x) inherits(x, "{") )|>
-            unlist() |>
-            which()
+    body_idx <- lapply(dots, \(x) inherits(x, "{")) |>
+        unlist() |>
+        which()
 
     if (length(body_idx) != 1L) {
         error_template_single_body(body_idx)
@@ -161,11 +162,9 @@ template <- function(..., .envir = rlang::caller_env()) {
             bottom <- rlang::current_env()
             this <- rlang::caller_env()
 
-
             withCallingHandlers(
                 {
                     nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
-
 
                     runtime <- environment(sys.function())
 
@@ -176,7 +175,9 @@ template <- function(..., .envir = rlang::caller_env()) {
                     )
                     on.exit(rm(".freshwater_ctx", envir = runtime), add = TRUE)
 
-                    x <- local({ BODY })
+                    x <- local({
+                        BODY
+                    })
 
                     if (!is.null(fragment)) {
                         x <- walk_nodes(x, fragment)
@@ -275,7 +276,6 @@ rewrite_attrs <- function(tag) {
     }
 
     if (inherits(tag, "shiny.tag.list") || inherits(tag, "list")) {
-
         for (i in seq_along(tag)) {
             tag[[i]] <- rewrite_attrs(tag[[i]])
         }
@@ -283,7 +283,6 @@ rewrite_attrs <- function(tag) {
     }
 
     if (inherits(tag, "shiny.tag")) {
-
         if (length(tag$attribs)) {
             attribs <- tag$attribs
             nms <- names(attribs)
@@ -422,8 +421,6 @@ form <- function(..., method = "get") {
 }
 
 
-
-
 #' @exportS3Method
 print.freshwater_template <- function(x, ...) {
     params <- attr(x, "template_params")
@@ -473,22 +470,25 @@ print.freshwater_fragment <- function(x, ...) {
 }
 
 walk_nodes <- function(tag, name) {
-    found <- list()
+    names_requested <- unique(as.character(name))
+    buckets <- structure(
+        vector(
+            mode = "list",
+            length = length(names_requested)
+        ),
+        names = names_requested
+    )
     walk <- function(x) {
-
         if (inherits(x, "shiny.tag")) {
-
             fragment <- attr(x, "fragment")
-
-            if (!is.null(fragment) && identical(fragment, name)) {
-                found[[length(found) + 1L]] <<- x
+            if (!is.null(fragment) && fragment %in% names_requested) {
+                buckets[[fragment]][[length(buckets[[fragment]]) + 1L]] <<- x
             }
 
             for (i in seq_along(x$children)) {
                 walk(x$children[[i]])
             }
             return(invisible(NULL))
-
         } else if (inherits(x, "list")) {
             for (child in x) {
                 walk(child)
@@ -499,7 +499,7 @@ walk_nodes <- function(tag, name) {
     }
 
     walk(tag)
-
+    found <- unlist(buckets, recursive = FALSE, use.names = FALSE)
 
     if (!length(found)) {
         return(NULL)

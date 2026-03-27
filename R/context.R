@@ -65,7 +65,7 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
     if (any(!names(dots) %in% all_fml_names)) {
         idx <- which(!names(dots) %in% all_fml_names)
         fmls <- sprintf("`%s`", names(dots)[idx]) |>
-            paste0(collapse =", ")
+            paste0(collapse = ", ")
 
         fmls <- sprintf(
             "%s %s",
@@ -105,8 +105,6 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
         )
     }
 
-
-
     invisible(api)
 }
 
@@ -120,24 +118,28 @@ api_context <- function(api) {
 
     fw_env$context$installed <- TRUE
 
-    plumber2::api_on(api, "before-request", function(server, id, request, arg_list) {
-        if (is.null(request)) {
-            return(TRUE)
-        }
-        if (request$method == "post") {
-            try(request$parse(plumber2::get_parsers()))
-            req_body <- request$body
-            if (!is.null(req_body) && "_method" %in% names(req_body)) {
-                method <- req_body[["_method"]]
-                if (tolower(method) %in% c("delete", "patch", "put")) {
-                    origin <- request$origin
-                    origin$REQUEST_METHOD <- toupper(method)
-                    request$origin <- origin
+    plumber2::api_on(
+        api,
+        "before-request",
+        function(server, id, request, arg_list) {
+            if (is.null(request)) {
+                return(TRUE)
+            }
+            if (request$method == "post") {
+                try(request$parse(plumber2::get_parsers()))
+                req_body <- request$body
+                if (!is.null(req_body) && "_method" %in% names(req_body)) {
+                    method <- req_body[["_method"]]
+                    if (tolower(method) %in% c("delete", "patch", "put")) {
+                        origin <- request$origin
+                        origin$REQUEST_METHOD <- toupper(method)
+                        request$origin <- origin
+                    }
                 }
             }
+            TRUE
         }
-        TRUE
-    })
+    )
 
     api_hooks(
         api,
@@ -203,22 +205,27 @@ get_fw_context <- function() {
     freshwater$request_context %||% NULL
 }
 
-#' @title Get current request path from context
+#' @title Get request data from current context
 #'
 #' @description
-#' Return the URL path of the current HTTP request,
-#' as captured in the freshwater request context. If
-#' called outside of an active context, an error is
-#' raised.
+#' These helpers provide access to request data for the current HTTP
+#' request via the freshwater request context.
 #'
-#' This is primarily intended for use inside templates
-#' where the request context has been established.
+#' - `current_path()` returns the request URL path
+#' - `current_method()` returns the HTTP method
+#' - `current_query()` returns the query parameters
+#' - `current_cookie()` returns the value of a cookie by name
+#'
+#' These functions are primarily intended for use inside templates
+#' where a request context has been established. If called
+#' outside of an active context, an error is raised.
 #'
 #' Context is available when freshwater context middleware is
 #' active (installed automatically by [api_csrf()],
 #' [api_error_pages()], or [api_freshwater()]).
 #'
 #' @family context helpers
+#' @rdname current_context
 #' @seealso [api_freshwater()], [api_csrf()], [api_error_pages()]
 #' @export
 current_path <- function() {
@@ -234,6 +241,59 @@ current_path <- function() {
         )
     }
     ctx$request$path
+}
+
+
+#' @rdname current_context
+#' @export
+current_method <- function() {
+    ctx <- get_fw_context()
+    if (is.null(ctx)) {
+        rlang::abort(
+            c(
+                "freshwater context missing",
+                i = "Did you forget to install freshwater middleware via `api_freshwater()`?",
+                i = "Helpers like `current_method()` can only be used during a request."
+            ),
+            class = "freshwater_context_missing"
+        )
+    }
+    ctx$request$method
+}
+
+#' @rdname current_context
+#' @export
+current_query <- function() {
+    ctx <- get_fw_context()
+    if (is.null(ctx)) {
+        rlang::abort(
+            c(
+                "freshwater context missing",
+                i = "Did you forget to install freshwater middleware via `api_freshwater()`?",
+                i = "Helpers like `current_query()` can only be used during a request."
+            ),
+            class = "freshwater_context_missing"
+        )
+    }
+    ctx$request$query
+}
+
+#' @rdname current_context
+#' @param name name of cookie
+#' @export
+current_cookie <- function(name) {
+    ctx <- get_fw_context()
+    if (is.null(ctx)) {
+        rlang::abort(
+            c(
+                "freshwater context missing",
+                i = "Did you forget to install freshwater middleware via `api_freshwater()`?",
+                i = "Helpers like `current_cookie()` can only be used during a request."
+            ),
+            class = "freshwater_context_missing"
+        )
+    }
+    ctx$request$cookies[[name]]
 }
 
 

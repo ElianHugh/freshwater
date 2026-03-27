@@ -33,7 +33,8 @@
 #'
 #' @param api a [plumber2] api object.
 #' @param path the path to short circuit.
-#' @param etag_fn a function that takes no arguments and returns a single value used to derive the ETag.
+#' @param etag_fn a function that takes either zero or one argument,
+#' and returns a single value used to derive the ETag.
 #' @export
 api_cget <- function(api, path, etag_fn) {
     if (!requireNamespace("openssl", quietly = TRUE)) {
@@ -42,7 +43,13 @@ api_cget <- function(api, path, etag_fn) {
     handler <- function(request, response) {
         inm <- request$get_header("If-None-Match")
 
-        etag <- new_etag(etag_fn())
+        etag <- new_etag(
+            if (length(formals(etag_fn)) > 0L) {
+                etag_fn(request)
+            } else {
+                etag_fn()
+            }
+        )
 
         response$set_header("ETag", etag)
 

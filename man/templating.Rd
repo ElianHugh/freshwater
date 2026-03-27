@@ -35,7 +35,8 @@ passes \code{...}  to the containing HTML nodes
 defined in the template.
 \item \strong{fragments}: named subtemplates that can be optionally extracted from
 the template upon rendering by supplying \code{fragment = "name"}. Fragment names
-are required.
+are required. If multiple fragment names are specified, fragments will be extracted
+and collated into a \link[htmltools:tagList]{htmltools::tagList}, in the order of names provided.
 }
 }
 \section{Attributes}{
