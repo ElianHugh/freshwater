@@ -129,6 +129,7 @@ api_csrf <- function(api, secure = TRUE, exemptions = character()) {
                             secure = secure,
                             same_site = "Lax"
                         )
+                        response$set_data(cookie_name, cookie_token)
                     }
 
                     if (request$method %in% unsafe_methods) {
@@ -160,13 +161,15 @@ api_csrf <- function(api, secure = TRUE, exemptions = character()) {
                 id = "freshwater::csrf_context",
                 function(api, args, next_call) {
                     request <- args$request
+                    response <- args$response
 
                     if (is.null(request)) {
                         return(next_call())
                     }
 
                     cookie_name <- fw_env$csrf$cookie_name %||% "csrf"
-                    token <- request$cookies[[cookie_name]] %||% ""
+                    token <- request$cookies[[cookie_name]] %||%
+                        try(response$get_data(cookie_name)) %||% ""
 
                     ctx <- get_fw_context()
                     ctx$csrf_token <- function() token

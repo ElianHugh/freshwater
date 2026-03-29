@@ -71,7 +71,7 @@ test_that("csrf works", {
 test_that("404s still occur with CSRF on", {
     api <- plumber2::api()
     api <- api_csrf(api, secure = FALSE)
-    api$trigger("freshwater_csrf")
+    api$trigger("freshwater::hook")
 
     req <- fiery::fake_request("https://localhost:8080/", method = "get")
     res <- api$test_request(req)
@@ -118,3 +118,57 @@ test_that("constant time comparison doesn't leak", {
     )
     expect_lt(max(times) / min(times), 1.25)
 })
+
+test_that("csrf token is available during first page render", {
+    suppressMessages({
+        api <- plumber2::api()
+
+        page <- template({
+            html(
+                head(
+                    meta(name = "csrf-token", content = csrf_token())
+                ),
+                body(
+                    form(
+                        action = "/bar",
+                        method = "post",
+                        input(type = "submit", value = "OK")
+                    )
+                )
+            )
+        })
+
+        api <- plumber2::api_get(api, "/", function() {
+            page()
+        })
+
+        api <- plumber2::api_post(api, "/bar", function() {
+            "bar"
+        })
+
+        api <- api_csrf(api, secure = FALSE)
+    })
+
+    api$trigger("freshwater::hook")
+
+    req <- fiery::fake_request(
+        "https://localhost:8080/",
+        method = "get",
+        headers = list(
+            accept = "text/html; charset=utf-8"
+        )
+    )
+    res <- api$test_request(req)
+
+    expect_identical(res$status, 200L)
+
+    headers <- unname(unlist(res$headers, use.names = FALSE))
+    csrf_header_idx <- grepl("^csrf=", headers) |> which()
+    expect_true(length(csrf_header_idx) >= 1)
+
+    csrf_header <- headers[[csrf_header_idx[[1]]]]
+    csrf_token <- sub("^csrf=([^;]+).*$", "\\1", csrf_header)
+
+    expect_match(res$body, csrf_token)
+})
+
