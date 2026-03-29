@@ -125,8 +125,7 @@ layout(
 
 ## Attribute name normalisation
 
-> Attribute names with non-leading underscores are rewritten to hyphenated HTML attributes
-> Double underscores (__) act as an escape hatch for literal underscores
+> Attribute names with non-leading underscores are rewritten to hyphenated HTML attributes. Trailing underscores are removed. Double underscores (__) act as an escape hatch for literal underscores.
 
 ```r
 template({
@@ -135,6 +134,7 @@ template({
     hx_target = "#main",
     data_user_id = 42,
     `data__raw__name` = "keep_underscore",
+    for_ = "foo",
     "Load"
   )
 })()
@@ -146,6 +146,7 @@ template({
     hx-target="#main"
     data-user-id="42"
     data_raw_name="keep_underscore"
+    for = "foo"
 >
     Load
 </div>
