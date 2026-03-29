@@ -22,6 +22,7 @@ reference:
     contents:
       - template
       - fragment
+      - document
       - form
       - csrf_token
       - register_html_serialiser

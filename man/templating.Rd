@@ -132,5 +132,5 @@ layout(htmltools::div("content"))
 
 }
 \seealso{
-\link{cache}, \link{form}, \link{csrf_token}, \link{api_freshwater}
+\link{document}, \link{cache}, \link{form}, \link{csrf_token}, \link{api_freshwater}
 }
