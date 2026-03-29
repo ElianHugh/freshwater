@@ -267,7 +267,7 @@ function(api) {
   [`clear_cache()`](https://elianhugh.github.io/freshwater/reference/template-caching.md)
   [`invalidate_cache()`](https://elianhugh.github.io/freshwater/reference/template-caching.md)
   [`invalidate_cache_here()`](https://elianhugh.github.io/freshwater/reference/template-caching.md)
-  : Cache a rendered partial within a template
+  : Cache a partial within a template
 - [`set_cache_backend()`](https://elianhugh.github.io/freshwater/reference/set_cache_backend.md)
   : Configure freshwater's cache backend
 - [`get_cache_backend()`](https://elianhugh.github.io/freshwater/reference/get_cache_backend.md)

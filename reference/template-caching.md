@@ -1,9 +1,9 @@
-# Cache a rendered partial within a template
+# Cache a partial within a template
 
-`cache()` memoises a portion of HTML output within a freshwater
-template. The contents are computed once per unique cache key, and
-reused in subsequent calls. This avoids repeat evaluation of expensive
-or stable HTML trees.
+`cache()` memoises a portion of a template as an HTML tag subtree. The
+contents are computed once per unique cache key, and reused in
+subsequent calls. This avoids repeat evaluation of expensive or stable
+HTML trees.
 
 `clear_cache()` removes all memoised templates from freshwater's cache
 store.
@@ -65,6 +65,11 @@ Caching is powered by
 [memoise::memoise](https://memoise.r-lib.org/reference/memoise.html).
 Cache storage limits, eviction, and persistence are controlled via the
 underlying memoise/cache backend.
+
+If telemetry from otel is enabled, cache hit and miss events are
+recorded on the current active span (typically the route-level span made
+by routr). Hit and miss counts are also measured as metrics when
+enabled.
 
 Note: invalidation affects future renders only. Calling this within the
 `cache()` block that is being targeted will not result in an
@@ -142,7 +147,7 @@ page <- template({
   )
 })
 page()
-#> <div>Generated at 2026-03-27 14:21:52.344566</div>
+#> <div>Generated at 2026-03-29 12:13:08.780285</div>
 
 # Invalidate the current cache
 # during rendering
