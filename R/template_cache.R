@@ -91,6 +91,10 @@ get_cache_backend <- function() {
 #' eviction, and persistence are controlled via the underlying
 #' memoise/cache backend.
 #'
+#' If telemetry from otel is enabled, cache hit and miss events are recorded on the
+#' current active span (typically the route-level span made by routr).
+#' Hit and miss counts are also measured as metrics when enabled.
+#'
 #' @export
 #' @param name unique name for the cached partial template
 #' @param vary values that should change when the cached output should change. This is used to construct the cache key.
@@ -172,6 +176,33 @@ cache <- function(name, vary = NULL, ...) {
 
   hit <- has_store(key)
   res <- freshwater$cache$store(key, fn)
+
+  if (requireNamespace("otel", quietly = TRUE)) {
+      attrs <- list(
+        "freshwater.cache.name" = name,
+        "freshwater.cache.template" = context$id,
+        "freshwater.cache.fragment" = context$fragment %||% ""
+      )
+
+      if (otel::is_tracing_enabled()) {
+        span <- tryCatch(otel::get_active_span(), error = function(e) NULL)
+        if (!is.null(span) && isTRUE(span$is_recording())) {
+          span$add_event(
+            name = if (hit) "freshwater.cache.hit" else "freshwater.cache.miss",
+            attributes = otel::as_attributes(attrs)
+          )
+        }
+      }
+
+      if (otel::is_measuring_enabled()) {
+        otel::counter_add(
+          if (hit) "freshwater.cache.hit" else "freshwater.cache.miss",
+          1L,
+          attributes = otel::as_attributes(list("freshwater.cache.name" = name))
+        )
+      }
+
+  }
 
   if (hit) {
     class(res) <- c("freshwater_cached_partial", class(res))

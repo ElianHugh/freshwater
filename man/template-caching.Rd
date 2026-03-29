@@ -5,7 +5,7 @@
 \alias{clear_cache}
 \alias{invalidate_cache}
 \alias{invalidate_cache_here}
-\title{Cache a rendered partial within a template}
+\title{Cache a partial within a template}
 \usage{
 cache(name, vary = NULL, ...)
 
@@ -27,7 +27,8 @@ invalidate_cache_here(name, vary = NULL, fragment = NULL)
 \item{fragment}{optional fragment name for targetting cached fragments}
 }
 \description{
-\code{cache()} memoises a portion of HTML output within a freshwater template.
+\code{cache()} memoises a portion of a template
+as an HTML tag subtree.
 The contents are computed once per unique cache key, and reused in subsequent calls.
 This avoids repeat evaluation of expensive or stable HTML trees.
 
@@ -51,6 +52,10 @@ Caching occurs a small overhead for first-time usage, but is faster in proceedin
 Caching is powered by \link[memoise:memoise]{memoise::memoise}. Cache storage limits,
 eviction, and persistence are controlled via the underlying
 memoise/cache backend.
+
+If telemetry from otel is enabled, cache hit and miss events are recorded on the
+current active span (typically the route-level span made by routr).
+Hit and miss counts are also measured as metrics when enabled.
 
 Note: invalidation affects future renders only. Calling this within the \code{cache()} block
 that is being targeted will not result in an invalidation of the cache.
