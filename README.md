@@ -13,7 +13,7 @@
 > [!NOTE]
 > This package is under active development and its functionality may change over time.
 
-freshwater provides server-side rendering utilities for plumber2 backends:
+freshwater is an HTML-first server-side rendering layer for plumber2:
 
 - composable HTML templates (slots, parameters, and fragments)
 - template caching
