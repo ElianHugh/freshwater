@@ -62,7 +62,7 @@
 <blockquote>
 <p>[!NOTE] This package is under active development and its functionality may change over time.</p>
 </blockquote>
-<p>freshwater provides server-side rendering utilities for plumber2 backends:</p>
+<p>freshwater is an HTML-first server-side rendering layer for plumber2:</p>
 <ul>
 <li>composable HTML templates (slots, parameters, and fragments)</li>
 <li>template caching</li>
@@ -158,7 +158,7 @@
 <h2 id="attribute-name-normalisation">Attribute name normalisation<a class="anchor" aria-label="anchor" href="#attribute-name-normalisation"></a>
 </h2>
 <blockquote>
-<p>Attribute names with non-leading underscores are rewritten to hyphenated HTML attributes Double underscores (__) act as an escape hatch for literal underscores</p>
+<p>Attribute names with non-leading underscores are rewritten to hyphenated HTML attributes. Trailing underscores are removed. Double underscores (__) act as an escape hatch for literal underscores.</p>
 </blockquote>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/templating.html">template</a></span><span class="op">(</span><span class="op">{</span></span>
@@ -167,6 +167,7 @@
 <span>    hx_target <span class="op">=</span> <span class="st">"#main"</span>,</span>
 <span>    data_user_id <span class="op">=</span> <span class="fl">42</span>,</span>
 <span>    `data__raw__name` <span class="op">=</span> <span class="st">"keep_underscore"</span>,</span>
+<span>    for_ <span class="op">=</span> <span class="st">"foo"</span>,</span>
 <span>    <span class="st">"Load"</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -175,9 +176,10 @@
 <span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="ot">    hx-target</span><span class="op">=</span><span class="st">"#main"</span></span>
 <span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="ot">    data-user-id</span><span class="op">=</span><span class="st">"42"</span></span>
 <span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="ot">    data_raw_name</span><span class="op">=</span><span class="st">"keep_underscore"</span></span>
-<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="dt">&gt;</span></span>
-<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a>    Load</span>
-<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="ot">    for </span><span class="op">=</span> <span class="st">"foo"</span></span>
+<span id="cb11-7"><a href="#cb11-7" tabindex="-1"></a><span class="dt">&gt;</span></span>
+<span id="cb11-8"><a href="#cb11-8" tabindex="-1"></a>    Load</span>
+<span id="cb11-9"><a href="#cb11-9" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="cached-partials">Cached partials<a class="anchor" aria-label="anchor" href="#cached-partials"></a>

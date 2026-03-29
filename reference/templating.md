@@ -56,6 +56,10 @@ versions instead. This means you can write
 `htmltools::div(data_foo="bar")` which is converted to
 `htmltools::div(data-foo="bar")`.
 
+Attributes with trailing underscores have their underscores stripped.
+This means the you can write `htmltools::tags$label(for_="foo")` which
+is converted to `htmltools::tags$label(for="foo")`.
+
 An escape hatch exists If you explicitly want underscores in your
 attributes. You may use double underscores, which will be converted to
 single underscores e.g. `htmltools::div(data__foo="bar")` which is
@@ -80,6 +84,7 @@ separate from the request context defined elsewhere.
 
 ## See also
 
+[document](https://elianhugh.github.io/freshwater/reference/document.md),
 [cache](https://elianhugh.github.io/freshwater/reference/template-caching.md),
 [form](https://elianhugh.github.io/freshwater/reference/form.md),
 [csrf_token](https://elianhugh.github.io/freshwater/reference/csrf_token.md),
@@ -160,4 +165,21 @@ layout(htmltools::div("content"))
 #> <body>
 #>   <div>content</div>
 #> </body>
+
+# Attribute Norming
+my_form <- template({
+    form(
+        label(for_ = "desc", "Description"),
+        input(
+            type = "text",
+            id = "desc",
+            data_user__id = "123"
+        )
+    )
+})
+my_form()
+#> <form method="get">
+#>   <label for="desc">Description</label>
+#>   <input type="text" id="desc" data-user_id="123"/>
+#> </form>
 ```

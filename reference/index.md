@@ -5,6 +5,8 @@
 - [`template()`](https://elianhugh.github.io/freshwater/reference/templating.md)
   [`fragment()`](https://elianhugh.github.io/freshwater/reference/templating.md)
   : Create a reusable HTML template
+- [`document()`](https://elianhugh.github.io/freshwater/reference/document.md)
+  : HTML Document Root
 - [`form()`](https://elianhugh.github.io/freshwater/reference/form.md) :
   Form
 - [`csrf_token()`](https://elianhugh.github.io/freshwater/reference/csrf_token.md)
