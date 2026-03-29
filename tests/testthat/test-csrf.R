@@ -79,7 +79,6 @@ test_that("404s still occur with CSRF on", {
     expect_identical(res$status, 404L)
 })
 
-
 test_that("constant time comparison doesn't leak", {
     flip_first <- function(s) {
         substr(s, 1, 1) <- if (substr(s, 1, 1) == "A") "B" else "A"
