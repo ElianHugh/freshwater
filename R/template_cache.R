@@ -91,6 +91,10 @@ get_cache_backend <- function() {
 #' eviction, and persistence are controlled via the underlying
 #' memoise/cache backend.
 #'
+#' If telemetry from otel is enabled, cache hit and miss events are recorded on the
+#' current active span (typically the route-level span made by routr).
+#' Hit and miss counts are also measured as metrics when enabled.
+#'
 #' @export
 #' @param name unique name for the cached partial template
 #' @param vary values that should change when the cached output should change. This is used to construct the cache key.
