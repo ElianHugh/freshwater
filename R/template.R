@@ -24,6 +24,10 @@
 #' `htmltools::div(data_foo="bar")` which is converted to
 #' `htmltools::div(data-foo="bar")`.
 #'
+#' Attributes with trailing underscores have their underscores stripped.
+#' This means the you can write `htmltools::tags$label(for_="foo")` which
+#' is converted to `htmltools::tags$label(for="foo")`.
+#'
 #' An escape hatch exists If you explicitly want
 #' underscores in your attributes.
 #' You may use double underscores, which
@@ -104,6 +108,19 @@
 #' })
 #'
 #' layout(htmltools::div("content"))
+#'
+#' # Attribute Norming
+#' my_form <- template({
+#'     form(
+#'         label(for_ = "desc", "Description"),
+#'         input(
+#'             type = "text",
+#'             id = "desc",
+#'             data_user__id = "123"
+#'         )
+#'     )
+#' })
+#' my_form()
 #'
 #' @param ... template definition. Provide zero or more parameters, followed by a
 #' single braced expression.
@@ -283,7 +300,8 @@ rewrite_attrs <- function(tag) {
         if (length(tag$attribs)) {
             attribs <- tag$attribs
             nms <- names(attribs)
-
+            # trailing -> underscores -> double underscores
+            nms <- gsub("(?<!_)_(?=$)", "", nms, perl = TRUE)
             nms <- gsub("(?<!^)(?<!_)_(?!_)", "-", nms, perl = TRUE)
             nms <- gsub("_{2,}", "_", nms, perl = TRUE)
 
