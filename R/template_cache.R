@@ -173,6 +173,33 @@ cache <- function(name, vary = NULL, ...) {
   hit <- has_store(key)
   res <- freshwater$cache$store(key, fn)
 
+  if (requireNamespace("otel", quietly = TRUE)) {
+      attrs <- list(
+        "freshwater.cache.name" = name,
+        "freshwater.cache.template" = context$id,
+        "freshwater.cache.fragment" = context$fragment %||% ""
+      )
+
+      if (otel::is_tracing_enabled()) {
+        span <- tryCatch(otel::get_active_span(), error = function(e) NULL)
+        if (!is.null(span) && isTRUE(span$is_recording())) {
+          span$add_event(
+            name = if (hit) "freshwater.cache.hit" else "freshwater.cache.miss",
+            attributes = otel::as_attributes(attrs)
+          )
+        }
+      }
+
+      if (otel::is_measuring_enabled()) {
+        otel::counter_add(
+          if (hit) "freshwater.cache.hit" else "freshwater.cache.miss",
+          1L,
+          attributes = otel::as_attributes(list("freshwater.cache.name" = name))
+        )
+      }
+
+  }
+
   if (hit) {
     class(res) <- c("freshwater_cached_partial", class(res))
   }
