@@ -24,6 +24,10 @@
 #' `htmltools::div(data_foo="bar")` which is converted to
 #' `htmltools::div(data-foo="bar")`.
 #'
+#' Attributes with trailing underscores have their underscores stripped.
+#' This means the you can write `htmltools::tags$label(for_="foo")` which
+#' is converted to `htmltools::tags$label(for="foo")`.
+#'
 #' An escape hatch exists If you explicitly want
 #' underscores in your attributes.
 #' You may use double underscores, which
@@ -105,12 +109,25 @@
 #'
 #' layout(htmltools::div("content"))
 #'
+#' # Attribute Norming
+#' my_form <- template({
+#'     form(
+#'         label(for_ = "desc", "Description"),
+#'         input(
+#'             type = "text",
+#'             id = "desc",
+#'             data_user__id = "123"
+#'         )
+#'     )
+#' })
+#' my_form()
+#'
 #' @param ... template definition. Provide zero or more parameters, followed by a
 #' single braced expression.
 #' @param .envir the environment in which to evaluate the template
 #' @return function of class `template` with interface `fn(<declared params>, ..., fragment = NULL)`
 #' @rdname templating
-#' @seealso [cache], [form], [csrf_token], [api_freshwater]
+#' @seealso [document], [cache], [form], [csrf_token], [api_freshwater]
 #' @export
 template <- function(..., .envir = rlang::caller_env()) {
     dots <- as.list(substitute(list(...)))[-1]
@@ -283,7 +300,8 @@ rewrite_attrs <- function(tag) {
         if (length(tag$attribs)) {
             attribs <- tag$attribs
             nms <- names(attribs)
-
+            # trailing -> underscores -> double underscores
+            nms <- gsub("(?<!_)_(?=$)", "", nms, perl = TRUE)
             nms <- gsub("(?<!^)(?<!_)_(?!_)", "-", nms, perl = TRUE)
             nms <- gsub("_{2,}", "_", nms, perl = TRUE)
 
@@ -387,6 +405,33 @@ form <- function(..., method = "get") {
             i = "For a plain form tag in normal R code, consider `htmltools::tags$form()`."
         ),
         class = "freshwater_builtin_stub"
+    )
+}
+
+#' HTML Document Root
+#' @description
+#' Constructs a full HTML document. It does not modify or validate its contents.
+#'
+#' `document()` is used for full-page responses, and should not be used for partials, fragments
+#' or nested templates.
+#' @return An `htmltools::tagList`, consisting of a doctype declaration, an <html> tag, and
+#' user-supplied content.
+#' @param ... user-supplied content
+#' @examples
+#' document(
+#'      htmltools::tags$head(
+#'          htmltools::tags$title("Home")
+#'      ),
+#'      htmltools::tags$body(
+#'          htmltools::tags$h1("Hello")
+#'      )
+#' )
+#' @seealso [template], [fragment]
+#' @export
+document <- function(...) {
+    htmltools::tagList(
+        htmltools::HTML("<!DOCTYPE html>"),
+        htmltools::tags$html(...)
     )
 }
 

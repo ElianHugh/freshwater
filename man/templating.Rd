@@ -46,6 +46,10 @@ This means you can write
 \code{htmltools::div(data_foo="bar")} which is converted to
 \verb{htmltools::div(data-foo="bar")}.
 
+Attributes with trailing underscores have their underscores stripped.
+This means the you can write \code{htmltools::tags$label(for_="foo")} which
+is converted to \verb{htmltools::tags$label(for="foo")}.
+
 An escape hatch exists If you explicitly want
 underscores in your attributes.
 You may use double underscores, which
@@ -130,7 +134,20 @@ layout <- template({
 
 layout(htmltools::div("content"))
 
+# Attribute Norming
+my_form <- template({
+    form(
+        label(for_ = "desc", "Description"),
+        input(
+            type = "text",
+            id = "desc",
+            data_user__id = "123"
+        )
+    )
+})
+my_form()
+
 }
 \seealso{
-\link{cache}, \link{form}, \link{csrf_token}, \link{api_freshwater}
+\link{document}, \link{cache}, \link{form}, \link{csrf_token}, \link{api_freshwater}
 }
