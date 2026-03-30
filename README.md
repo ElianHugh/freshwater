@@ -15,7 +15,7 @@
 
 freshwater is an HTML-first server-side rendering layer for plumber2:
 
-- composable HTML templates (slots, parameters, and fragments)
+- composable HTML templates (parameters, content injection, and fragments)
 - template caching
 - weak ETag caching
 - shiny tag serialisation[^1]
@@ -33,6 +33,34 @@ You can install the development version of freshwater from [GitHub](https://gith
 ``` r
 # install.packages("pak")
 pak::pak("ElianHugh/freshwater")
+```
+
+## Usage
+
+```r
+library(plumber2)
+library(freshwater)
+
+page <- template(page_title, {
+  document(
+    head(title(page_title)),
+    body(
+      h1(page_title),
+      ...
+    )
+  )
+})
+
+#' @plumber
+function(api) {
+  api |>
+    api_freshwater(debug = TRUE)
+}
+
+#' @get /
+function() {
+  page("Home", p("Hello from freshwater"))
+}
 ```
 
 ## Reusable templates
@@ -97,7 +125,7 @@ card("Hello", fragment = "body")
 
 ```r
 layout <- template({
-    div(
+    document(
     head(title("App")),
     body(...)
   )
@@ -112,15 +140,15 @@ layout(
 ```
 
 ```html
-<div>
+<!DOCTYPE html>
+<html>
   <body>
     <div>
       <h1>Dashboard</h1>
       <p>Welcome back</p>
     </div>
   </body>
-</div>
-
+</html>
 ```
 
 ## Attribute name normalisation

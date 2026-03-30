@@ -8,7 +8,9 @@ freshwater installs a per-request execution context that allows
 \code{\link[=current_path]{current_path()}}, \code{\link[=csrf_token]{csrf_token()}}, and \code{\link[=template]{template()}}
 helpers to access the active HTTP request.
 The context itself is stored in freshwater's internal state and is
-set/unset with each request.
+set/unset with each request. Context-dependent helpers
+are only valid when handling an active request. Moreover,
+requests are only active during \emph{synchronous execution}.
 
 Context is created automatically when
 \code{\link[=api_freshwater]{api_freshwater()}}, \code{\link[=api_csrf]{api_csrf()}}, or \code{\link[=api_error_pages]{api_error_pages()}} is installed.

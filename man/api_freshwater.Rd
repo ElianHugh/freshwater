@@ -28,8 +28,8 @@ This is a convenience wrapper:
 }
 
 Arguments in \code{...} are selectively forwarded to
-\code{\link[=api_csrf]{api_csrf()}} and \code{\link[=api_error_pages]{api_error_pages()}} based on
-matching formal parameters.
+\code{\link[=api_csrf]{api_csrf()}}, \code{\link[=api_error_pages]{api_error_pages()}}, and \link{register_html_serialiser}
+based on matching formal parameters.
 }
 \seealso{
 \link{api_csrf}, \link{api_error_pages}, \link{register_html_serialiser}

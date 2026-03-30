@@ -38,8 +38,8 @@ NULL
 #' - Optionally installs HTML error page handlers
 #'
 #' Arguments in `...` are selectively forwarded to
-#' [api_csrf()] and [api_error_pages()] based on
-#' matching formal parameters.
+#' [api_csrf()], [api_error_pages()], and [register_html_serialiser]
+#' based on matching formal parameters.
 #'
 #' @param api a [plumber2] api object.
 #' @param csrf whether to enable CSRF protection

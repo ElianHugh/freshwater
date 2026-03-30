@@ -19,7 +19,7 @@ current_cookie(name)
 \item{name}{name of cookie}
 }
 \description{
-These helpers provide access to request data for the current HTTP
+These read-only helpers provide access to request data for the current HTTP
 request via the freshwater request context.
 \itemize{
 \item \code{current_path()} returns the request URL path

@@ -10,7 +10,7 @@ utils::globalVariables(c("error", "request"))
 #'  - {**500 Internal Server Error**} conditions
 #'
 #' Custom error page templates can be supplied via the
-#' `handler` parameter. These should be freshwater templates
+#' `handlers` parameter. These should be freshwater templates
 #' created via [template()], and should match the call signatures of
 #' the default error templates. See [freshwater_error_templates] for
 #' the relevant template signatures required.
