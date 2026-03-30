@@ -13,9 +13,10 @@ This is a convenience wrapper:
 - Optionally installs HTML error page handlers
 
 Arguments in `...` are selectively forwarded to
-[`api_csrf()`](https://elianhugh.github.io/freshwater/reference/api_csrf.md)
+[`api_csrf()`](https://elianhugh.github.io/freshwater/reference/api_csrf.md),
+[`api_error_pages()`](https://elianhugh.github.io/freshwater/reference/error_pages.md),
 and
-[`api_error_pages()`](https://elianhugh.github.io/freshwater/reference/error_pages.md)
+[register_html_serialiser](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md)
 based on matching formal parameters.
 
 ## Usage

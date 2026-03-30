@@ -41,8 +41,8 @@ api_error_pages(
 
 ## Details
 
-Custom error page templates can be supplied via the `handler` parameter.
-These should be freshwater templates created via
+Custom error page templates can be supplied via the `handlers`
+parameter. These should be freshwater templates created via
 [`template()`](https://elianhugh.github.io/freshwater/reference/templating.md),
 and should match the call signatures of the default error templates. See
 [freshwater_error_templates](https://elianhugh.github.io/freshwater/reference/freshwater_error_templates.md)
@@ -67,5 +67,5 @@ function(api) {
 #> {
 #>     api_error_pages(api, debug = TRUE)
 #> }
-#> <environment: 0x55c5e4fba900>
+#> <environment: 0x555a4390fe18>
 ```

@@ -1,7 +1,7 @@
 # Get request data from current context
 
-These helpers provide access to request data for the current HTTP
-request via the freshwater request context.
+These read-only helpers provide access to request data for the current
+HTTP request via the freshwater request context.
 
 - `current_path()` returns the request URL path
 

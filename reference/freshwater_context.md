@@ -7,6 +7,9 @@ and
 [`template()`](https://elianhugh.github.io/freshwater/reference/templating.md)
 helpers to access the active HTTP request. The context itself is stored
 in freshwater's internal state and is set/unset with each request.
+Context-dependent helpers are only valid when handling an active
+request. Moreover, requests are only active during *synchronous
+execution*.
 
 Context is created automatically when
 [`api_freshwater()`](https://elianhugh.github.io/freshwater/reference/api_freshwater.md),

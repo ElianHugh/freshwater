@@ -3,7 +3,9 @@
 current_path(), csrf_token(), and template()
 helpers to access the active HTTP request.
 The context itself is stored in freshwater's internal state and is
-set/unset with each request.
+set/unset with each request. Context-dependent helpers
+are only valid when handling an active request. Moreover,
+requests are only active during synchronous execution.
 Context is created automatically when
 api_freshwater(), api_csrf(), or api_error_pages() is installed.
 Method spoofing is applied during the before-request phase by rewriting
@@ -11,7 +13,9 @@ REQUEST_METHOD when a hidden _method field is present."><meta property="og:descr
 current_path(), csrf_token(), and template()
 helpers to access the active HTTP request.
 The context itself is stored in freshwater's internal state and is
-set/unset with each request.
+set/unset with each request. Context-dependent helpers
+are only valid when handling an active request. Moreover,
+requests are only active during synchronous execution.
 Context is created automatically when
 api_freshwater(), api_csrf(), or api_error_pages() is installed.
 Method spoofing is applied during the before-request phase by rewriting
@@ -58,7 +62,9 @@ REQUEST_METHOD when a hidden _method field is present."></head><body>
 <code><a href="current_context.html">current_path()</a></code>, <code><a href="csrf_token.html">csrf_token()</a></code>, and <code><a href="templating.html">template()</a></code>
 helpers to access the active HTTP request.
 The context itself is stored in freshwater's internal state and is
-set/unset with each request.</p>
+set/unset with each request. Context-dependent helpers
+are only valid when handling an active request. Moreover,
+requests are only active during <em>synchronous execution</em>.</p>
 <p>Context is created automatically when
 <code><a href="api_freshwater.html">api_freshwater()</a></code>, <code><a href="api_csrf.html">api_csrf()</a></code>, or <code><a href="error_pages.html">api_error_pages()</a></code> is installed.</p>
 <p>Method spoofing is applied during the <code>before-request</code> phase by rewriting
