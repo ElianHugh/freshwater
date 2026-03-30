@@ -31,7 +31,7 @@ freshwater can render friendly \strong{HTML error pages} for:
 }
 \details{
 Custom error page templates can be supplied via the
-\code{handler} parameter. These should be freshwater templates
+\code{handlers} parameter. These should be freshwater templates
 created via \code{\link[=template]{template()}}, and should match the call signatures of
 the default error templates. See \link{freshwater_error_templates} for
 the relevant template signatures required.
