@@ -226,7 +226,8 @@ get_fw_context <- function() {
 #' - `current_method()` returns the HTTP method
 #' - `current_query()` returns the query parameters
 #' - `current_cookie()` returns the value of a cookie by name
-#' - `current_headers()`
+#' - `current_header()` returns the value
+#' of a header by name
 #'
 #' These functions are primarily intended for use inside templates
 #' where a request context has been established. If called
@@ -238,6 +239,7 @@ get_fw_context <- function() {
 #'
 #' @family context helpers
 #' @rdname current_context
+#' @param name the name of a cookie or header
 #' @seealso [api_freshwater()], [api_csrf()], [api_error_pages()]
 #' @export
 current_path <- function() {
@@ -291,7 +293,6 @@ current_query <- function() {
 }
 
 #' @rdname current_context
-#' @param name name of cookie
 #' @export
 current_cookie <- function(name) {
     ctx <- get_fw_context()
@@ -309,7 +310,6 @@ current_cookie <- function(name) {
 }
 
 #' @rdname current_context
-#' @param name name of header
 #' @export
 current_header <- function(name) {
     ctx <- get_fw_context()

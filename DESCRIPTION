@@ -34,7 +34,6 @@ Collate:
     'security.R'
     'template.R'
     'errors.R'
-    'redirect.R'
     'serialisers.R'
     'template_cache.R'
     'url.R'

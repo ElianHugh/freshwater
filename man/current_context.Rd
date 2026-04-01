@@ -19,7 +19,7 @@ current_cookie(name)
 current_header(name)
 }
 \arguments{
-\item{name}{name of header}
+\item{name}{the name of a cookie or header}
 }
 \description{
 These read-only helpers provide access to request data for the current HTTP
@@ -29,7 +29,8 @@ request via the freshwater request context.
 \item \code{current_method()} returns the HTTP method
 \item \code{current_query()} returns the query parameters
 \item \code{current_cookie()} returns the value of a cookie by name
-\item \code{current_headers()}
+\item \code{current_header()} returns the value
+of a header by name
 }
 
 These functions are primarily intended for use inside templates
