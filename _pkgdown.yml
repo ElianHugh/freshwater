@@ -42,7 +42,13 @@ reference:
       - current_method
       - current_query
       - current_cookie
+      - current_header
       - freshwater_context
+
+  - title: "Routing & URLS"
+    contents:
+      - endpoints
+      - redirect
 
   - title: "Middleware"
     contents:
@@ -52,10 +58,6 @@ reference:
       - api_cget
       - api_hooks
       - hook
-
-  - title: "Response Helpers"
-    contents:
-      - redirect
 
   - title: "Defaults"
     contents:

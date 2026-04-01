@@ -177,6 +177,7 @@ patch_plumber_handler <- function(api, plumber_handler, hooks, .where = c("appen
     plumber_handler
 }
 
+
 enhook_routes <- function(api, hooks, .where = c("append", "prepend")) {
   rr <- api$request_router
   routes <- rr$routes

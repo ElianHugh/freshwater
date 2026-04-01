@@ -14,7 +14,8 @@ Imports:
     memoise,
     plumber2,
     rlang,
-    cachem
+    cachem,
+    glue
 Suggests:
     fiery,
     openssl,
@@ -36,4 +37,5 @@ Collate:
     'redirect.R'
     'serialisers.R'
     'template_cache.R'
+    'url.R'
     'zzz.R'

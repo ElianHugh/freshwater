@@ -122,6 +122,14 @@ api_context <- function(api) {
 
     plumber2::api_on(
         api,
+        "freshwater::hook",
+        function(server, id, request, arg_list) {
+            ensure_endpoints_registered(server, force = TRUE)
+        }
+    )
+
+    plumber2::api_on(
+        api,
         "before-request",
         function(server, id, request, arg_list) {
             if (is.null(request)) {
@@ -155,6 +163,7 @@ api_context <- function(api) {
 
                 ctx <- new.env(parent = emptyenv())
                 ctx$request <- request
+                ctx$api <- api
                 with_fw_context(ctx, next_call())
             })
         ),
@@ -217,6 +226,7 @@ get_fw_context <- function() {
 #' - `current_method()` returns the HTTP method
 #' - `current_query()` returns the query parameters
 #' - `current_cookie()` returns the value of a cookie by name
+#' - `current_headers()`
 #'
 #' These functions are primarily intended for use inside templates
 #' where a request context has been established. If called
@@ -296,6 +306,24 @@ current_cookie <- function(name) {
         )
     }
     ctx$request$cookies[[name]]
+}
+
+#' @rdname current_context
+#' @param name name of header
+#' @export
+current_header <- function(name) {
+    ctx <- get_fw_context()
+    if (is.null(ctx)) {
+        rlang::abort(
+            c(
+                "freshwater context missing",
+                i = "Did you forget to install freshwater middleware via `api_freshwater()`?",
+                i = "Helpers like `current_header()` can only be used during a request."
+            ),
+            class = "freshwater_context_missing"
+        )
+    }
+    ctx$request$get_header(name)
 }
 
 

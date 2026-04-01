@@ -5,6 +5,7 @@
 \alias{current_method}
 \alias{current_query}
 \alias{current_cookie}
+\alias{current_header}
 \title{Get request data from current context}
 \usage{
 current_path()
@@ -14,9 +15,11 @@ current_method()
 current_query()
 
 current_cookie(name)
+
+current_header(name)
 }
 \arguments{
-\item{name}{name of cookie}
+\item{name}{name of header}
 }
 \description{
 These read-only helpers provide access to request data for the current HTTP
@@ -26,6 +29,7 @@ request via the freshwater request context.
 \item \code{current_method()} returns the HTTP method
 \item \code{current_query()} returns the query parameters
 \item \code{current_cookie()} returns the value of a cookie by name
+\item \code{current_headers()}
 }
 
 These functions are primarily intended for use inside templates

@@ -58,6 +58,7 @@ function(api) {
 }
 
 #' @get /
+#' @serializer html
 function() {
   page("Home", p("Hello from freshwater"))
 }
