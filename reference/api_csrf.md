@@ -88,6 +88,6 @@ function(api) {
 #> {
 #>     api_csrf(api, secure = FALSE, exemptions = c("/foo/*", "/bar"))
 #> }
-#> <environment: 0x555a4347ca58>
+#> <environment: 0x562ba59935b0>
 
 ```

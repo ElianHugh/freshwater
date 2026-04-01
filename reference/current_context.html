@@ -5,6 +5,7 @@ current_path() returns the request URL path
 current_method() returns the HTTP method
 current_query() returns the query parameters
 current_cookie() returns the value of a cookie by name
+current_headers()
 
 
 These functions are primarily intended for use inside templates
@@ -18,6 +19,7 @@ current_path() returns the request URL path
 current_method() returns the HTTP method
 current_query() returns the query parameters
 current_cookie() returns the value of a cookie by name
+current_headers()
 
 
 These functions are primarily intended for use inside templates
@@ -69,6 +71,7 @@ request via the freshwater request context.</p><ul><li><p><code>current_path()</
 <li><p><code>current_method()</code> returns the HTTP method</p></li>
 <li><p><code>current_query()</code> returns the query parameters</p></li>
 <li><p><code>current_cookie()</code> returns the value of a cookie by name</p></li>
+<li><p><code>current_headers()</code></p></li>
 </ul><p>These functions are primarily intended for use inside templates
 where a request context has been established. If called
 outside of an active context, an error is raised.</p>
@@ -85,7 +88,9 @@ active (installed automatically by <code><a href="api_csrf.html">api_csrf()</a><
 <span></span>
 <span><span class="fu">current_query</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">current_cookie</span><span class="op">(</span><span class="va">name</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">current_cookie</span><span class="op">(</span><span class="va">name</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">current_header</span><span class="op">(</span><span class="va">name</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -93,7 +98,7 @@ active (installed automatically by <code><a href="api_csrf.html">api_csrf()</a><
 
 
 <dl><dt id="arg-name">name<a class="anchor" aria-label="anchor" href="#arg-name"></a></dt>
-<dd><p>name of cookie</p></dd>
+<dd><p>name of header</p></dd>
 
 </dl></div>
     <div class="section level2">

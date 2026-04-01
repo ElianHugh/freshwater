@@ -32,9 +32,17 @@
   [`current_method()`](https://elianhugh.github.io/freshwater/reference/current_context.md)
   [`current_query()`](https://elianhugh.github.io/freshwater/reference/current_context.md)
   [`current_cookie()`](https://elianhugh.github.io/freshwater/reference/current_context.md)
+  [`current_header()`](https://elianhugh.github.io/freshwater/reference/current_context.md)
   : Get request data from current context
 - [`freshwater_context`](https://elianhugh.github.io/freshwater/reference/freshwater_context.md)
   : Freshwater Request Context
+
+## Routing & URLS
+
+- [`endpoints()`](https://elianhugh.github.io/freshwater/reference/endpoints.md)
+  : Reverse Routing
+- [`redirect()`](https://elianhugh.github.io/freshwater/reference/redirect.md)
+  : Redirect to another resource
 
 ## Middleware
 
@@ -49,11 +57,6 @@
 - [`api_hooks()`](https://elianhugh.github.io/freshwater/reference/hooks.md)
   [`hook()`](https://elianhugh.github.io/freshwater/reference/hooks.md)
   : Route handler hooks
-
-## Response Helpers
-
-- [`redirect()`](https://elianhugh.github.io/freshwater/reference/redirect.md)
-  : Redirect to another resource
 
 ## Defaults
 

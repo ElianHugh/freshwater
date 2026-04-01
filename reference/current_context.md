@@ -11,6 +11,8 @@ HTTP request via the freshwater request context.
 
 - `current_cookie()` returns the value of a cookie by name
 
+- `current_headers()`
+
 These functions are primarily intended for use inside templates where a
 request context has been established. If called outside of an active
 context, an error is raised.
@@ -32,13 +34,15 @@ current_method()
 current_query()
 
 current_cookie(name)
+
+current_header(name)
 ```
 
 ## Arguments
 
 - name:
 
-  name of cookie
+  name of header
 
 ## See also
 
