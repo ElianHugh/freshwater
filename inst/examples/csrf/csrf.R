@@ -2,10 +2,8 @@ library(freshwater)
 
 #' @plumber
 function(api) {
-    register_html_serialiser()
     api |>
-        api_csrf(secure = FALSE) |>
-        api_error_pages(debug = TRUE)
+        api_freshwater(secure = FALSE, debug = TRUE)
 }
 
 demo <- template(result = "", {
@@ -18,7 +16,7 @@ demo <- template(result = "", {
             ?.getAttribute('content');
 
         try {
-            const res = await fetch('/post', {
+            const res = await fetch('/with_csrf', {
             method: 'POST',
             headers: { 'X-CSRF-Token': token }
             });
@@ -95,7 +93,7 @@ demo <- template(result = "", {
                 class = "good_form",
                 h2("freshwater form(): POST (auto token)"),
                 form(
-                    action = "/post",
+                    action = endpoints("csrf")$with_csrf$post(),
                     method = "post",
                     input(type = "submit", value = "POST OK")
                 )
@@ -107,7 +105,7 @@ demo <- template(result = "", {
                 class = "good_form",
                 h2("freshwater form(): DELETE (auto token)"),
                 form(
-                    action = "/delete",
+                    action = endpoints("csrf")$with_csrf$delete(),
                     method = "delete",
                     input(type = "submit", value = "DELETE OK")
                 )
@@ -126,7 +124,7 @@ demo <- template(result = "", {
                 class = "good_form",
                 h2("freshwater form(): Exempt Route"),
                 form(
-                    action = "/no_csrf",
+                    action = endpoints("csrf")$no_csrf$post(),
                     method = "post",
                     input(type = "submit", value = "Exempt OK")
                 )
@@ -136,7 +134,7 @@ demo <- template(result = "", {
                 class = "bad_form",
                 h2("Tokenless POST"),
                 htmltools::tags$form(
-                    action = "/post",
+                    action = endpoints("csrf")$with_csrf$post(),
                     method = "post",
                     input(type = "submit", value = "POST fail")
                 ),
@@ -164,20 +162,29 @@ function(response) {
     demo(result = result)
 }
 
-#' @post /post
+#' @post /with_csrf
 function(response) {
     result <<- "Authenticated (POST)"
-    redirect(response, "/form")
+    redirect(
+        response,
+        endpoints("csrf")$form(),
+    )
 }
 
-#' @delete /delete
+#' @delete /with_csrf
 function(response) {
     result <<- "Authenticated (DELETE)"
-    redirect(response, "/form")
+    redirect(
+        response,
+        endpoints("csrf")$form(),
+    )
 }
 
 #' @post /no_csrf
 function(response) {
     result <<- "No authentication needed (POST)"
-    redirect(response, "/form")
+    redirect(
+        response,
+        endpoints("csrf")$form(),
+    )
 }

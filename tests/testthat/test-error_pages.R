@@ -70,6 +70,7 @@ test_that("error pages render upon user error", {
 		e = errorCondition("bar"),
 		is_debug = TRUE
 	) |>
+		htmltools::doRenderTags() |>
 		as.character()
 
 	expect_identical(res$status, 500L)
@@ -86,6 +87,7 @@ test_that("error pages render upon user error", {
 	res <- api$test_request(req)
 
 	missing_page <- default_error_404_template() |>
+		htmltools::doRenderTags() |>
 		as.character()
 
 	expect_identical(res$status, 404L)
@@ -115,7 +117,10 @@ test_that("manual user 404s are respected", {
 	)
 	res <- api$test_request(req)
 
-	missing_page <- default_error_404_template(list(response=list(body = "Foo"))) |>
+	missing_page <- default_error_404_template(list(
+		response = list(body = "Foo")
+	)) |>
+		htmltools::doRenderTags() |>
 		as.character()
 
 	expect_identical(res$status, 404L)
@@ -153,6 +158,7 @@ test_that("other methods return error pages", {
 		e = errorCondition("bar"),
 		is_debug = TRUE
 	) |>
+		htmltools::doRenderTags() |>
 		as.character()
 
 	expect_identical(res$status, 500L)
@@ -170,6 +176,7 @@ test_that("other methods return error pages", {
 	res <- api$test_request(req)
 
 	missing_page <- default_error_404_template() |>
+		htmltools::doRenderTags() |>
 		as.character()
 
 	expect_identical(res$status, 404L)

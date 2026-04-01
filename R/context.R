@@ -342,7 +342,7 @@ print.freshwater_api <- function(x, ...) {
     if (isTRUE(fw$error_pages$installed)) {
         extras <- character(0)
 
-        # for futur flags
+        # for future flags
         if (isTRUE(fw$error_pages$debug)) {
             extras <- c(extras, " (debug)")
         }

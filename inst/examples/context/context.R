@@ -8,14 +8,18 @@ function(api) {
 
 page <- template({
     div(
-        p("Current path is :", current_path())
+        p("Current path is :", current_path()),
+        p("Current method is :", current_method())
     )
 
 })
 
-#' @get
+#' @get /
 function(response) {
-    redirect(response, "/foo")
+    redirect(
+        response,
+        endpoints("context")$foo()
+    )
 }
 
 #' @get /foo

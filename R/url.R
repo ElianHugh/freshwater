@@ -12,6 +12,7 @@ endpoint_alias <- function(path) {
     x
 }
 
+#todo, path construction beyond just the glue
 make_endpoint <- function(path) {
     params_ <- waysign::path_params(path)
     fn <- function(...) {
