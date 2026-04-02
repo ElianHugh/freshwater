@@ -159,6 +159,11 @@ test_that("template fragments work", {
       )
     )
 
+    expect_error(
+      t1(fragment = c("baz", "foo", "test")),
+      class = "freshwater_template_error"
+    )
+
 })
 
 test_that("template params work", {
