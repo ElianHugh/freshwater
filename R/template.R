@@ -15,7 +15,8 @@
 #' - **fragments**: named subtemplates that can be optionally extracted from
 #' the template upon rendering by supplying `fragment = "name"`. Fragment names
 #' are required. If multiple fragment names are specified, fragments will be extracted
-#' and collated into a [htmltools::tagList], in the order of names provided.
+#' and collated into a [htmltools::tagList], in the order of names provided. If a specified fragment cannot be found, an error will
+#' be raised.
 #'
 #' # Attributes
 #' Attributes with non-leading underscores are
