@@ -16,7 +16,9 @@ endpoint_alias <- function(path) {
 make_endpoint <- function(path) {
     params_ <- waysign::path_params(path)
     fn <- function(...) {
-        glue::glue_data(list(...), params_$glue) |>
+        dots <- list(...) |>
+            URLencode(reserved = TRUE)
+        glue::glue_data(dots, params_$glue) |>
             as.character()
     }
     attr(fn, "meta") <- list(path = path)
