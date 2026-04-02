@@ -100,3 +100,50 @@ test_that("current path works", {
         class = "freshwater_context_missing"
     )
 })
+
+test_that("current_* helpers work", {
+    tpl <- template(
+        cookie = NULL,
+        header = NULL,
+        query = NULL,
+        path = NULL,
+        method = NULL,
+        {
+            div(
+                p(cookie %||% current_cookie("theme")),
+                p(header %||% current_header("accept")),
+                p(query %||% current_query()$id),
+                p(path %||% current_path()),
+                p(method %||% current_method())
+            )
+        }
+    )
+
+    api <- suppressMessages(
+        plumber2::api() |>
+            plumber2::api_get("/foo", function() {
+                tpl()
+            })
+    )
+
+    api <- api_freshwater(api, csrf = FALSE, error_pages = FALSE)
+    api$trigger("freshwater::hook")
+
+    res <- faux_request(
+        api,
+        path = "foo?id=1",
+        accept = "text/html; charset=utf-8",
+        cookie = "theme=dark"
+    )
+    expect_identical(
+        res$body,
+        tpl(
+            cookie = "dark",
+            header = "text/html; charset=utf-8",
+            query = 1L,
+            path = "/foo",
+            method = "get"
+        ) |> htmltools::doRenderTags() |>
+            as.character()
+    )
+})

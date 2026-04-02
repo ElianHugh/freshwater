@@ -2,8 +2,8 @@ library(freshwater)
 
 #' @plumber
 function(api) {
-    register_html_serialiser()
-    api
+    api |>
+        api_freshwater(debug = TRUE, csrf = FALSE)
 }
 
 # ~~~~~~~~~~ #
@@ -37,7 +37,7 @@ search_cars <- function(query, limit = 20) {
 # ~~~~~~~~~ #
 
 layout <- template(title = "App", {
-    htmltools::tagList(
+    document(
         head(
             title(title),
             script(src = "https://unpkg.com/htmx.org@1.9.12")
@@ -65,7 +65,7 @@ search_page <- template(query = "", {
             type = "search",
             name = "search",
             placeholder = "Begin typing to search cars...",
-            hx_post = "/search",
+            hx_post = endpoints("active-search")$search$post(),
             hx_trigger = "input changed delay:100ms, load",
             hx_target = "#search-results",
             hx_indicator = ".htmx-indicator"

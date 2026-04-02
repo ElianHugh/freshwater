@@ -15,7 +15,8 @@
 #' - **fragments**: named subtemplates that can be optionally extracted from
 #' the template upon rendering by supplying `fragment = "name"`. Fragment names
 #' are required. If multiple fragment names are specified, fragments will be extracted
-#' and collated into a [htmltools::tagList], in the order of names provided.
+#' and collated into a [htmltools::tagList], in the order of names provided. If a specified fragment cannot be found, an error will
+#' be raised.
 #'
 #' # Attributes
 #' Attributes with non-leading underscores are
@@ -197,7 +198,7 @@ template <- function(..., .envir = rlang::caller_env()) {
                     })
 
                     if (!is.null(fragment)) {
-                        x <- walk_nodes(x, fragment)
+                        x <- walk_nodes(x, fragment, nm)
                         if (is.null(x)) {
                             error_missing_fragment(fragment, nm)
                         }
@@ -518,7 +519,7 @@ print.freshwater_fragment <- function(x, ...) {
     NextMethod()
 }
 
-walk_nodes <- function(tag, name) {
+walk_nodes <- function(tag, name, tpl_nm) {
     names_requested <- unique(as.character(name))
     buckets <- structure(
         vector(
@@ -548,6 +549,14 @@ walk_nodes <- function(tag, name) {
     }
 
     walk(tag)
+
+    lens <- lengths(buckets)
+    if (any(lens == 0L)) {
+        idx <- which(lens==0L)
+        nms <- names(buckets)[idx]
+        error_missing_fragment(nms, tpl_nm)
+    }
+
     found <- unlist(buckets, recursive = FALSE, use.names = FALSE)
 
     if (!length(found)) {

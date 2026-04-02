@@ -293,7 +293,7 @@ error_page <- template(
             package = "freshwater"
         )
 
-        htmltools::tags$html(
+        document(
             htmltools::tags$head(
                 htmltools::tags$title("Server error"),
                 if (!is.null(head_extra)) head_extra,
@@ -308,7 +308,10 @@ error_page <- template(
                     htmltools::tags$h2(
                         class = "fw-title",
                         heading,
-                        htmltools::tags$span(as.character(code), class = "fw-badge")
+                        htmltools::tags$span(
+                            as.character(code),
+                            class = "fw-badge"
+                        )
                     ),
                     if (!is.null(sub)) htmltools::tags$p(sub, class = "fw-sub"),
                     ...

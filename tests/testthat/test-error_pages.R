@@ -40,7 +40,7 @@ test_that("error pages render upon user error", {
 		})
 	})
 
-	api <- api_error_pages(api, debug = TRUE)
+	api <- api_freshwater(api, debug = TRUE, csrf=FALSE)
 	api$trigger("freshwater::hook")
 
 	# 200
@@ -70,6 +70,7 @@ test_that("error pages render upon user error", {
 		e = errorCondition("bar"),
 		is_debug = TRUE
 	) |>
+		htmltools::doRenderTags() |>
 		as.character()
 
 	expect_identical(res$status, 500L)
@@ -86,6 +87,7 @@ test_that("error pages render upon user error", {
 	res <- api$test_request(req)
 
 	missing_page <- default_error_404_template() |>
+		htmltools::doRenderTags() |>
 		as.character()
 
 	expect_identical(res$status, 404L)
@@ -101,7 +103,7 @@ test_that("manual user 404s are respected", {
 			response$status <- 404L
 			response$body <- "Foo"
 		})
-		api <- api_error_pages(api, debug = TRUE)
+		api <- api_freshwater(api, debug = TRUE, csrf =FALSE)
 	})
 
 	api$trigger("freshwater::hook")
@@ -115,7 +117,10 @@ test_that("manual user 404s are respected", {
 	)
 	res <- api$test_request(req)
 
-	missing_page <- default_error_404_template(list(response=list(body = "Foo"))) |>
+	missing_page <- default_error_404_template(list(
+		response = list(body = "Foo")
+	)) |>
+		htmltools::doRenderTags() |>
 		as.character()
 
 	expect_identical(res$status, 404L)
@@ -133,7 +138,7 @@ test_that("other methods return error pages", {
 		api <- plumber2::api_post(api, "/bar", function() {
 			stop("bar")
 		})
-		api <- api_error_pages(api, debug = TRUE)
+		api <- api_freshwater(api, debug = TRUE, csrf=FALSE)
 	})
 
 	api$trigger("freshwater::hook")
@@ -153,6 +158,7 @@ test_that("other methods return error pages", {
 		e = errorCondition("bar"),
 		is_debug = TRUE
 	) |>
+		htmltools::doRenderTags() |>
 		as.character()
 
 	expect_identical(res$status, 500L)
@@ -170,6 +176,7 @@ test_that("other methods return error pages", {
 	res <- api$test_request(req)
 
 	missing_page <- default_error_404_template() |>
+		htmltools::doRenderTags() |>
 		as.character()
 
 	expect_identical(res$status, 404L)
@@ -188,7 +195,7 @@ test_that("error pages only occur for HTML", {
 		api <- plumber2::api_get(api, "/bar", function() {
 			stop("bar")
 		})
-		api <- api_error_pages(api, debug = TRUE)
+		api <- api_freshwater(api, debug = TRUE, csrf=FALSE)
 	})
 
 
@@ -241,7 +248,7 @@ test_that("error pages function for `then` handlers", {
 			)
 		)
 
-		api <- api_error_pages(api, debug = TRUE)
+		api <- api_freshwater(api, debug = TRUE, csrf=FALSE)
 	})
 
 	api$trigger("freshwater::hook")

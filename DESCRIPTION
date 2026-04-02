@@ -15,7 +15,8 @@ Imports:
     plumber2,
     rlang,
     cachem,
-    glue
+    glue,
+    waysign
 Suggests:
     fiery,
     openssl,
@@ -23,7 +24,6 @@ Suggests:
     testthat (>= 3.0.0),
     promises,
     later,
-    waysign,
     otel
 Config/testthat/edition: 3
 URL: https://elianhugh.github.io/freshwater/

@@ -12,10 +12,43 @@ endpoint_alias <- function(path) {
     x
 }
 
+#todo, path construction beyond just the glue
 make_endpoint <- function(path) {
     params_ <- waysign::path_params(path)
     fn <- function(...) {
-        glue::glue_data(list(...), params_$glue) |>
+        dots <- list(...)
+        nms <- names(dots)
+
+        if (any(!nzchar(nms))) {
+            rlang::abort("All endpoint parameters must be named.")
+        }
+
+        missing <- setdiff(params_$keys, nms)
+
+        if (length(missing)) {
+            rlang::abort(
+                sprintf(
+                    "Missing endpoint parameter(s): %s.",
+                    paste(sprintf('"%s"', missing), collapse = ", ")
+                )
+            )
+        }
+
+        extra <- setdiff(nms, params_$keys)
+        if (length(missing)) {
+            rlang::abort(
+                sprintf(
+                    "Unexpected endpoint parameter(s): %s.",
+                    paste(sprintf('"%s"', extra), collapse = ", ")
+                )
+            )
+        }
+
+        dots <- dots |>
+            as.character() |>
+            URLencode(reserved = TRUE, repeated = FALSE) |>
+            setNames(nm = nms)
+        glue::glue_data(dots, params_$glue) |>
             as.character()
     }
     attr(fn, "meta") <- list(path = path)
@@ -35,6 +68,9 @@ make_endpoint <- function(path) {
     }
     out
 }
+
+#' @export
+`[[.freshwater_endpoint` <- `$.freshwater_endpoint`
 
 register_endpoint <- function(fw_env, route, root, method, path) {
     alias <- endpoint_alias(path)
