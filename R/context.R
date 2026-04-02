@@ -91,19 +91,43 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
 
     api <- api_context(api)
 
+    csrf_args <- args_from_fmls(api_csrf, dots)
     if (csrf) {
-        csrf_args <- args_from_fmls(api_csrf, dots)
         api <- do.call(
             api_csrf,
             args = c(list(api = api), csrf_args)
         )
+    } else if (length(csrf_args) > 0L) {
+        rlang::warn(
+            sprintf(
+                "CSRF is disabled. Arguments %s will be ignored.",
+                paste0(
+                    "`",
+                    names(csrf_args),
+                    "`",
+                    collapse = ", "
+                )
+            )
+        )
     }
 
+    error_page_args <- args_from_fmls(api_error_pages, dots)
     if (error_pages) {
-        error_page_args <- args_from_fmls(api_error_pages, dots)
         api <- do.call(
             api_error_pages,
             args = c(list(api = api), error_page_args)
+        )
+    } else if (length(error_page_args) > 0L) {
+        rlang::warn(
+            sprintf(
+                "Error pages are disabled. Arguments %s will be ignored.",
+                paste0(
+                    "`",
+                    names(error_page_args),
+                    "`",
+                    collapse = ", "
+                )
+            )
         )
     }
 
