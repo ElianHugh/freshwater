@@ -2,12 +2,14 @@ faux_request <- function(
     api,
     path = "",
     method = "get",
-    accept = "text/plain; charset=utf-8"
+    accept = "text/plain; charset=utf-8",
+    ...
 ) {
     fiery::fake_request(
         sprintf("http://localhost:8080/%s", path),
         headers = list(
-            accept = accept
+            accept = accept,
+            ...
         ),
         method = method
     ) |>
