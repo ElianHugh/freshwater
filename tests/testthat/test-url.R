@@ -35,18 +35,10 @@ test_that("redirect after works", {
 test_that("endpoints work", {
     suppressMessages({
         api <- plumber2::api() |>
-            plumber2::api_get("/foo", function(response) {
-                "foo"
-            }) |>
-            plumber2::api_get("/bar", function() {
-                "bar"
-            }) |>
-            plumber2::api_get("/baz", function() {
-                "baz"
-            }) |>
-            plumber2::api_delete("/baz/:id", function() {
-                "baz"
-            })
+            plumber2::api_get("/foo", function(response) "foo") |>
+            plumber2::api_get("/bar", function() "bar") |>
+            plumber2::api_get("/baz", function() "baz") |>
+            plumber2::api_delete("/baz/:id", function() "baz")
     })
 
     eps <- endpoints("default", api = api, refresh = TRUE)

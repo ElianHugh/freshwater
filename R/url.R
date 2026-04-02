@@ -37,6 +37,9 @@ make_endpoint <- function(path) {
     out
 }
 
+#' @export
+`[[.freshwater_endpoint` <- `$.freshwater_endpoint`
+
 register_endpoint <- function(fw_env, route, root, method, path) {
     alias <- endpoint_alias(path)
     endpoint <- make_endpoint(path)
