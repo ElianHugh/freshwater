@@ -63,10 +63,6 @@ api_csrf <- function(api, secure = TRUE, exemptions = character()) {
         rlang::abort("openssl is required to enable CSRF protection.")
     }
 
-    if (!requireNamespace("waysign", quietly = TRUE)) {
-        rlang::abort("waysign is required to enable CSRF protection.")
-    }
-
     if (!is.character(exemptions)) {
         rlang::abort(
             "`exemptions` must be a character vector of path patterns."
