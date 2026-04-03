@@ -42,6 +42,7 @@ register_endpoints <- function(api) {
     for (route in routes) {
         r <- rr$get_route(route)
         # currently unused, requires further testing
+        # does not appear to be needed?
         root <- r$root %||% "/"
         root <- sub("^\\^", "", root)
 
