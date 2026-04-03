@@ -27,7 +27,8 @@ Alias rules:
 \item "/" endpoints become "index"
 \item GET endpoints are accessed directly, like index()
 \item non-GET endpoints require an accessor, like index$delete()
-\item path parameters are removed from the alias and supplied as function args
+\item path parameters are removed from the alias and used to disambiguate overloaded helpers via named
+function args
 }
 
 For example:
@@ -37,6 +38,7 @@ For example:
 \item \code{GET /my/filter} -> \code{my_filter()}
 \item \verb{GET /users/:id} -> \code{users(id = 1)}
 \item \verb{DELETE /users/:id} -> \code{users$delete(id = 1)}
+\item \verb{DELETE /users/:name} -> users$delete(name = "Jim")``
 }
 }
 \examples{

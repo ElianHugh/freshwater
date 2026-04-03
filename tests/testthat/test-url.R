@@ -38,6 +38,7 @@ test_that("endpoints work", {
             plumber2::api_get("/foo", function(response) "foo") |>
             plumber2::api_get("/bar", function() "bar") |>
             plumber2::api_get("/baz", function() "baz") |>
+            plumber2::api_get("/baz/:name", function() "baz") |>
             plumber2::api_delete("/baz/:id", function() "baz")
     })
 
@@ -46,4 +47,5 @@ test_that("endpoints work", {
     expect_length(eps, 3L)
     expect_identical(eps$foo(), "/foo")
     expect_identical(eps$baz$delete(id = 1L), "/baz/1")
+    expect_identical(eps$baz(name = "foo"), "/baz/foo")
 })
