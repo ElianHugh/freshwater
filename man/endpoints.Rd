@@ -29,6 +29,8 @@ Alias rules:
 \item non-GET endpoints require an accessor, like index$delete()
 \item path parameters are removed from the alias and used to disambiguate overloaded helpers via named
 function args
+\item Reserved argument: \code{.query} argument constructs a query from a named list
+\item Reserved argument: \code{.anchor} constructs an anchor from a character scalar
 }
 
 For example:
@@ -36,9 +38,11 @@ For example:
 \item \verb{GET /} -> \code{index()}
 \item \verb{POST /} -> \code{index$post()}
 \item \code{GET /my/filter} -> \code{my_filter()}
-\item \verb{GET /users/:id} -> \code{users(id = 1)}
+\item \verb{GET /users/:id} -> \code{users(id = 1, .query = list(page = 2))}
+\item \verb{GET /users/:id} -> \code{users(id = 1, .anchor = "details")}
+\item \verb{GET /users/:id} -> \code{users(id = 1, .query = list(page = 2), .anchor = "details")}
 \item \verb{DELETE /users/:id} -> \code{users$delete(id = 1)}
-\item \verb{DELETE /users/:name} -> users$delete(name = "Jim")``
+\item \verb{DELETE /users/:name} -> \code{users$delete(name = "Jim")}
 }
 }
 \examples{

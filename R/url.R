@@ -97,7 +97,7 @@ compile_aliases <- function(eps) {
                                             candidates
                                         )
 
-                                        fn <- function(...) {
+                                        fn <- function(..., .query = character(), .anchor = character()) {
                                             dots <- list(...)
                                             nms <- names(dots) %||% character()
 
@@ -142,9 +142,15 @@ compile_aliases <- function(eps) {
                                             )]]
 
 
-                                            glue::glue_data(
+                                            out <- glue::glue_data(
                                                 dots,
                                                 candidate$glue
+                                            )
+
+                                            paste0(
+                                                out,
+                                                make_query(.query),
+                                                make_anchor(.anchor)
                                             )
                                         }
 
@@ -199,6 +205,42 @@ ensure_endpoints_registered <- function(api, force = FALSE) {
     }
 }
 
+make_query <- function(.query) {
+    if (is.null(.query) || !length(.query)) {
+        return("")
+    }
+
+    if (is.null(names(.query)) || any(!nzchar(names(.query)))) {
+        rlang::abort("`.query` must be a named list.")
+    }
+
+    enc <- lapply(
+        seq_along(.query),
+        function(i) {
+            v <- .query[[i]]
+            nm <- names(.query)[[i]]
+
+            sprintf(
+                "%s=%s",
+                URLencode(as.character(nm), reserved = TRUE, repeated = TRUE),
+                URLencode(as.character(v), reserved = TRUE, repeated = TRUE)
+            )
+        }
+    )
+    enc <- unlist(enc, use.names = FALSE)
+    if (!length(enc)) return("")
+    sprintf(
+        "?%s",
+        paste0(enc, collapse="&")
+    )
+}
+
+make_anchor <- function(.anchor) {
+    if (length(.anchor) > 0L && (is.null(.anchor) || !nzchar(.anchor))) return ("")
+    .anchor <- sub("^#+", "", .anchor)
+    sprintf("#%s", URLencode(.anchor, reserved = TRUE, repeated = TRUE))
+}
+
 #' Reverse Routing
 #'
 #' Access generated endpoint URL helpers.
@@ -210,15 +252,19 @@ ensure_endpoints_registered <- function(api, force = FALSE) {
 #'  - non-GET endpoints require an accessor, like index$delete()
 #'  - path parameters are removed from the alias and used to disambiguate overloaded helpers via named
 #' function args
+#' - Reserved argument: `.query` argument constructs a query from a named list
+#' - Reserved argument: `.anchor` constructs an anchor from a character scalar
 #'
 #' For example:
 #'
 #' - `GET /` -> `index()`
 #' - `POST /` -> `index$post()`
 #' - `GET /my/filter` -> `my_filter()`
-#' - `GET /users/:id` -> `users(id = 1)`
+#' - `GET /users/:id` -> `users(id = 1, .query = list(page = 2))`
+#' - `GET /users/:id` -> `users(id = 1, .anchor = "details")`
+#' - `GET /users/:id` -> `users(id = 1, .query = list(page = 2), .anchor = "details")`
 #' - `DELETE /users/:id` -> `users$delete(id = 1)`
-#' - `DELETE /users/:name` -> users$delete(name = "Jim")``
+#' - `DELETE /users/:name` -> `users$delete(name = "Jim")`
 #'
 #' @examples
 #' #* @plumber
@@ -359,7 +405,7 @@ redirect <- function(response, location, after = NULL) {
         return(plumber2::Break)
     } else {
         after <- as.integer(after)
-        !is.na(after) ||
+        (!is.na(after) && after > 0L) ||
             rlang::abort(
                 c(
                     "`after` should be a number greater than 0L.",
