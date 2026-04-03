@@ -48,4 +48,13 @@ test_that("endpoints work", {
     expect_identical(eps$foo(), "/foo")
     expect_identical(eps$baz$delete(id = 1L), "/baz/1")
     expect_identical(eps$baz(name = "foo"), "/baz/foo")
+
+
+    # queries & anchors work
+    expect_identical(eps$baz(name = "foo", .query=list(a = "foo")), "/baz/foo?a=foo")
+    expect_identical(
+        eps$baz(name = "foo", .query = list(a = "foo"), .anchor = "baz"),
+        "/baz/foo?a=foo#baz"
+    )
+
 })
