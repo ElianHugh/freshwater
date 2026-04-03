@@ -36,7 +36,8 @@ defined in the template.
 \item \strong{fragments}: named subtemplates that can be optionally extracted from
 the template upon rendering by supplying \code{fragment = "name"}. Fragment names
 are required. If multiple fragment names are specified, fragments will be extracted
-and collated into a \link[htmltools:tagList]{htmltools::tagList}, in the order of names provided.
+and collated into a \link[htmltools:tagList]{htmltools::tagList}, in the order of names provided. If a specified fragment cannot be found, an error will
+be raised.
 }
 }
 \section{Attributes}{

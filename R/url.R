@@ -12,50 +12,6 @@ endpoint_alias <- function(path) {
     x
 }
 
-#todo, path construction beyond just the glue
-make_endpoint <- function(path) {
-    params_ <- waysign::path_params(path)
-    fn <- function(...) {
-        dots <- list(...)
-        nms <- names(dots)
-
-        if (any(!nzchar(nms))) {
-            rlang::abort("All endpoint parameters must be named.")
-        }
-
-        missing <- setdiff(params_$keys, nms)
-
-        if (length(missing)) {
-            rlang::abort(
-                sprintf(
-                    "Missing endpoint parameter(s): %s.",
-                    paste(sprintf('"%s"', missing), collapse = ", ")
-                )
-            )
-        }
-
-        extra <- setdiff(nms, params_$keys)
-        if (length(missing)) {
-            rlang::abort(
-                sprintf(
-                    "Unexpected endpoint parameter(s): %s.",
-                    paste(sprintf('"%s"', extra), collapse = ", ")
-                )
-            )
-        }
-
-        dots <- dots |>
-            as.character() |>
-            URLencode(reserved = TRUE, repeated = FALSE) |>
-            setNames(nm = nms)
-        glue::glue_data(dots, params_$glue) |>
-            as.character()
-    }
-    attr(fn, "meta") <- list(path = path)
-    attr(fn, "methods") <- list()
-    class(fn) <- c("freshwater_endpoint", class(fn))
-    fn
-}
 
 #' @export
 `$.freshwater_endpoint` <- function(x, name) {
@@ -72,49 +28,6 @@ make_endpoint <- function(path) {
 #' @export
 `[[.freshwater_endpoint` <- `$.freshwater_endpoint`
 
-register_endpoint <- function(fw_env, route, root, method, path) {
-    alias <- endpoint_alias(path)
-    endpoint <- make_endpoint(path)
-    current <- fw_env$endpoints[[route]][[alias]]
-
-    if (method == "get") {
-        if (is.null(current)) {
-            fw_env$endpoints[[route]][[alias]] <- structure(
-                endpoint,
-                has_get = TRUE
-            )
-        } else {
-            methods <- attr(current, "methods", exact = TRUE) %||% list()
-            attr(endpoint, "methods") <- methods
-            fw_env$endpoints[[route]][[alias]] <- endpoint
-        }
-        return(invisible(NULL))
-    }
-
-    if (is.null(current)) {
-        current <- structure(
-            function(...) {
-                rlang::abort(
-                    sprintf(
-                        'Endpoint "%s" does not have a GET handler; use $%s().',
-                        alias,
-                        method
-                    )
-                )
-            },
-            meta = list(path = path),
-            methods = list(),
-            has_get = FALSE,
-            class = c("freshwater_endpoint", "function")
-        )
-    }
-
-    methods <- attr(current, "methods", exact = TRUE) %||% list()
-    methods[[method]] <- endpoint
-    attr(current, "methods") <- methods
-    fw_env$endpoints[[route]][[alias]] <- current
-}
-
 register_endpoints <- function(api) {
     rr <- api$request_router
     routes <- rr$routes
@@ -125,6 +38,7 @@ register_endpoints <- function(api) {
         class = c("freshwater_endpoints", "list")
     )
 
+    endpoints <- list()
     for (route in routes) {
         r <- rr$get_route(route)
         # currently unused, requires further testing
@@ -136,10 +50,146 @@ register_endpoints <- function(api) {
         }
 
         r$remap_handlers(function(method, path, handler) {
-            register_endpoint(fw_env, route, root, method, path)
+            alias <- endpoint_alias(path)
+            params <- waysign::path_params(path)
+            candidate <- list(
+                method = method,
+                path = path,
+                keys = params$keys,
+                glue = params$glue
+            )
+
+            fw_env$endpoints[[route]][[alias]][[
+                length(fw_env$endpoints[[route]][[alias]]) + 1L
+            ]] <<- candidate
+
             r$add_handler(method, path, handler)
         })
     }
+    fw_env$endpoints <- compile_aliases(fw_env$endpoints)
+    NULL
+}
+
+compile_aliases <- function(eps) {
+    compiled <- setNames(
+        lapply(
+            eps,
+            function(route_eps) {
+                setNames(
+                    lapply(
+                        names(route_eps),
+                        function(alias) {
+                            candidates <- route_eps[[alias]]
+
+                            method_names <- unique(vapply(
+                                candidates,
+                                `[[`,
+                                character(1),
+                                "method"
+                            ))
+
+                            methods <- setNames(
+                                lapply(
+                                    method_names,
+                                    function(method) {
+                                        method_candidates <- Filter(
+                                            \(x) identical(x$method, method),
+                                            candidates
+                                        )
+
+                                        fn <- function(...) {
+                                            dots <- list(...)
+                                            nms <- names(dots) %||% character()
+
+                                            hits <- vapply(
+                                                method_candidates,
+                                                \(candidate) {
+                                                    identical(
+                                                        sort(candidate$keys),
+                                                        sort(nms)
+                                                    )
+                                                },
+                                                logical(1L)
+                                            )
+
+                                            if (!any(hits)) {
+                                                params_txt <- if (length(nms)) {
+                                                    paste(
+                                                        sprintf('"%s"', nms),
+                                                        collapse = ", "
+                                                    )
+                                                } else {
+                                                    "<none>"
+                                                }
+                                                keys <- lapply(
+                                                    method_candidates,
+                                                    \(candidate) { candidate$keys }
+                                                ) |> paste0(collapse = ", ")
+
+                                                rlang::abort(
+                                                    sprintf(
+                                                        'No matching overload for endpoint "%s$%s()" with parameter(s) %s. Expected %s.',
+                                                        alias,
+                                                        method,
+                                                        params_txt,
+                                                        keys
+                                                    )
+                                                )
+                                            }
+
+                                            candidate <- method_candidates[[which(
+                                                hits
+                                            )]]
+
+
+                                            glue::glue_data(
+                                                dots,
+                                                candidate$glue
+                                            )
+                                        }
+
+                                        structure(
+                                            fn,
+                                            method = method,
+                                            paths = vapply(method_candidates, `[[`, character(1), "path"),
+                                            class = c("freshwater_endpoint_method", "function")
+                                        )
+                                    }
+                                ),
+                                method_names
+                            )
+
+                            index <- methods$get
+
+                            if (is.null(index)) {
+                                 index <- function(...) {
+                                    rlang::abort(
+                                        sprintf(
+                                            'Method "get" is not available for endpoint "%s".',
+                                            alias
+                                        )
+                                    )
+                                }
+                            }
+                            structure(
+                                index,
+                                methods = methods,
+                                paths = vapply(candidates, `[[`, character(1), "path"),
+                                class = c("freshwater_endpoint", "function")
+                            )
+                        }
+                    ),
+                    names(route_eps)
+                )
+            }
+        ),
+        names(eps)
+    )
+
+    structure(
+        compiled,
+        class = "freshwater_endpoints"
+    )
 }
 
 ensure_endpoints_registered <- function(api, force = FALSE) {
@@ -158,7 +208,8 @@ ensure_endpoints_registered <- function(api, force = FALSE) {
 #'  - "/" endpoints become "index"
 #'  - GET endpoints are accessed directly, like index()
 #'  - non-GET endpoints require an accessor, like index$delete()
-#'  - path parameters are removed from the alias and supplied as function args
+#'  - path parameters are removed from the alias and used to disambiguate overloaded helpers via named
+#' function args
 #'
 #' For example:
 #'
@@ -167,6 +218,7 @@ ensure_endpoints_registered <- function(api, force = FALSE) {
 #' - `GET /my/filter` -> `my_filter()`
 #' - `GET /users/:id` -> `users(id = 1)`
 #' - `DELETE /users/:id` -> `users$delete(id = 1)`
+#' - `DELETE /users/:name` -> users$delete(name = "Jim")``
 #'
 #' @examples
 #' #* @plumber
@@ -218,17 +270,14 @@ endpoints <- function(route = NULL, api = NULL, refresh = FALSE) {
 #' @export
 print.freshwater_endpoint <- function(x, ...) {
     methods <- attr(x, "methods", exact = TRUE) %||% list()
-    if (isTRUE(attr(x, "has_get", exact = TRUE))) {
-        methods <- c(list("get" = ""), methods)
-    }
-
-    meta <- attr(x, "meta", exact = TRUE) %||% list()
+    paths <- attr(x, "paths", exact = TRUE) %||% list()
     cat(
         "<freshwater endpoint>",
-        sprintf("- path: %s", meta$path),
+        sprintf("- paths: %s", paste0(paths, collapse = ", ")),
         sprintf("- methods: %s", paste0(names(methods), collapse = ", ")),
         sep = "\n"
     )
+    invisible(x)
 }
 
 #' @export
@@ -236,9 +285,26 @@ print.freshwater_endpoints <- function(x, ...) {
     cat("<freshwater endpoints> \n")
     for (name in names(x)) {
         cat(
-            sprintf("- %s (%s)", name, length(x[[name]]))
+            sprintf("- %s (%s)", name, length(x[[name]])),
+            "\n"
         )
     }
+    invisible(x)
+}
+
+#' @export
+print.freshwater_endpoint_method <- function(x, ...) {
+    method <- attr(x, "method", exact = TRUE) %||% list()
+    paths <- attr(x, "paths", exact = TRUE) %||% list()
+
+    cat(
+        "<freshwater endpoint method>",
+        sprintf("- method: %s", method),
+        sprintf("- paths: %s", paste(paths, collapse = ", ")),
+        sep = "\n"
+    )
+
+    invisible(x)
 }
 
 
