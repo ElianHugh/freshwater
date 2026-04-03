@@ -42,8 +42,8 @@ Alias rules:
 
 - non-GET endpoints require an accessor, like index\$delete()
 
-- path parameters are removed from the alias and supplied as function
-  args
+- path parameters are removed from the alias and used to disambiguate
+  overloaded helpers via named function args
 
 For example:
 
@@ -57,6 +57,8 @@ For example:
 
 - `DELETE /users/:id` -\> `users$delete(id = 1)`
 
+- `DELETE /users/:name` -\> users\$delete(name = "Jim")“
+
 ## Examples
 
 ``` r
@@ -69,7 +71,7 @@ function(api) {
 #> {
 #>     api_freshwater(api)
 #> }
-#> <environment: 0x56230dfc1240>
+#> <environment: 0x55eff0f8f2e8>
 
 #* @get /
 #* @serializer html
@@ -81,5 +83,5 @@ function() {
 #> {
 #>     endpoints("user")$index()
 #> }
-#> <environment: 0x56230dfc1240>
+#> <environment: 0x55eff0f8f2e8>
 ```

@@ -19,7 +19,8 @@ Templates may define:
   Fragment names are required. If multiple fragment names are specified,
   fragments will be extracted and collated into a
   [htmltools::tagList](https://rstudio.github.io/htmltools/reference/tagList.html),
-  in the order of names provided.
+  in the order of names provided. If a specified fragment cannot be
+  found, an error will be raised.
 
 ## Usage
 

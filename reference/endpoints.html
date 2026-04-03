@@ -73,12 +73,14 @@ route's endpoint accessors.</p>
     <p>Alias rules:</p><ul><li><p>"/" endpoints become "index"</p></li>
 <li><p>GET endpoints are accessed directly, like index()</p></li>
 <li><p>non-GET endpoints require an accessor, like index$delete()</p></li>
-<li><p>path parameters are removed from the alias and supplied as function args</p></li>
+<li><p>path parameters are removed from the alias and used to disambiguate overloaded helpers via named
+function args</p></li>
 </ul><p>For example:</p><ul><li><p><code>GET /</code> -&gt; <code>index()</code></p></li>
 <li><p><code>POST /</code> -&gt; <code>index$post()</code></p></li>
 <li><p><code>GET /my/filter</code> -&gt; <code>my_filter()</code></p></li>
 <li><p><code>GET /users/:id</code> -&gt; <code>users(id = 1)</code></p></li>
 <li><p><code>DELETE /users/:id</code> -&gt; <code>users$delete(id = 1)</code></p></li>
+<li><p><code>DELETE /users/:name</code> -&gt; users$delete(name = "Jim")“</p></li>
 </ul></div>
 
     <div class="section level2">
@@ -92,7 +94,7 @@ route's endpoint accessors.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     api_freshwater(api)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56230dfc1240&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55eff0f8f2e8&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#* @get /</span></span></span>
 <span class="r-in"><span><span class="co">#* @serializer html</span></span></span>
@@ -104,7 +106,7 @@ route's endpoint accessors.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     endpoints("user")$index()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56230dfc1240&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55eff0f8f2e8&gt;</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
