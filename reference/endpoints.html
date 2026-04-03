@@ -75,12 +75,16 @@ route's endpoint accessors.</p>
 <li><p>non-GET endpoints require an accessor, like index$delete()</p></li>
 <li><p>path parameters are removed from the alias and used to disambiguate overloaded helpers via named
 function args</p></li>
+<li><p>Reserved argument: <code>.query</code> argument constructs a query from a named list</p></li>
+<li><p>Reserved argument: <code>.anchor</code> constructs an anchor from a character scalar</p></li>
 </ul><p>For example:</p><ul><li><p><code>GET /</code> -&gt; <code>index()</code></p></li>
 <li><p><code>POST /</code> -&gt; <code>index$post()</code></p></li>
 <li><p><code>GET /my/filter</code> -&gt; <code>my_filter()</code></p></li>
-<li><p><code>GET /users/:id</code> -&gt; <code>users(id = 1)</code></p></li>
+<li><p><code>GET /users/:id</code> -&gt; <code>users(id = 1, .query = list(page = 2))</code></p></li>
+<li><p><code>GET /users/:id</code> -&gt; <code>users(id = 1, .anchor = "details")</code></p></li>
+<li><p><code>GET /users/:id</code> -&gt; <code>users(id = 1, .query = list(page = 2), .anchor = "details")</code></p></li>
 <li><p><code>DELETE /users/:id</code> -&gt; <code>users$delete(id = 1)</code></p></li>
-<li><p><code>DELETE /users/:name</code> -&gt; users$delete(name = "Jim")“</p></li>
+<li><p><code>DELETE /users/:name</code> -&gt; <code>users$delete(name = "Jim")</code></p></li>
 </ul></div>
 
     <div class="section level2">
@@ -94,7 +98,7 @@ function args</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     api_freshwater(api)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55eff0f8f2e8&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5626a0833800&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#* @get /</span></span></span>
 <span class="r-in"><span><span class="co">#* @serializer html</span></span></span>
@@ -106,7 +110,7 @@ function args</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     endpoints("user")$index()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55eff0f8f2e8&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5626a0833800&gt;</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

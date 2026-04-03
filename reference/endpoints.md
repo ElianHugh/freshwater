@@ -45,6 +45,12 @@ Alias rules:
 - path parameters are removed from the alias and used to disambiguate
   overloaded helpers via named function args
 
+- Reserved argument: `.query` argument constructs a query from a named
+  list
+
+- Reserved argument: `.anchor` constructs an anchor from a character
+  scalar
+
 For example:
 
 - `GET /` -\> `index()`
@@ -53,11 +59,16 @@ For example:
 
 - `GET /my/filter` -\> `my_filter()`
 
-- `GET /users/:id` -\> `users(id = 1)`
+- `GET /users/:id` -\> `users(id = 1, .query = list(page = 2))`
+
+- `GET /users/:id` -\> `users(id = 1, .anchor = "details")`
+
+- `GET /users/:id` -\>
+  `users(id = 1, .query = list(page = 2), .anchor = "details")`
 
 - `DELETE /users/:id` -\> `users$delete(id = 1)`
 
-- `DELETE /users/:name` -\> users\$delete(name = "Jim")“
+- `DELETE /users/:name` -\> `users$delete(name = "Jim")`
 
 ## Examples
 
@@ -71,7 +82,7 @@ function(api) {
 #> {
 #>     api_freshwater(api)
 #> }
-#> <environment: 0x55eff0f8f2e8>
+#> <environment: 0x5626a0833800>
 
 #* @get /
 #* @serializer html
@@ -83,5 +94,5 @@ function() {
 #> {
 #>     endpoints("user")$index()
 #> }
-#> <environment: 0x55eff0f8f2e8>
+#> <environment: 0x5626a0833800>
 ```
