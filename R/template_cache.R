@@ -275,6 +275,9 @@ invalidate_cache <- function(tpl, name, vary = NULL, fragment = NULL) {
 
   if (has_store(key)) {
     drop_store(key = key, fn = \() NULL)
+    if (exists(key, envir = freshwater$cache$ttl_buckets, inherits = FALSE)) {
+      rm(list = key, envir = freshwater$cache$ttl_buckets)
+    }
   } else {
     FALSE
   }
@@ -327,6 +330,9 @@ invalidate_cache_here <- function(name, vary = NULL, fragment = NULL) {
   )
   if (has_store(key)) {
     drop_store(key = key, fn = \() NULL)
+    if (exists(key, envir = freshwater$cache$ttl_buckets, inherits = FALSE)) {
+      rm(list = key, envir = freshwater$cache$ttl_buckets)
+    }
   } else {
     FALSE
   }
