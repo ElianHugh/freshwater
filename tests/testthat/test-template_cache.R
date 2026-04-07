@@ -3,6 +3,7 @@ test_that("template caching works", {
         cache(
             name = "test",
             vary = x,
+            NULL,
             span(Sys.time())
         )
     })
@@ -28,6 +29,7 @@ test_that("template caching works", {
         cache(
             name = "test",
             vary = NULL,
+            NULL,
             span(Sys.time())
         )
     })
@@ -43,6 +45,7 @@ test_that("template caching works", {
         cache(
             name = "test",
             vary = x,
+            NULL,
             span(Sys.time())
         )
     })
@@ -59,7 +62,7 @@ test_that("template caching works", {
 
   t <- template(user, {
     div(
-      cache("foo", user$id,
+      cache("foo", user$id, NULL,
         message("cached!"),
         div()
       )
@@ -83,6 +86,7 @@ test_that("fragments can contain caches", {
                 cache(
                     "test",
                     vary = x,
+                    NULL,
                     span(Sys.time())
                 )
             )
@@ -114,6 +118,7 @@ test_that("caches can produce fragments", {
             cache(
                 name = "test",
                 vary = x,
+                NULL,
                 fragment(
                     name = "test",
                     span(Sys.time())
@@ -142,12 +147,14 @@ test_that("caches can be nested", {
     cache(
       "page",
       vary = page$updated_at,
+      NULL,
       div(
         { page_runs  <<- page_runs + 1L; NULL },
         h1("Dashboard"),
         cache(
           "stats",
           vary = stats$updated_at,
+          NULL,
           p({
             stats_runs <<- stats_runs + 1L
             stats$count
@@ -181,4 +188,39 @@ test_that("caches can be nested", {
   expect_equal(page_runs, 3L)
   expect_equal(stats_runs, 2L)
   expect_match(as.character(out4), ">9<")
+})
+
+
+test_that("cache ttl invalidates as expected", {
+  clear_cache()
+
+  n <- 0L
+
+  t <- template(user, {
+    div(
+      cache(
+        name = "foo",
+        vary = user$id,
+        ttl = 1L,
+        {
+          n <<- n + 1L
+          div(as.character(n))
+        }
+      )
+    )
+  })
+
+  r1 <- as.character(t(list(id = 1)))
+  r2 <- as.character(t(list(id = 1)))
+
+  expect_identical(r1, r2)
+  expect_identical(n, 1L)
+
+  Sys.sleep(1.2)
+
+  r3 <- as.character(t(list(id = 1)))
+
+  expect_identical(n, 2L)
+  expect_false(identical(r2, r3))
+  expect_match(r3, ">2<")
 })
