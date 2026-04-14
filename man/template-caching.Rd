@@ -7,7 +7,7 @@
 \alias{invalidate_cache_here}
 \title{Cache a partial within a template}
 \usage{
-cache(name, vary = NULL, ...)
+cache(name, vary = NULL, ttl = NULL, ...)
 
 clear_cache()
 
@@ -19,6 +19,9 @@ invalidate_cache_here(name, vary = NULL, fragment = NULL)
 \item{name}{unique name for the cached partial template}
 
 \item{vary}{values that should change when the cached output should change. This is used to construct the cache key.}
+
+\item{ttl}{when the cache should expire. When NULL, will only expire when
+the cache is invalidated.}
 
 \item{...}{tag content to render and cache}
 
