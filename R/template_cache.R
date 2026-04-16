@@ -108,6 +108,7 @@ get_cache_backend <- function() {
 #'     cache(
 #'       "nav",
 #'       vary = user$id,
+#'       ttl = NULL,
 #'       ul(
 #'         li("Home"),
 #'         li("Profile"),
@@ -123,16 +124,19 @@ get_cache_backend <- function() {
 #'     cache(
 #'         name = "page",
 #'         vary = page$updated_at,
+#'         ttl = NULL,
 #'         div(
 #'             h1("Dashboard"),
 #'             cache(
 #'                 name = "stats",
-#'                  vary = stats$updated_at,
+#'                 vary = stats$updated_at,
+#'                 ttl = NULL,
 #'                 div(p(stats$count))
 #'             ),
 #'             cache(
 #'                 name = "recent",
 #'                 vary = recent$updated_at,
+#'                 ttl = NULL,
 #'                 div(recent)
 #'             )
 #'         )
@@ -144,7 +148,8 @@ get_cache_backend <- function() {
 #' page <- template({
 #'   cache(
 #'     name = "clock",
-#'     vary = memoise::timeout(60L),
+#'     vary = NULL,
+#'     ttl = 60L,
 #'     div(sprintf("Generated at %s", Sys.time()))
 #'   )
 #' })
@@ -303,6 +308,7 @@ invalidate_cache <- function(tpl, name, vary = NULL, fragment = NULL) {
 #'     cache(
 #'       name = "content",
 #'       vary = user$id,
+#'       ttl = NULL,
 #'       {
 #'         if (user$refresh) {
 #'           invalidate_cache_here(

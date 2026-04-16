@@ -72,11 +72,11 @@ register_endpoints <- function(api) {
 }
 
 compile_aliases <- function(eps) {
-    compiled <- setNames(
+    compiled <- stats::setNames(
         lapply(
             eps,
             function(route_eps) {
-                setNames(
+                stats::setNames(
                     lapply(
                         names(route_eps),
                         function(alias) {
@@ -89,7 +89,7 @@ compile_aliases <- function(eps) {
                                 "method"
                             ))
 
-                            methods <- setNames(
+                            methods <- stats::setNames(
                                 lapply(
                                     method_names,
                                     function(method) {
@@ -223,8 +223,8 @@ make_query <- function(.query) {
 
             sprintf(
                 "%s=%s",
-                URLencode(as.character(nm), reserved = TRUE, repeated = TRUE),
-                URLencode(as.character(v), reserved = TRUE, repeated = TRUE)
+                utils::URLencode(as.character(nm), reserved = TRUE, repeated = TRUE),
+                utils::URLencode(as.character(v), reserved = TRUE, repeated = TRUE)
             )
         }
     )
@@ -239,7 +239,7 @@ make_query <- function(.query) {
 make_anchor <- function(.anchor) {
     if (length(.anchor) > 0L && (is.null(.anchor) || !nzchar(.anchor))) return ("")
     .anchor <- sub("^#+", "", .anchor)
-    sprintf("#%s", URLencode(.anchor, reserved = TRUE, repeated = TRUE))
+    sprintf("#%s", utils::URLencode(.anchor, reserved = TRUE, repeated = TRUE))
 }
 
 #' Reverse Routing
