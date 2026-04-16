@@ -246,6 +246,7 @@ test_that("template attribute norming", {
     cache(
       name = "test",
       vary = NULL,
+      NULL,
       div(data_class_id = 1L)
     )
   })

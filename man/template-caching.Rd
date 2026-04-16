@@ -7,7 +7,7 @@
 \alias{invalidate_cache_here}
 \title{Cache a partial within a template}
 \usage{
-cache(name, vary = NULL, ...)
+cache(name, vary = NULL, ttl = NULL, ...)
 
 clear_cache()
 
@@ -19,6 +19,9 @@ invalidate_cache_here(name, vary = NULL, fragment = NULL)
 \item{name}{unique name for the cached partial template}
 
 \item{vary}{values that should change when the cached output should change. This is used to construct the cache key.}
+
+\item{ttl}{when the cache should expire. When NULL, will only expire when
+the cache is invalidated.}
 
 \item{...}{tag content to render and cache}
 
@@ -67,6 +70,7 @@ nav <- template(user, {
     cache(
       "nav",
       vary = user$id,
+      ttl = NULL,
       ul(
         li("Home"),
         li("Profile"),
@@ -82,16 +86,19 @@ dashboard <- template(page = list(), stats = list(), recent = list(), {
     cache(
         name = "page",
         vary = page$updated_at,
+        ttl = NULL,
         div(
             h1("Dashboard"),
             cache(
                 name = "stats",
-                 vary = stats$updated_at,
+                vary = stats$updated_at,
+                ttl = NULL,
                 div(p(stats$count))
             ),
             cache(
                 name = "recent",
                 vary = recent$updated_at,
+                ttl = NULL,
                 div(recent)
             )
         )
@@ -103,7 +110,8 @@ dashboard()
 page <- template({
   cache(
     name = "clock",
-    vary = memoise::timeout(60L),
+    vary = NULL,
+    ttl = 60L,
     div(sprintf("Generated at \%s", Sys.time()))
   )
 })
@@ -117,6 +125,7 @@ page <- template(user, {
     cache(
       name = "content",
       vary = user$id,
+      ttl = NULL,
       {
         if (user$refresh) {
           invalidate_cache_here(

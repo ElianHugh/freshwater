@@ -98,6 +98,8 @@ get_cache_backend <- function() {
 #' @export
 #' @param name unique name for the cached partial template
 #' @param vary values that should change when the cached output should change. This is used to construct the cache key.
+#' @param ttl when the cache should expire. When NULL, will only expire when
+#' the cache is invalidated.
 #' @param ... tag content to render and cache
 #' @examples
 #' # Caching
@@ -106,6 +108,7 @@ get_cache_backend <- function() {
 #'     cache(
 #'       "nav",
 #'       vary = user$id,
+#'       ttl = NULL,
 #'       ul(
 #'         li("Home"),
 #'         li("Profile"),
@@ -121,16 +124,19 @@ get_cache_backend <- function() {
 #'     cache(
 #'         name = "page",
 #'         vary = page$updated_at,
+#'         ttl = NULL,
 #'         div(
 #'             h1("Dashboard"),
 #'             cache(
 #'                 name = "stats",
-#'                  vary = stats$updated_at,
+#'                 vary = stats$updated_at,
+#'                 ttl = NULL,
 #'                 div(p(stats$count))
 #'             ),
 #'             cache(
 #'                 name = "recent",
 #'                 vary = recent$updated_at,
+#'                 ttl = NULL,
 #'                 div(recent)
 #'             )
 #'         )
@@ -142,7 +148,8 @@ get_cache_backend <- function() {
 #' page <- template({
 #'   cache(
 #'     name = "clock",
-#'     vary = memoise::timeout(60L),
+#'     vary = NULL,
+#'     ttl = 60L,
 #'     div(sprintf("Generated at %s", Sys.time()))
 #'   )
 #' })
@@ -150,9 +157,13 @@ get_cache_backend <- function() {
 #'
 #' @seealso [template], [set_cache_backend], [get_cache_backend], [api_cget], [memoise::memoise]
 #' @rdname template-caching
-cache <- function(name, vary = NULL, ...) {
-  ensure_cache_state()
+cache <- function(name, vary = NULL, ttl = NULL, ...) {
+  if (!is.null(ttl) && (!is.numeric(ttl) || length(ttl) != 1L)) {
+    rlang::abort("ttl must be either NULL or a numeric scalar.")
+  }
 
+
+  ensure_cache_state()
   context <- current_template(parent.frame())
   vary <- force(vary)
 
@@ -174,34 +185,53 @@ cache <- function(name, vary = NULL, ...) {
     context$fragment
   )
 
+  if (is.null(freshwater$cache$ttl_buckets)) {
+    freshwater$cache$ttl_buckets <- new.env(parent = emptyenv())
+  }
+
+  if (!is.null(ttl)) {
+    bucket_now <- memoise::timeout(ttl)
+    bucket_old <- freshwater$cache$ttl_buckets[[key]]
+
+    if (
+      has_store(key) &&
+        !is.null(bucket_old) &&
+        !identical(bucket_now, bucket_old)
+    ) {
+      drop_store(key = key, fn = \() NULL)
+    }
+
+    freshwater$cache$ttl_buckets[[key]] <- bucket_now
+  }
+
   hit <- has_store(key)
+
   res <- freshwater$cache$store(key, fn)
 
   if (requireNamespace("otel", quietly = TRUE)) {
-      attrs <- list(
-        "freshwater.cache.name" = name,
-        "freshwater.cache.template" = context$id,
-        "freshwater.cache.fragment" = context$fragment %||% ""
-      )
+    attrs <- list(
+      "freshwater.cache.name" = name,
+      "freshwater.cache.template" = context$id,
+      "freshwater.cache.fragment" = context$fragment %||% ""
+    )
 
-      if (otel::is_tracing_enabled()) {
-        span <- tryCatch(otel::get_active_span(), error = function(e) NULL)
-        if (!is.null(span) && isTRUE(span$is_recording())) {
-          span$add_event(
-            name = if (hit) "freshwater.cache.hit" else "freshwater.cache.miss",
-            attributes = otel::as_attributes(attrs)
-          )
-        }
-      }
-
-      if (otel::is_measuring_enabled()) {
-        otel::counter_add(
-          if (hit) "freshwater.cache.hit" else "freshwater.cache.miss",
-          1L,
-          attributes = otel::as_attributes(list("freshwater.cache.name" = name))
+    if (otel::is_tracing_enabled()) {
+      span <- tryCatch(otel::get_active_span(), error = function(e) NULL)
+      if (!is.null(span) && isTRUE(span$is_recording())) {
+        span$add_event(
+          name = if (hit) "freshwater.cache.hit" else "freshwater.cache.miss",
+          attributes = otel::as_attributes(attrs)
         )
       }
+    }
 
+    if (otel::is_measuring_enabled()) {
+      otel::counter_add(
+        if (hit) "freshwater.cache.hit" else "freshwater.cache.miss",
+        1L,
+        attributes = otel::as_attributes(list("freshwater.cache.name" = name))
+      )
+    }
   }
 
   if (hit) {
@@ -211,6 +241,7 @@ cache <- function(name, vary = NULL, ...) {
   res
 }
 
+
 #' Clear the cache of all memoised templates
 #'
 #' `clear_cache()` removes all memoised templates from freshwater's cache store.
@@ -219,6 +250,7 @@ cache <- function(name, vary = NULL, ...) {
 #' @rdname template-caching
 clear_cache <- function() {
   memoise::forget(freshwater$cache$store)
+  freshwater$cache$ttl_buckets <- new.env(parent = emptyenv())
   invisible(TRUE)
 }
 
@@ -249,6 +281,9 @@ invalidate_cache <- function(tpl, name, vary = NULL, fragment = NULL) {
 
   if (has_store(key)) {
     drop_store(key = key, fn = \() NULL)
+    if (exists(key, envir = freshwater$cache$ttl_buckets, inherits = FALSE)) {
+      rm(list = key, envir = freshwater$cache$ttl_buckets)
+    }
   } else {
     FALSE
   }
@@ -273,6 +308,7 @@ invalidate_cache <- function(tpl, name, vary = NULL, fragment = NULL) {
 #'     cache(
 #'       name = "content",
 #'       vary = user$id,
+#'       ttl = NULL,
 #'       {
 #'         if (user$refresh) {
 #'           invalidate_cache_here(
@@ -301,6 +337,9 @@ invalidate_cache_here <- function(name, vary = NULL, fragment = NULL) {
   )
   if (has_store(key)) {
     drop_store(key = key, fn = \() NULL)
+    if (exists(key, envir = freshwater$cache$ttl_buckets, inherits = FALSE)) {
+      rm(list = key, envir = freshwater$cache$ttl_buckets)
+    }
   } else {
     FALSE
   }

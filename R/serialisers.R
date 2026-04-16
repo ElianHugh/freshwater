@@ -33,7 +33,7 @@ register_html_serialiser <- function(force = FALSE) {
         "html",
         function(...) {
             function(x) {
-                if (inherits(x, c("shiny.tag", "shiny.tag.list"))) {
+                if (inherits(x, c("shiny.tag", "shiny.tag.list", "list", "html"))) {
                     htmltools::as.tags(x) |>
                         htmltools::doRenderTags() |>
                         as.character()
@@ -44,7 +44,8 @@ register_html_serialiser <- function(force = FALSE) {
                 }
             }
         },
-        mime_type = "text/html"
+        mime_type = "text/html",
+        default = TRUE
     )
 
     freshwater$serialiser_registered <- TRUE

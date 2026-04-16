@@ -16,7 +16,9 @@ Imports:
     rlang,
     cachem,
     glue,
-    waysign
+    waysign,
+    stats,
+    utils
 Suggests:
     fiery,
     openssl,

@@ -191,6 +191,7 @@ nav <- template(user, {
     cache(
       name = "nav",
       vary = user$id,
+      ttl = NULL,
       li("Home"),
       li("Profile"),
       if (user$is_admin) li("Admin")
@@ -214,11 +215,13 @@ dashboard <- template(page, stats, {
   cache(
     "page",
     vary = page$updated_at,
+    ttl = NULL,
     div(
       h1("Dashboard"),
       cache(
         "stats",
         vary = stats$updated_at,
+        ttl = NULL,
         p(stats$count)
       )
     )
