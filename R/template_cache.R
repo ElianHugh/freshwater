@@ -162,7 +162,6 @@ cache <- function(name, vary = NULL, ttl = NULL, ...) {
     rlang::abort("ttl must be either NULL or a numeric scalar.")
   }
 
-
   ensure_cache_state()
   context <- current_template(parent.frame())
   vary <- force(vary)
@@ -193,11 +192,7 @@ cache <- function(name, vary = NULL, ttl = NULL, ...) {
     bucket_now <- memoise::timeout(ttl)
     bucket_old <- freshwater$cache$ttl_buckets[[key]]
 
-    if (
-      has_store(key) &&
-        !is.null(bucket_old) &&
-        !identical(bucket_now, bucket_old)
-    ) {
+    if (!is.null(bucket_old) && !identical(bucket_now, bucket_old)) {
       drop_store(key = key, fn = \() NULL)
     }
 
