@@ -20,7 +20,7 @@ allow users to forcibly regenerate caches inside the template function.
 ## Usage
 
 ``` r
-cache(name, vary = NULL, ...)
+cache(name, vary = NULL, ttl = NULL, ...)
 
 clear_cache()
 
@@ -39,6 +39,11 @@ invalidate_cache_here(name, vary = NULL, fragment = NULL)
 
   values that should change when the cached output should change. This
   is used to construct the cache key.
+
+- ttl:
+
+  when the cache should expire. When NULL, will only expire when the
+  cache is invalidated.
 
 - ...:
 
@@ -92,6 +97,7 @@ nav <- template(user, {
     cache(
       "nav",
       vary = user$id,
+      ttl = NULL,
       ul(
         li("Home"),
         li("Profile"),
@@ -114,16 +120,19 @@ dashboard <- template(page = list(), stats = list(), recent = list(), {
     cache(
         name = "page",
         vary = page$updated_at,
+        ttl = NULL,
         div(
             h1("Dashboard"),
             cache(
                 name = "stats",
-                 vary = stats$updated_at,
+                vary = stats$updated_at,
+                ttl = NULL,
                 div(p(stats$count))
             ),
             cache(
                 name = "recent",
                 vary = recent$updated_at,
+                ttl = NULL,
                 div(recent)
             )
         )
@@ -142,12 +151,13 @@ dashboard()
 page <- template({
   cache(
     name = "clock",
-    vary = memoise::timeout(60L),
+    vary = NULL,
+    ttl = 60L,
     div(sprintf("Generated at %s", Sys.time()))
   )
 })
 page()
-#> <div>Generated at 2026-04-03 22:07:49.912463</div>
+#> <div>Generated at 2026-04-16 00:29:57.372949</div>
 
 # Invalidate the current cache
 # during rendering
@@ -157,6 +167,7 @@ page <- template(user, {
     cache(
       name = "content",
       vary = user$id,
+      ttl = NULL,
       {
         if (user$refresh) {
           invalidate_cache_here(
