@@ -18,7 +18,8 @@ Imports:
     glue,
     waysign,
     stats,
-    utils
+    utils,
+    stringi
 Suggests:
     fiery,
     openssl,

@@ -132,8 +132,7 @@
 #' @export
 template <- function(..., .envir = rlang::caller_env()) {
     dots <- as.list(substitute(list(...)))[-1]
-    body_idx <- lapply(dots, \(x) inherits(x, "{")) |>
-        unlist() |>
+    body_idx <- vapply(dots, \(x) inherits(x, "{"), logical(1)) |>
         which()
 
     if (length(body_idx) != 1L) {
@@ -176,54 +175,52 @@ template <- function(..., .envir = rlang::caller_env()) {
 
     f_body <- substitute(
         {
-            call_ <- rlang::caller_call()
-            bottom <- rlang::current_env()
-            this <- rlang::caller_env()
+            .fw_call_ <- rlang::caller_call()
+            .fw_bottom <- rlang::current_env()
+            .fw_this <- rlang::caller_env()
 
             withCallingHandlers(
                 {
-                    nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
+                    .fw_nm <- deparse(sys.call()[[1L]], width.cutoff = 500L)
 
-                    runtime <- environment(sys.function())
+                    .fw_runtime <- environment(sys.function())
 
                     assign(
                         ".freshwater_ctx",
-                        list(template = nm, fragment = fragment, id = id),
-                        envir = runtime
+                        list(template = .fw_nm, fragment = fragment, id = .fw_id),
+                        envir = .fw_runtime
                     )
-                    on.exit(rm(".freshwater_ctx", envir = runtime), add = TRUE)
+                    on.exit(rm(".freshwater_ctx", envir = .fw_runtime), add = TRUE)
 
-                    x <- local({
-                        BODY
-                    })
+                    x <- BODY
 
                     if (!is.null(fragment)) {
-                        x <- walk_nodes(x, fragment, nm)
+                        x <- .fw_walk_nodes(x, fragment, .fw_nm)
                         if (is.null(x)) {
-                            error_missing_fragment(fragment, nm)
+                            .fw_error_missing_fragment(fragment, .fw_nm)
                         }
                     }
 
-                    rewrite_attrs(x)
+                    .fw_rewrite_attrs(x)
                 },
                 error = function(e) {
-                    new_template_error(
-                        nm,
+                    .fw_new_template_error(
+                        .fw_nm,
                         e,
-                        call = call_,
-                        this = this,
-                        bottom = bottom
+                        call = .fw_call_,
+                        this = .fw_this,
+                        bottom = .fw_bottom
                     )
                 }
             )
         },
         list(
             BODY = body_expr,
-            walk_nodes = walk_nodes,
-            new_template_error = new_template_error,
-            rewrite_attrs = rewrite_attrs,
-            error_missing_fragment = error_missing_fragment,
-            id = id
+            .fw_walk_nodes = walk_nodes,
+            .fw_new_template_error = new_template_error,
+            .fw_rewrite_attrs = rewrite_attrs,
+            .fw_error_missing_fragment = error_missing_fragment,
+            .fw_id = id
         )
     )
 
@@ -302,9 +299,11 @@ rewrite_attrs <- function(tag) {
             attribs <- tag$attribs
             nms <- names(attribs)
             # trailing -> underscores -> double underscores
-            nms <- gsub("(?<!_)_(?=$)", "", nms, perl = TRUE)
-            nms <- gsub("(?<!^)(?<!_)_(?!_)", "-", nms, perl = TRUE)
-            nms <- gsub("_{2,}", "_", nms, perl = TRUE)
+            if (any(grepl("_", nms, fixed = TRUE))) {
+                nms <- stringi::stri_replace_all_regex(nms, "(?<!_)_(?=$)", "")
+                nms <- stringi::stri_replace_all_regex(nms, "(?<!^)(?<!_)_(?!_)", "-")
+                nms <- stringi::stri_replace_all_regex(nms, "_{2,}", "_")
+            }
 
             names(attribs) <- nms
             tag$attribs <- attribs
@@ -519,8 +518,53 @@ print.freshwater_fragment <- function(x, ...) {
     NextMethod()
 }
 
+walk_one <- function(tag, name, tpl_nm) {
+    out <- vector(mode = "list", length = 0L)
+    walk <- function(x) {
+        if (inherits(x, "shiny.tag")) {
+            fragment <- attr(x, "fragment")
+            if (!is.null(fragment) && identical(fragment, name)) {
+                out[[length(out) + 1L]] <<- x
+            }
+
+            for (i in seq_along(x$children)) {
+                walk(x$children[[i]])
+            }
+            return(invisible(NULL))
+        } else if (inherits(x, "list")) {
+            for (child in x) {
+                walk(child)
+            }
+            return(invisible(NULL))
+        }
+        invisible(NULL)
+    }
+
+    walk(tag)
+
+
+    if (length(out) == 0L) {
+        error_missing_fragment(name, tpl_nm)
+    }
+
+    if (length(out) == 1L) {
+        return(out[[1L]])
+    }
+
+    htmltools::tagList(out)
+
+
+}
+
 walk_nodes <- function(tag, name, tpl_nm) {
     names_requested <- unique(as.character(name))
+
+    if (length(names_requested) == 1L) {
+        return(walk_one(tag, names_requested[[1L]], tpl_nm))
+    }
+
+    lookup <- rep.int(TRUE, length(names_requested))
+    names(lookup) <- names_requested
     buckets <- structure(
         vector(
             mode = "list",
@@ -531,7 +575,7 @@ walk_nodes <- function(tag, name, tpl_nm) {
     walk <- function(x) {
         if (inherits(x, "shiny.tag")) {
             fragment <- attr(x, "fragment")
-            if (!is.null(fragment) && fragment %in% names_requested) {
+            if (!is.null(fragment) && isTRUE(lookup[fragment])) {
                 buckets[[fragment]][[length(buckets[[fragment]]) + 1L]] <<- x
             }
 
