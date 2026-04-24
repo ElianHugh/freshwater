@@ -140,8 +140,15 @@ api_error_pages <- function(
                 return(plumber2::Next)
             }
 
+            # etags should not happen on 500s
+
+
             status <- as.character(status)
             use_html <- wants_html(request)
+
+            if (status != "404") {
+                response$remove_header("ETag")
+            }
 
             if (use_html) {
                 response$set_header(
