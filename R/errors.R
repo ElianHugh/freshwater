@@ -77,7 +77,28 @@ api_error_pages <- function(
                 response <- args$response %||% NULL
                 request <- args$request %||% NULL
                 tryCatch(
-                    next_call(),
+                    expr = {
+                        res <- next_call()
+
+                         if (!response$status %in% c(403L, 404L, 500L)) {
+                            return(res)
+                        }
+
+                        if (!should_freshwater_handle(request, response)) {
+                            return(res)
+                        }
+
+                        api$trigger(
+                            "error_code",
+                            status = response$status,
+                            request = request,
+                            response = response,
+                            message = NULL
+                        )
+
+                        plumber2::Next
+
+                    },
                     error = function(e) {
                         if (!should_freshwater_handle(request, response, e)) {
                             return(plumber2::Next)
@@ -140,8 +161,13 @@ api_error_pages <- function(
                 return(plumber2::Next)
             }
 
+            # etags should not happen on 500s
             status <- as.character(status)
             use_html <- wants_html(request)
+
+            if (status != "404") {
+                response$remove_header("ETag")
+            }
 
             if (use_html) {
                 response$set_header(
@@ -404,8 +430,8 @@ default_error_403_template <- template(error = NULL, request = NULL, {
     msg <- "You don't have permission to access this resource."
     msg <- if (!is.null(error) && inherits(error, "reqres_problem")) {
         error$detail %||% msg
-    } else if (!is.null(request$response$body) && nzchar(request$response$body)) {
-        request$response$body
+    # } else if (!is.null(request$response$body) && nzchar(request$response$body)) {
+    #     request$response$body
     } else {
        msg
     }

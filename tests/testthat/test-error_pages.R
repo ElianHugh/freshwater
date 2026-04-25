@@ -259,3 +259,17 @@ test_that("error pages function for `then` handlers", {
 	expect_identical(res$status, 500L)
 	expect_match(res$body, "Bad handler", fixed = TRUE)
 })
+
+test_that("error pages work when cget is present", {
+	suppressMessages({
+		api <- plumber2::api()
+		api <- plumber2::api_get(api, "/", \() stop("Foo"))
+		api <- api_cget(api, "/", \() 1L)
+		api <- api_freshwater(api, debug = TRUE, csrf = FALSE)
+		api$trigger("freshwater::hook")
+
+	})
+
+	res <- faux_request(api, path = "/", accept = "text/html; charset=utf-8")
+	expect_true(is.null(res$headers$etag))
+})
