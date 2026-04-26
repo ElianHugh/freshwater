@@ -378,3 +378,28 @@ print.freshwater_api <- function(x, ...) {
     }
     invisible(x)
 }
+
+
+create_portable_context <- function() {
+    ctx <- get_fw_context()
+    if (is.null(ctx)) {
+        rlang::abort("Unexpected missing freshwater context.")
+    }
+    fw_env <- get_freshwater_env(ctx$api)
+
+    structure(
+        list(
+            api = list(
+                endpoints = fw_env$endpoints
+            ),
+            request = list(
+                cookies = ctx$request$cookies,
+                query = ctx$request$query,
+                method = ctx$request$method,
+                path = ctx$request$path,
+                get_header = "????"
+            )
+        ),
+        class = c("fw_portable_context", "list")
+    )
+}
