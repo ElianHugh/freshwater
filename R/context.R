@@ -389,8 +389,12 @@ create_portable_context <- function() {
 
     structure(
         list(
-            api = list(
-                endpoints = fw_env$endpoints
+            api = structure(
+                list(),
+                freshwater = list(
+                    endpoints = fw_env$endpoints
+                ),
+                class = c("freshwater_api", "list")
             ),
             request = list(
                 cookies = ctx$request$cookies,
@@ -402,4 +406,107 @@ create_portable_context <- function() {
         ),
         class = c("fw_portable_context", "list")
     )
+}
+
+#' @export
+register_async_evaluator <- function(force = FALSE) {
+    if (!requireNamespace("mori")) {
+        rlang::abort("{mori} is required to register a freshwater async evaluator.")
+    }
+    if (!requireNamespace("promises")) {
+        rlang::abort("{promises} is required to register a freshwater async evaluator.")
+    }
+
+    if (!force && isTRUE(freshwater$async_registered)) {
+        return(invisible(NULL))
+    }
+
+    plumber2::register_async("freshwater", function(...) {
+        function(expr, envir) {
+            parent <- sys.parent()
+            ctx <- new.env(parent = emptyenv())
+            ctx$request <- get("request", envir = parent)
+            ctx$api <- get("server", envir = parent)
+
+            with_fw_context(ctx, {
+                portable_ctx <- create_portable_context() |>
+                    mori::share()
+
+                nm <- mori::shared_name(portable_ctx)
+
+                body <- substitute(
+                    {
+                        tryCatch(
+                            {
+                                .fw_ctx <- mori::map_shared(nm)
+                                freshwater:::set_fw_context(.fw_ctx)
+
+                                expr
+                            },
+                            error = function(e) {
+                                e
+                            }
+                        )
+                    },
+                    list(
+                        expr = expr,
+                        nm = nm
+                    )
+                )
+
+                promises::hybrid_then(
+                    expr = {
+                        mirai::mirai(
+                            .expr = body,
+                            envir,
+                            ...
+                        )
+                    },
+                    on_success = function(v) {
+                        if (!inherits(v, "error")) {
+                            return(v)
+                        }
+
+                        api <- ctx$api
+                        request <- ctx$request
+                        response <- request$response
+
+                        if (!inherits(v, "reqres_problem")) {
+                            response$status <- 500L
+                        } else {
+                            response$status <- v$status
+                        }
+
+                        fw_env <- get_freshwater_env(api)
+                        if (isTRUE(fw_env$error_pages$installed)) {
+                            api$trigger(
+                                "error_code",
+                                status = response$status,
+                                request = request,
+                                response = response,
+                                message = v
+                            )
+                            return(
+                                list(
+                                    result = response$body,
+                                    continue = plumber2::Break
+                                )
+                            )
+                        }
+
+                        list(
+                            result = "The server hit an error while processing your request.",
+                            continue = plumber2::Break
+                        )
+                    },
+                    tee = FALSE
+                )
+            })
+        }
+    })
+
+
+    freshwater$async_registered <- TRUE
+
+    invisible(NULL)
 }
