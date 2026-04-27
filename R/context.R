@@ -409,16 +409,23 @@ create_portable_context <- function() {
 }
 
 #' @export
-register_async_evaluator <- function(force = FALSE) {
-    if (!requireNamespace("mori")) {
+register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
+    if (!requireNamespace("mori", quietly = TRUE)) {
         rlang::abort("{mori} is required to register a freshwater async evaluator.")
     }
-    if (!requireNamespace("promises")) {
+    if (!requireNamespace("promises", quietly = TRUE)) {
         rlang::abort("{promises} is required to register a freshwater async evaluator.")
     }
 
     if (!force && isTRUE(freshwater$async_registered)) {
         return(invisible(NULL))
+    }
+
+    current <- getOption("plumber2.async")
+    if (isTRUE(set_default)) {
+        if (is.null(current) || force) {
+            options(plumber2.async = "freshwater")
+        }
     }
 
     plumber2::register_async("freshwater", function(...) {
@@ -504,7 +511,6 @@ register_async_evaluator <- function(force = FALSE) {
             })
         }
     })
-
 
     freshwater$async_registered <- TRUE
 
