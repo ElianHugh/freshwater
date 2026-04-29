@@ -26,6 +26,7 @@ reference:
       - form
       - csrf_token
       - register_html_serialiser
+      - register_async_evaluator
 
   - title: "Rendering Performance"
     contents:

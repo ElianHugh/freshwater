@@ -379,42 +379,52 @@ print.freshwater_api <- function(x, ...) {
     invisible(x)
 }
 
-
-create_portable_context <- function() {
-    ctx <- get_fw_context()
-    if (is.null(ctx)) {
-        rlang::abort("Unexpected missing freshwater context.")
-    }
-    fw_env <- get_freshwater_env(ctx$api)
-
-    structure(
-        list(
-            api = structure(
-                list(),
-                freshwater = list(
-                    endpoints = fw_env$endpoints
-                ),
-                class = c("freshwater_api", "list")
-            ),
-            request = list(
-                cookies = ctx$request$cookies,
-                query = ctx$request$query,
-                method = ctx$request$method,
-                path = ctx$request$path,
-                get_header = "????"
-            )
-        ),
-        class = c("fw_portable_context", "list")
-    )
-}
-
+#' Register context-safe async evaluator
+#'
+#' Registers an asynchronous evaluator for routes, allowing freshwater context to
+#' be propogated to [mirai::mirai] workers. This means that contextful helpers such as [current_method],
+#' [current_path], and [current_query] (among others) will work in async routes.
+#'
+#' @details
+#' Context is not inherently portable across asynchronous contexts, this function
+#' creates a read-only context that is passed to a mirai worker.
+#'
+#' Hooks are *not* applied to the async route, but may be provided to any associated
+#' `then` handlers. If error pages are installed on the main process, errors from
+#' the worker will be appropriately converted into freshwater error pages.
+#'
+#' Requires the [promises::promises], [mirai::mirai],
+#' and [mori::mori] packages in order to be used.
+#'
+#' @examples
+#' register_async_evaluator()
+#' #* @async
+#' #* @get /async
+#' function() {
+#'  current_path()
+#' }
+#' @seealso [api_freshwater], [api_error_pages], [api_hooks], [mirai::mirai]
+#'
+#' @param force whether to register the evaluator regardless of if it has been
+#' registered already
+#' @param set_default whether to set the default async evaluator to the
+#' freshwater version.
 #' @export
 register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
     if (!requireNamespace("mori", quietly = TRUE)) {
-        rlang::abort("{mori} is required to register a freshwater async evaluator.")
+        rlang::abort(
+            "{mori} is required to register a freshwater async evaluator."
+        )
     }
     if (!requireNamespace("promises", quietly = TRUE)) {
-        rlang::abort("{promises} is required to register a freshwater async evaluator.")
+        rlang::abort(
+            "{promises} is required to register a freshwater async evaluator."
+        )
+    }
+    if (!requireNamespace("mirai", quietly = TRUE)) {
+        rlang::abort(
+            "{mirai} is required to register a freshwater async evaluator."
+        )
     }
 
     if (!force && isTRUE(freshwater$async_registered)) {
@@ -446,18 +456,16 @@ register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
                         tryCatch(
                             {
                                 .fw_ctx <- mori::map_shared(nm)
-                                freshwater:::set_fw_context(.fw_ctx)
-
+                                .set_fw_context(.fw_ctx)
                                 expr
                             },
-                            error = function(e) {
-                                e
-                            }
+                            error = function(e) e
                         )
                     },
                     list(
                         expr = expr,
-                        nm = nm
+                        nm = nm,
+                        .set_fw_context = set_fw_context
                     )
                 )
 
@@ -515,4 +523,35 @@ register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
     freshwater$async_registered <- TRUE
 
     invisible(NULL)
+}
+
+
+#' This *has* to retain parity with the internal fw context definition
+#' @noRd
+create_portable_context <- function() {
+    ctx <- get_fw_context()
+    if (is.null(ctx)) {
+        rlang::abort("Unexpected missing freshwater context.")
+    }
+    fw_env <- get_freshwater_env(ctx$api)
+
+    structure(
+        list(
+            api = structure(
+                list(),
+                freshwater = list(
+                    endpoints = fw_env$endpoints
+                ),
+                class = c("freshwater_api", "list")
+            ),
+            request = list(
+                cookies = ctx$request$cookies,
+                query = ctx$request$query,
+                method = ctx$request$method,
+                path = ctx$request$path,
+                get_header = "????"
+            )
+        ),
+        class = c("fw_portable_context", "list")
+    )
 }
