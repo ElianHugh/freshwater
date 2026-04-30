@@ -16,10 +16,13 @@ current_query()
 
 current_cookie(name)
 
-current_header(name)
+current_header(name, normalise = TRUE)
 }
 \arguments{
 \item{name}{the name of a cookie or header}
+
+\item{normalise}{whether to normalise the provided name or
+pass it verbatim}
 }
 \description{
 These read-only helpers provide access to request data for the current HTTP

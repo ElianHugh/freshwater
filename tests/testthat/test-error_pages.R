@@ -274,6 +274,12 @@ test_that("error pages work when cget is present", {
 })
 
 test_that("errors work under async", {
+	testthat::skip_if_not_installed("cli")
+	testthat::skip_if_not_installed("mori")
+	testthat::skip_if_not_installed("mirai")
+	testthat::skip_if_not_installed("promises")
+
+
 	suppressMessages({
 		register_async_evaluator()
 		api <- plumber2::api()

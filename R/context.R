@@ -334,8 +334,10 @@ current_cookie <- function(name) {
 }
 
 #' @rdname current_context
+#' @param normalise whether to normalise the provided name or
+#' pass it verbatim
 #' @export
-current_header <- function(name) {
+current_header <- function(name, normalise = TRUE) {
     ctx <- get_fw_context()
     if (is.null(ctx)) {
         rlang::abort(
@@ -347,7 +349,12 @@ current_header <- function(name) {
             class = "freshwater_context_missing"
         )
     }
-    ctx$request$get_header(name)
+    # we don't use $get_header because it isn't portable
+    if (isTRUE(normalise)) {
+        ctx$request$headers[[tolower(gsub('-', '_', name))]]
+    } else {
+        ctx$request$headers[[name]]
+    }
 }
 
 
@@ -549,7 +556,7 @@ create_portable_context <- function() {
                 query = ctx$request$query,
                 method = ctx$request$method,
                 path = ctx$request$path,
-                get_header = "????"
+                headers = ctx$request$headers
             )
         ),
         class = c("fw_portable_context", "list")
