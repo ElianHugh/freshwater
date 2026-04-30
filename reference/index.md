@@ -13,6 +13,8 @@
   : CSRF Token
 - [`register_html_serialiser()`](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md)
   : Register HTML Serialiser
+- [`register_async_evaluator()`](https://elianhugh.github.io/freshwater/reference/register_async_evaluator.md)
+  : Register context-safe async evaluator
 
 ## Rendering Performance
 

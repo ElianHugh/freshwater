@@ -35,7 +35,7 @@ current_query()
 
 current_cookie(name)
 
-current_header(name)
+current_header(name, normalise = TRUE)
 ```
 
 ## Arguments
@@ -43,6 +43,10 @@ current_header(name)
 - name:
 
   the name of a cookie or header
+
+- normalise:
+
+  whether to normalise the provided name or pass it verbatim
 
 ## See also
 
