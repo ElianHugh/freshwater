@@ -147,3 +147,60 @@ test_that("current_* helpers work", {
             as.character()
     )
 })
+
+
+test_that("current_* helpers work under fw async", {
+    testthat::skip_if_not_installed("mori")
+    testthat::skip_if_not_installed("mirai")
+    testthat::skip_if_not_installed("promises")
+
+    register_async_evaluator()
+    tpl <- template(
+        cookie = NULL,
+        header = NULL,
+        query = NULL,
+        path = NULL,
+        method = NULL,
+        {
+            div(
+                p(cookie %||% current_cookie("theme")),
+                p(header %||% current_header("accept")),
+                p(query %||% current_query()$id),
+                p(path %||% current_path()),
+                p(method %||% current_method())
+            )
+        }
+    )
+
+    api <- suppressMessages(
+        plumber2::api() |>
+            plumber2::api_get("/foo", function() {
+                tpl()
+            }, async = "freshwater")
+    )
+
+    api <- api_freshwater(api, csrf = FALSE, error_pages = FALSE)
+    api$trigger("freshwater::hook")
+
+    res <- faux_request(
+        api,
+        path = "foo?id=1",
+        accept = "text/html; charset=utf-8",
+        cookie = "theme=dark"
+    ) |>
+        wait_for_resolve()
+
+
+    expect_identical(
+        res$body,
+        tpl(
+            cookie = "dark",
+            header = "text/html; charset=utf-8",
+            query = 1L,
+            path = "/foo",
+            method = "get"
+        ) |>
+            htmltools::doRenderTags() |>
+            as.character()
+    )
+})

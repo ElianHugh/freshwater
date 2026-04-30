@@ -27,7 +27,9 @@ Suggests:
     testthat (>= 3.0.0),
     promises,
     later,
-    otel
+    otel,
+    mori,
+    mirai
 Config/testthat/edition: 3
 URL: https://elianhugh.github.io/freshwater/
 Collate:

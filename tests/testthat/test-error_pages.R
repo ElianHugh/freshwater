@@ -267,9 +267,42 @@ test_that("error pages work when cget is present", {
 		api <- api_cget(api, "/", \() 1L)
 		api <- api_freshwater(api, debug = TRUE, csrf = FALSE)
 		api$trigger("freshwater::hook")
-
 	})
 
 	res <- faux_request(api, path = "/", accept = "text/html; charset=utf-8")
 	expect_true(is.null(res$headers$etag))
+})
+
+test_that("errors work under async", {
+	testthat::skip_if_not_installed("cli")
+	testthat::skip_if_not_installed("mori")
+	testthat::skip_if_not_installed("mirai")
+	testthat::skip_if_not_installed("promises")
+
+
+	suppressMessages({
+		register_async_evaluator()
+		api <- plumber2::api()
+		api <- plumber2::api_get(api, "/internal", \() plumber2::abort_internal_error("Internal Error"), async = "freshwater")
+		api <- plumber2::api_get(api, "/forbidden", \() plumber2::abort_forbidden("Forbidden"), async = "freshwater")
+		api <- plumber2::api_get(api, "/not_found", \() plumber2::abort_not_found("Not Found"), async = "freshwater")
+		api <- api_freshwater(api, debug = TRUE, csrf = FALSE)
+		api$trigger("freshwater::hook")
+
+		res <- faux_request(api, path = "internal", accept = "text/html; charset=utf-8") |>
+			wait_for_resolve()
+		expect_identical(res$status, 500L)
+		expect_match(res$body, "Internal Error", fixed = TRUE)
+
+		res <- faux_request(api, path = "forbidden", accept = "text/html; charset=utf-8") |>
+			wait_for_resolve()
+		expect_identical(res$status, 403L)
+		expect_match(res$body, "Forbidden", fixed = TRUE)
+
+
+		res <- faux_request(api, path = "not_found", accept = "text/html; charset=utf-8") |>
+			wait_for_resolve()
+		expect_identical(res$status, 404L)
+		expect_match(res$body, "Not Found", fixed = TRUE)
+	})
 })

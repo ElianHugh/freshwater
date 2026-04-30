@@ -334,8 +334,10 @@ current_cookie <- function(name) {
 }
 
 #' @rdname current_context
+#' @param normalise whether to normalise the provided name or
+#' pass it verbatim
 #' @export
-current_header <- function(name) {
+current_header <- function(name, normalise = TRUE) {
     ctx <- get_fw_context()
     if (is.null(ctx)) {
         rlang::abort(
@@ -347,7 +349,12 @@ current_header <- function(name) {
             class = "freshwater_context_missing"
         )
     }
-    ctx$request$get_header(name)
+    # we don't use $get_header because it isn't portable
+    if (isTRUE(normalise)) {
+        ctx$request$headers[[tolower(gsub('-', '_', name))]]
+    } else {
+        ctx$request$headers[[name]]
+    }
 }
 
 
@@ -377,4 +384,180 @@ print.freshwater_api <- function(x, ...) {
         cat("  - csrf: installed\n")
     }
     invisible(x)
+}
+
+#' Register context-safe async evaluator
+#'
+#' Registers an asynchronous evaluator for routes, allowing freshwater context to
+#' be propagated to [mirai::mirai] workers. This means that contextful helpers such as [current_method],
+#' [current_path], and [current_query] (among others) will work in async routes.
+#'
+#' @details
+#' Context is not inherently portable across asynchronous contexts, this function
+#' creates a portable snapshot of the current context that is passed to a mirai worker.
+#'
+#' Hooks are *not* applied to the async route, but may be provided to any associated
+#' `then` handlers. If error pages are installed on the main process, errors from
+#' the worker will be appropriately converted into freshwater error pages.
+#'
+#' Requires the [promises], [mirai], and [mori] packages.
+#'
+#' @examples
+#' register_async_evaluator()
+#' #* @async
+#' #* @get /async
+#' function() {
+#'  current_path()
+#' }
+#' @seealso [api_freshwater], [api_error_pages], [api_hooks], [mirai::mirai], [current_method]
+#'
+#' @param force whether to register the evaluator regardless of if it has been
+#' registered already
+#' @param set_default whether to set the default async evaluator to `"freshwater"`
+#' @export
+register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
+    if (!requireNamespace("mori", quietly = TRUE)) {
+        rlang::abort(
+            "{mori} is required to register a freshwater async evaluator."
+        )
+    }
+    if (!requireNamespace("promises", quietly = TRUE)) {
+        rlang::abort(
+            "{promises} is required to register a freshwater async evaluator."
+        )
+    }
+    if (!requireNamespace("mirai", quietly = TRUE)) {
+        rlang::abort(
+            "{mirai} is required to register a freshwater async evaluator."
+        )
+    }
+
+    if (!force && isTRUE(freshwater$async_registered)) {
+        return(invisible(NULL))
+    }
+
+    current <- getOption("plumber2.async")
+    if (isTRUE(set_default)) {
+        if (is.null(current) || force) {
+            options(plumber2.async = "freshwater")
+        }
+    }
+
+    plumber2::register_async("freshwater", function(...) {
+        function(expr, envir) {
+            parent <- sys.parent()
+            ctx <- new.env(parent = emptyenv())
+            ctx$request <- get("request", envir = parent)
+            ctx$api <- get("server", envir = parent)
+
+            with_fw_context(ctx, {
+                portable_ctx <- create_portable_context() |>
+                    mori::share()
+
+                nm <- mori::shared_name(portable_ctx)
+
+                body <- substitute(
+                    {
+                        tryCatch(
+                            {
+                                .fw_ctx <- mori::map_shared(nm)
+                                .with_fw_context(.fw_ctx, expr)
+                            },
+                            error = function(e) e
+                        )
+                    },
+                    list(
+                        expr = expr,
+                        nm = nm,
+                        .with_fw_context = with_fw_context
+                    )
+                )
+
+                promises::hybrid_then(
+                    expr = {
+                        mirai::mirai(
+                            .expr = body,
+                            envir,
+                            ...
+                        )
+                    },
+                    on_success = function(v) {
+                        if (!inherits(v, "error")) {
+                            return(v)
+                        }
+
+                        api <- ctx$api
+                        request <- ctx$request
+                        response <- request$response
+
+                        if (!inherits(v, "reqres_problem")) {
+                            response$status <- 500L
+                        } else {
+                            response$status <- v$status
+                        }
+
+                        fw_env <- get_freshwater_env(api)
+                        if (isTRUE(fw_env$error_pages$installed)) {
+                            api$trigger(
+                                "error_code",
+                                status = response$status,
+                                request = request,
+                                response = response,
+                                message = v
+                            )
+                            return(
+                                list(
+                                    result = response$body,
+                                    continue = plumber2::Break
+                                )
+                            )
+                        }
+
+                        list(
+                            result = "The server hit an error while processing your request.",
+                            continue = plumber2::Break
+                        )
+                    },
+                    tee = FALSE
+                )
+            })
+        }
+    })
+
+    freshwater$async_registered <- TRUE
+
+    invisible(NULL)
+}
+
+
+#' Create a portable snapshot of the current request context
+#'
+#' This must retain parity with the internal context shape
+#' @noRd
+create_portable_context <- function() {
+    ctx <- get_fw_context()
+    if (is.null(ctx)) {
+        rlang::abort("Unexpected missing freshwater context.")
+    }
+    fw_env <- get_freshwater_env(ctx$api)
+
+    structure(
+        list(
+            api = structure(
+                list(),
+                freshwater = list(
+                    endpoints = fw_env$endpoints
+                ),
+                class = c("freshwater_api", "list")
+            ),
+            request = list(
+                cookies = ctx$request$cookies,
+                query = ctx$request$query,
+                method = ctx$request$method,
+                path = ctx$request$path,
+                headers = ctx$request$headers
+            )
+        ),
+        class = c("fw_portable_context", "list")
+    )
 }

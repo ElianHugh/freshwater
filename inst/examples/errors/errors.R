@@ -1,5 +1,29 @@
 library(freshwater)
 
+async <- function(expr, ...) {
+    ctx <- create_portable_context() |>
+        mori::share()
+    nm <- mori::shared_name(ctx)
+
+    body <- substitute(
+        {
+            .fw_ctx <- mori::map_shared(nm)
+            freshwater:::set_fw_context(.fw_ctx)
+            expr
+        },
+        list(
+            expr = expr
+        )
+    )
+
+    mirai::mirai(
+        .expr = body,
+        environment(),
+        ...
+    ) |>
+        promises::as.promise()
+}
+
 #' @plumber
 function(api) {
     register_html_serialiser()
@@ -77,10 +101,12 @@ function() {
 
 #' @get /forbidden
 function() {
-    plumber2::abort_http_problem(
-        code = 403L,
-        detail = "Not allowed"
-    )
+    async(contact_card(contacts[[3L]])) |>
+        promises::as.promise()
+    # plumber2::abort_http_problem(
+    #     code = 403L,
+    #     detail = "Not allowed"
+    # )
 }
 
 
@@ -88,4 +114,41 @@ function() {
 #' @serializer html
 function() {
     1L
+}
+
+
+mirai::daemons(2L)
+
+mirai::everywhere({
+    unlockBinding("freshwater", asNamespace("freshwater"))
+    fw_env <- get("freshwater", envir = asNamespace("freshwater"))
+})[]
+
+
+#' @get /test
+#' @serializer html
+function() {
+    ctx <- create_portable_context() |>
+        mori::share()
+
+    x <- microbenchmark::microbenchmark(
+        worker = {
+            mirai::mirai(
+                {
+                    ctx <- mori::map_shared(nm)
+                    fw_env$request_context <- ctx
+                    freshwater::current_path()
+                },
+                nm = mori::shared_name(ctx)
+            )[]
+        },
+        no_worker = {
+            freshwater::current_path()
+        },
+        times = 100L
+    )
+
+    print(x)
+    htmltools::HTML(capture.output(print(xtable::xtable(summary(x)), type = "html")))
+
 }
