@@ -409,7 +409,7 @@ print.freshwater_api <- function(x, ...) {
 #' function() {
 #'  current_path()
 #' }
-#' @seealso [api_freshwater], [api_error_pages], [api_hooks], [mirai::mirai], [current_context]
+#' @seealso [api_freshwater], [api_error_pages], [api_hooks], [mirai::mirai], [current_method]
 #'
 #' @param force whether to register the evaluator regardless of if it has been
 #' registered already

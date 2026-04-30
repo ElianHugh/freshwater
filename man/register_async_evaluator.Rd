@@ -19,7 +19,7 @@ be propagated to \link[mirai:mirai]{mirai::mirai} workers. This means that conte
 }
 \details{
 Context is not inherently portable across asynchronous contexts, this function
-creates a portable snapshopt of the current context that is passed to a mirai worker.
+creates a portable snapshot of the current context that is passed to a mirai worker.
 
 Hooks are \emph{not} applied to the async route, but may be provided to any associated
 \code{then} handlers. If error pages are installed on the main process, errors from
@@ -36,5 +36,5 @@ function() {
 }
 }
 \seealso{
-\link{api_freshwater}, \link{api_error_pages}, \link{api_hooks}, \link[mirai:mirai]{mirai::mirai}, \link{current_context}
+\link{api_freshwater}, \link{api_error_pages}, \link{api_hooks}, \link[mirai:mirai]{mirai::mirai}, \link{current_method}
 }
