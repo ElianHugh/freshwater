@@ -10,24 +10,22 @@ register_async_evaluator(force = FALSE, set_default = TRUE)
 \item{force}{whether to register the evaluator regardless of if it has been
 registered already}
 
-\item{set_default}{whether to set the default async evaluator to the
-freshwater version.}
+\item{set_default}{whether to set the default async evaluator to \code{"freshwater"}}
 }
 \description{
 Registers an asynchronous evaluator for routes, allowing freshwater context to
-be propogated to \link[mirai:mirai]{mirai::mirai} workers. This means that contextful helpers such as \link{current_method},
+be propagated to \link[mirai:mirai]{mirai::mirai} workers. This means that contextful helpers such as \link{current_method},
 \link{current_path}, and \link{current_query} (among others) will work in async routes.
 }
 \details{
 Context is not inherently portable across asynchronous contexts, this function
-creates a read-only context that is passed to a mirai worker.
+creates a portable snapshopt of the current context that is passed to a mirai worker.
 
 Hooks are \emph{not} applied to the async route, but may be provided to any associated
 \code{then} handlers. If error pages are installed on the main process, errors from
 the worker will be appropriately converted into freshwater error pages.
 
-Requires the \link[promises:promises-package]{promises::promises}, \link[mirai:mirai]{mirai::mirai},
-and \link[mori:mori-package]{mori::mori} packages in order to be used.
+Requires the \link[promises:promises-package]{promises::promises}, \link[mirai:mirai]{mirai::mirai}, and \link[mori:mori-package]{mori::mori} packages.
 }
 \examples{
 register_async_evaluator()
@@ -38,5 +36,5 @@ function() {
 }
 }
 \seealso{
-\link{api_freshwater}, \link{api_error_pages}, \link{api_hooks}, \link[mirai:mirai]{mirai::mirai}
+\link{api_freshwater}, \link{api_error_pages}, \link{api_hooks}, \link[mirai:mirai]{mirai::mirai}, \link{current_context}
 }

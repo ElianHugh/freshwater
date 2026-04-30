@@ -389,19 +389,18 @@ print.freshwater_api <- function(x, ...) {
 #' Register context-safe async evaluator
 #'
 #' Registers an asynchronous evaluator for routes, allowing freshwater context to
-#' be propogated to [mirai::mirai] workers. This means that contextful helpers such as [current_method],
+#' be propagated to [mirai::mirai] workers. This means that contextful helpers such as [current_method],
 #' [current_path], and [current_query] (among others) will work in async routes.
 #'
 #' @details
 #' Context is not inherently portable across asynchronous contexts, this function
-#' creates a read-only context that is passed to a mirai worker.
+#' creates a portable snapshopt of the current context that is passed to a mirai worker.
 #'
 #' Hooks are *not* applied to the async route, but may be provided to any associated
 #' `then` handlers. If error pages are installed on the main process, errors from
 #' the worker will be appropriately converted into freshwater error pages.
 #'
-#' Requires the [promises::promises], [mirai::mirai],
-#' and [mori::mori] packages in order to be used.
+#' Requires the [promises], [mirai], and [mori] packages.
 #'
 #' @examples
 #' register_async_evaluator()
@@ -410,12 +409,11 @@ print.freshwater_api <- function(x, ...) {
 #' function() {
 #'  current_path()
 #' }
-#' @seealso [api_freshwater], [api_error_pages], [api_hooks], [mirai::mirai]
+#' @seealso [api_freshwater], [api_error_pages], [api_hooks], [mirai::mirai], [current_context]
 #'
 #' @param force whether to register the evaluator regardless of if it has been
 #' registered already
-#' @param set_default whether to set the default async evaluator to the
-#' freshwater version.
+#' @param set_default whether to set the default async evaluator to `"freshwater"`
 #' @export
 register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
     if (!requireNamespace("mori", quietly = TRUE)) {
@@ -533,7 +531,9 @@ register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
 }
 
 
-#' This *has* to retain parity with the internal fw context definition
+#' Create a portable snapshot of the current request context
+#'
+#' This must retain parity with the internal context shape
 #' @noRd
 create_portable_context <- function() {
     ctx <- get_fw_context()
