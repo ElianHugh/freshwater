@@ -394,7 +394,7 @@ print.freshwater_api <- function(x, ...) {
 #'
 #' @details
 #' Context is not inherently portable across asynchronous contexts, this function
-#' creates a portable snapshopt of the current context that is passed to a mirai worker.
+#' creates a portable snapshot of the current context that is passed to a mirai worker.
 #'
 #' Hooks are *not* applied to the async route, but may be provided to any associated
 #' `then` handlers. If error pages are installed on the main process, errors from
@@ -461,8 +461,7 @@ register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
                         tryCatch(
                             {
                                 .fw_ctx <- mori::map_shared(nm)
-                                .set_fw_context(.fw_ctx)
-                                expr
+                                .with_fw_context(.fw_ctx, expr)
                             },
                             error = function(e) e
                         )
@@ -470,7 +469,7 @@ register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
                     list(
                         expr = expr,
                         nm = nm,
-                        .set_fw_context = set_fw_context
+                        .with_fw_context = with_fw_context
                     )
                 )
 
