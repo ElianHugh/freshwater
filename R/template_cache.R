@@ -299,18 +299,18 @@ invalidate_cache <- function(tpl, name, vary = NULL, fragment = NULL) {
 #' # during rendering
 #'
 #' page <- template(user, {
+#'   if (user$refresh) {
+#'     invalidate_cache_here(
+#'       name = "content",
+#'       vary = user$id
+#'     )
+#'   }
 #'   div(
 #'     cache(
 #'       name = "content",
 #'       vary = user$id,
 #'       ttl = NULL,
 #'       {
-#'         if (user$refresh) {
-#'           invalidate_cache_here(
-#'             name = "content",
-#'             vary = user$id
-#'           )
-#'         }
 #'         p("Hello ", user$id)
 #'       }
 #'     )
@@ -318,7 +318,6 @@ invalidate_cache <- function(tpl, name, vary = NULL, fragment = NULL) {
 #' })
 #'
 #' page(list(id = 1, refresh = FALSE))
-#'
 #' page(list(id = 1, refresh = TRUE))
 #'
 #' @export

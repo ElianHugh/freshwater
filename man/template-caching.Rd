@@ -121,18 +121,18 @@ page()
 # during rendering
 
 page <- template(user, {
+  if (user$refresh) {
+    invalidate_cache_here(
+      name = "content",
+      vary = user$id
+    )
+  }
   div(
     cache(
       name = "content",
       vary = user$id,
       ttl = NULL,
       {
-        if (user$refresh) {
-          invalidate_cache_here(
-            name = "content",
-            vary = user$id
-          )
-        }
         p("Hello ", user$id)
       }
     )
@@ -140,7 +140,6 @@ page <- template(user, {
 })
 
 page(list(id = 1, refresh = FALSE))
-
 page(list(id = 1, refresh = TRUE))
 
 }
