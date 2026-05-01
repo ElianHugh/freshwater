@@ -9,7 +9,7 @@ freshwater is an HTML-first server-side rendering layer for plumber2:
   fragments)
 - template caching
 - weak ETag caching
-- shiny tag serialisation[¹](#fn1)
+- shiny tag serialisation[^1]
 - CSRF protection
 - … and more!
 
@@ -22,6 +22,7 @@ You can install the development version of freshwater from
 [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("ElianHugh/freshwater")
 ```
@@ -29,6 +30,7 @@ pak::pak("ElianHugh/freshwater")
 ## Usage
 
 ``` r
+
 library(plumber2)
 library(freshwater)
 
@@ -58,6 +60,7 @@ function() {
 ## Reusable templates
 
 ``` r
+
 library(freshwater)
 
 details <- template(name, age, {
@@ -80,6 +83,7 @@ details("Jim", 30)
 ## Fragments
 
 ``` r
+
 card <- template(title, {
   div(
     h2(title),
@@ -106,6 +110,7 @@ card("Hello")
 ```
 
 ``` r
+
 card("Hello", fragment = "body")
 ```
 
@@ -116,6 +121,7 @@ card("Hello", fragment = "body")
 ## Layouts & content injection
 
 ``` r
+
 layout <- template({
     document(
     head(title("App")),
@@ -150,6 +156,7 @@ layout(
 > underscores (\_\_) act as an escape hatch for literal underscores.
 
 ``` r
+
 template({
   div(
     hx_get = "/items",
@@ -179,6 +186,7 @@ template({
 > Cached partials are keyed by template, fragment, cache name, and vary.
 
 ``` r
+
 nav <- template(user, {
   ul(
     cache(
@@ -204,6 +212,7 @@ nav(list(id = 1, is_admin = TRUE))
 ## Nested Caches
 
 ``` r
+
 dashboard <- template(page, stats, {
   cache(
     "page",
@@ -251,6 +260,7 @@ dashboard(
 > freshwater returns 304 Not Modified and skips rendering.
 
 ``` r
+
 #* @get /dashboard
 #* @etag \() as.integer(Sys.Date())
 function() {
@@ -264,6 +274,7 @@ function() {
 > pattern
 
 ``` r
+
 function(api) {
   api |>
     api_csrf(secure = TRUE)
@@ -277,7 +288,5 @@ function(api) {
 
 \`\`\`r function(api) { api \|\> api_error_pages(debug=TRUE) }
 
-------------------------------------------------------------------------
-
-1.  differs to base plumber2 implementation in that we render the entire
-    tag tree, allowing for emitting head tags amongst others.
+[^1]: differs to base plumber2 implementation in that we render the
+    entire tag tree, allowing for emitting head tags amongst others.

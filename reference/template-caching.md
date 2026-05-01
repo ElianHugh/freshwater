@@ -157,24 +157,24 @@ page <- template({
   )
 })
 page()
-#> <div>Generated at 2026-04-30 00:53:49.822353</div>
+#> <div>Generated at 2026-05-01 00:54:35.686961</div>
 
 # Invalidate the current cache
 # during rendering
 
 page <- template(user, {
+  if (user$refresh) {
+    invalidate_cache_here(
+      name = "content",
+      vary = user$id
+    )
+  }
   div(
     cache(
       name = "content",
       vary = user$id,
       ttl = NULL,
       {
-        if (user$refresh) {
-          invalidate_cache_here(
-            name = "content",
-            vary = user$id
-          )
-        }
         p("Hello ", user$id)
       }
     )
@@ -188,7 +188,6 @@ page(list(id = 1, refresh = FALSE))
 #>     1
 #>   </p>
 #> </div>
-
 page(list(id = 1, refresh = TRUE))
 #> <div>
 #>   <p>
