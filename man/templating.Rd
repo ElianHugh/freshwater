@@ -5,13 +5,16 @@
 \alias{fragment}
 \title{Create a reusable HTML template}
 \usage{
-template(..., .envir = rlang::caller_env())
+template(..., .id = NULL, .envir = rlang::caller_env())
 
 fragment(name = NULL, ...)
 }
 \arguments{
 \item{...}{template definition. Provide zero or more parameters, followed by a
 single braced expression.}
+
+\item{.id}{a character scalar or function that returns a character scalar. The result is provided as
+an id attribute to the root of the template.}
 
 \item{.envir}{the environment in which to evaluate the template}
 

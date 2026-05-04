@@ -125,12 +125,14 @@
 #'
 #' @param ... template definition. Provide zero or more parameters, followed by a
 #' single braced expression.
+#' @param .id a character scalar or function that returns a character scalar. The result is provided as
+#' an id attribute to the root of the template.
 #' @param .envir the environment in which to evaluate the template
 #' @return function of class `template` with interface `fn(<declared params>, ..., fragment = NULL)`
 #' @rdname templating
 #' @seealso [document], [cache], [form], [csrf_token], [api_freshwater]
 #' @export
-template <- function(..., .envir = rlang::caller_env()) {
+template <- function(..., .id = NULL, .envir = rlang::caller_env()) {
     dots <- as.list(substitute(list(...)))[-1]
     body_idx <- vapply(dots, \(x) inherits(x, "{"), logical(1)) |>
         which()
@@ -175,6 +177,9 @@ template <- function(..., .envir = rlang::caller_env()) {
 
     f_body <- substitute(
         {
+            .fw_args <- as.list(environment())
+            .fw_args <- .fw_args[setdiff(names(.fw_args), c("...", "fragment"))]
+
             .fw_call_ <- rlang::caller_call()
             .fw_bottom <- rlang::current_env()
             .fw_this <- rlang::caller_env()
@@ -194,6 +199,22 @@ template <- function(..., .envir = rlang::caller_env()) {
 
                     x <- BODY
 
+
+                    .fw_id_resolved <- NULL
+                    if (!is.null(.fw_id_resolver)) {
+                         if (is.character(.fw_id_resolver)) {
+                            .fw_id_resolved <- .fw_id_resolver
+                        } else if (is.function(.fw_id_resolver)) {
+                            .fw_id_resolved <- do.call(.fw_id_resolver, .fw_args)
+                        }
+                        if (inherits(x, "shiny.tag")) {
+                            x <- htmltools::tagAppendAttributes(
+                                x,
+                                id = .fw_id_resolved
+                            )
+                        }
+                    }
+
                     if (!is.null(fragment)) {
                         x <- .fw_walk_nodes(x, fragment, .fw_nm)
                         if (is.null(x)) {
@@ -201,7 +222,7 @@ template <- function(..., .envir = rlang::caller_env()) {
                         }
                     }
 
-                    .fw_rewrite_attrs(x)
+                    .fw_rewrite_attrs(x, .fw_id_resolved)
                 },
                 error = function(e) {
                     .fw_new_template_error(
@@ -220,7 +241,8 @@ template <- function(..., .envir = rlang::caller_env()) {
             .fw_new_template_error = new_template_error,
             .fw_rewrite_attrs = rewrite_attrs,
             .fw_error_missing_fragment = error_missing_fragment,
-            .fw_id = id
+            .fw_id = id,
+            .fw_id_resolver = .id
         )
     )
 
@@ -230,6 +252,7 @@ template <- function(..., .envir = rlang::caller_env()) {
         "template_params" = param_exprs,
         "template_env" = .envir,
         "template_id" = id,
+        "template_id_resolver" = .id,
         class = c("freshwater_template", "function")
     )
 }
@@ -285,7 +308,7 @@ new_template_error <- function(template_name, error, call, this, bottom) {
     )
 }
 
-rewrite_attrs <- function(tag) {
+rewrite_attrs <- function(tag, resolved_id) {
     if (is.null(tag)) {
         return(tag)
     }
@@ -296,8 +319,19 @@ rewrite_attrs <- function(tag) {
 
     if (inherits(tag, "shiny.tag")) {
         if (length(tag$attribs)) {
+
             attribs <- tag$attribs
             nms <- names(attribs)
+
+
+            if (".part" %in% nms) {
+                val <- attribs[[".part"]]
+                attribs[["data-fw-part"]] <- sprintf("%s-%s", resolved_id, val)
+                attribs[[".part"]] <- NULL
+            }
+
+            nms <- names(attribs)
+
             # trailing -> underscores -> double underscores
             if (any(grepl("_", nms, fixed = TRUE))) {
                 nms <- stringi::stri_replace_all_regex(nms, "(?<!_)_(?=$)", "")
@@ -310,7 +344,7 @@ rewrite_attrs <- function(tag) {
         }
 
         if (length(tag$children)) {
-            tag$children <- lapply(tag$children, rewrite_attrs)
+            tag$children <- lapply(tag$children, \(child) rewrite_attrs(child, resolved_id))
         }
 
         return(tag)
@@ -318,7 +352,7 @@ rewrite_attrs <- function(tag) {
 
     if (inherits(tag, "shiny.tag.list") || inherits(tag, "list")) {
         for (i in seq_along(tag)) {
-            tag[[i]] <- list(rewrite_attrs(tag[[i]]))
+            tag[[i]] <- list(rewrite_attrs(tag[[i]], resolved_id))
         }
         return(tag)
     }
@@ -664,4 +698,77 @@ current_template <- function(
 ) {
     ctx <- get0(".freshwater_ctx", envir = env, inherits = TRUE)
     if (is.null(ctx)) default else ctx
+}
+
+
+#' Title
+#'
+#' @param tpl TODO
+#' @param ... TODO
+#' @param part TODO
+#' @examples
+#' card <- template(
+#'     user,
+#'     .id = function(user) sprintf("user-%s", user$id),
+#'     {
+#'         div(user$name)
+#'     }
+#' )
+#' target(card, list(id = 1234L))
+#'
+#' user_table <- template(users = list(), .id = "my-table", {
+#'     table(
+#'         thead(
+#'             .part = "header",
+#'             tr(th("Name"))
+#'         ),
+#'         tbody(
+#'             .part = "body",
+#'             lapply(users, \(user) tr(td(user)))
+#'         ),
+#'         tfoot(
+#'             .part = "footer",
+#'             tr(td(sprintf("There are '%s' users.", length(users))))
+#'         )
+#'    )
+#' })
+#' @export
+target <- function(tpl, ..., .part = NULL) {
+    tpl_id <- attr(tpl, "template_id_resolver", exact = TRUE)
+    if (is.null(tpl_id)) {
+        fw_nm <- deparse(substitute(tpl), width.cutoff = 500L)
+        msg <- sprintf("No instance # defined for template `%s`.", fw_nm)
+        rlang::abort(msg, class = "freshwater_template_error")
+    }
+    if (is.character(tpl_id)) {
+        res <- tpl_id
+    } else if (is.function(tpl_id)) {
+        res <- tryCatch(
+            tpl_id(...),
+            error = function(e) {
+                fw_nm <- deparse(substitute(tpl), width.cutoff = 500L)
+                rlang::abort(
+                    sprintf(
+                        "Failed to resolve target for template `%s`: %s",
+                        fw_nm,
+                        e$message
+                    ),
+                    class = "freshwater_template_error"
+                )
+            }
+        )
+    } else {
+        rlang::abort(
+            sprintf(
+                "Unexpected value for template ID. Expected `character` or `function`, received `%s`",
+                class(tpl_id)
+            )
+        )
+    }
+
+    if (!is.null(.part)) {
+        sprintf('[data-fw-part="%s-%s"]', res, .part)
+    } else {
+        return(sprintf("#%s", res))
+    }
 }
