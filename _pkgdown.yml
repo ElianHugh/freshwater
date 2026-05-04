@@ -25,6 +25,7 @@ reference:
       - document
       - form
       - target
+      - targets
       - csrf_token
       - register_html_serialiser
       - register_async_evaluator
