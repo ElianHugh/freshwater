@@ -34,6 +34,7 @@ attributes across templates.
 
 ## See also
 
+[targets](https://elianhugh.github.io/freshwater/reference/targets.md),
 [template](https://elianhugh.github.io/freshwater/reference/templating.md)
 
 ## Examples
@@ -65,4 +66,6 @@ user_table <- template(users = list(), .id = "my-table", {
         )
    )
 })
+target(user_table)
+#> [1] "#my-table"
 ```
