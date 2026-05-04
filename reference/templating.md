@@ -25,7 +25,7 @@ Templates may define:
 ## Usage
 
 ``` r
-template(..., .envir = rlang::caller_env())
+template(..., .id = NULL, .envir = rlang::caller_env())
 
 fragment(name = NULL, ...)
 ```
@@ -36,6 +36,11 @@ fragment(name = NULL, ...)
 
   template definition. Provide zero or more parameters, followed by a
   single braced expression.
+
+- .id:
+
+  a character scalar or function that returns a character scalar. The
+  result is provided as an id attribute to the root of the template.
 
 - .envir:
 
@@ -88,6 +93,7 @@ separate from the request context defined elsewhere.
 [document](https://elianhugh.github.io/freshwater/reference/document.md),
 [cache](https://elianhugh.github.io/freshwater/reference/template-caching.md),
 [form](https://elianhugh.github.io/freshwater/reference/form.md),
+[target](https://elianhugh.github.io/freshwater/reference/target.md),
 [csrf_token](https://elianhugh.github.io/freshwater/reference/csrf_token.md),
 [api_freshwater](https://elianhugh.github.io/freshwater/reference/api_freshwater.md)
 

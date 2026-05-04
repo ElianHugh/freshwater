@@ -9,6 +9,8 @@
   : HTML Document Root
 - [`form()`](https://elianhugh.github.io/freshwater/reference/form.md) :
   Form
+- [`target()`](https://elianhugh.github.io/freshwater/reference/target.md)
+  : Resolve a template's target selector
 - [`csrf_token()`](https://elianhugh.github.io/freshwater/reference/csrf_token.md)
   : CSRF Token
 - [`register_html_serialiser()`](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md)

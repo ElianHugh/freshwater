@@ -82,7 +82,7 @@ function(api) {
 #> {
 #>     api_freshwater(api)
 #> }
-#> <environment: 0x55ece48d9670>
+#> <environment: 0x558ab25c29c0>
 
 #* @get /
 #* @serializer html
@@ -94,5 +94,5 @@ function() {
 #> {
 #>     endpoints("user")$index()
 #> }
-#> <environment: 0x55ece48d9670>
+#> <environment: 0x558ab25c29c0>
 ```
