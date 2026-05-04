@@ -177,7 +177,10 @@ template <- function(..., .id = NULL, .envir = rlang::caller_env()) {
 
     f_body <- substitute(
         {
-            .fw_args <- as.list(environment())
+
+            .fw_call <- match.call(expand.dots = FALSE)
+            .fw_args <- as.list(.fw_call)[-1L]
+            # .fw_args <- as.list(environment())
             .fw_args <- .fw_args[setdiff(names(.fw_args), c("...", "fragment"))]
 
             .fw_call_ <- rlang::caller_call()
@@ -205,6 +208,7 @@ template <- function(..., .id = NULL, .envir = rlang::caller_env()) {
                          if (is.character(.fw_id_resolver)) {
                             .fw_id_resolved <- .fw_id_resolver
                         } else if (is.function(.fw_id_resolver)) {
+                            .fw_args <- .fw_args[names(formals(.fw_id_resolver))]
                             .fw_id_resolved <- do.call(.fw_id_resolver, .fw_args)
                         }
                         if (inherits(x, "shiny.tag")) {
@@ -701,11 +705,21 @@ current_template <- function(
 }
 
 
-#' Title
+#' Resolve a template's target selector
 #'
-#' @param tpl TODO
-#' @param ... TODO
-#' @param part TODO
+#' `target()` returns a CSS selector for a template instance. For normal
+#' targets, this is an id selector of the form `#<TEMPLATE_ID>`, where
+#' the id is resolved from the template's id function.
+#'
+#' In order to support multi-root template selection,
+#' supplying `.part` will return a data attribute selector of the form:
+#' `[data-fw-part="<TEMPLATE_ID>-<PART_NAME>"]`
+#' Part names are automatically scoped against the template's `.id`, ensuring
+#' unique data attributes across templates.
+#'
+#' @param tpl a freshwater template
+#' @param ... arguments passed to the template id function
+#' @param .part whether to select a sub-part
 #' @examples
 #' card <- template(
 #'     user,
@@ -767,8 +781,8 @@ target <- function(tpl, ..., .part = NULL) {
     }
 
     if (!is.null(.part)) {
-        sprintf('[data-fw-part="%s-%s"]', res, .part)
-    } else {
-        return(sprintf("#%s", res))
+        return(sprintf('[data-fw-part="%s-%s"]', res, .part))
     }
+
+    sprintf("#%s", res)
 }

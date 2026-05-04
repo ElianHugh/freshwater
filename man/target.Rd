@@ -2,19 +2,28 @@
 % Please edit documentation in R/template.R
 \name{target}
 \alias{target}
-\title{Title}
+\title{Resolve a template's target selector}
 \usage{
 target(tpl, ..., .part = NULL)
 }
 \arguments{
-\item{tpl}{TODO}
+\item{tpl}{a freshwater template}
 
-\item{...}{TODO}
+\item{...}{arguments passed to the template id function}
 
-\item{part}{TODO}
+\item{.part}{whether to select a sub-part}
 }
 \description{
-Title
+\code{target()} returns a CSS selector for a template instance. For normal
+targets, this is an id selector of the form \verb{#<TEMPLATE_ID>}, where
+the id is resolved from the template's id function.
+}
+\details{
+In order to support multi-root template selection,
+supplying \code{.part} will return a data attribute selector of the form:
+\verb{[data-fw-part="<TEMPLATE_ID>-<PART_NAME>"]}
+Part names are automatically scoped against the template's \code{.id}, ensuring
+unique data attributes across templates.
 }
 \examples{
 card <- template(

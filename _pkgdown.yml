@@ -24,6 +24,7 @@ reference:
       - fragment
       - document
       - form
+      - target
       - csrf_token
       - register_html_serialiser
       - register_async_evaluator
