@@ -52,3 +52,6 @@ user_table <- template(users = list(), .id = "my-table", {
    )
 })
 }
+\seealso{
+\link{template}
+}

@@ -130,7 +130,7 @@
 #' @param .envir the environment in which to evaluate the template
 #' @return function of class `template` with interface `fn(<declared params>, ..., fragment = NULL)`
 #' @rdname templating
-#' @seealso [document], [cache], [form], [csrf_token], [api_freshwater]
+#' @seealso [document], [cache], [form], [target], [csrf_token], [api_freshwater]
 #' @export
 template <- function(..., .id = NULL, .envir = rlang::caller_env()) {
     dots <- as.list(substitute(list(...)))[-1]
@@ -746,6 +746,7 @@ current_template <- function(
 #'         )
 #'    )
 #' })
+#' @seealso [template]
 #' @export
 target <- function(tpl, ..., .part = NULL) {
     tpl_id <- attr(tpl, "template_id_resolver", exact = TRUE)
