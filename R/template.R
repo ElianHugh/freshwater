@@ -746,7 +746,8 @@ current_template <- function(
 #'         )
 #'    )
 #' })
-#' @seealso [template]
+#' target(user_table)
+#' @seealso [targets], [template]
 #' @export
 target <- function(tpl, ..., .part = NULL) {
     tpl_id <- attr(tpl, "template_id_resolver", exact = TRUE)
@@ -786,4 +787,32 @@ target <- function(tpl, ..., .part = NULL) {
     }
 
     sprintf("#%s", res)
+}
+
+#' Combine multiple target selectors
+#'
+#' `targets()` returns a comma-separated string combining multiple
+#' [target()] calls. If a template is supplied, `target()` is called on it,
+#' otherwise the value is coerced to character and used as-is.
+#'
+#' @param ... templates or character vectors
+#' @examples
+#' tpl <- template(.id = "foo", {})
+#' tpl2 <- template(x, .id = function(x) x, {})
+#' targets(
+#'     tpl,
+#'    target(tpl2, x = "bar")
+#' )
+#' @seealso [target]
+#' @export
+targets <- function(...) {
+    dots <- Filter(Negate(is.null), list(...))
+    res <- lapply(dots, \(x) {
+        if (is.function(x)) {
+            target(x)
+        } else {
+            as.character(x)
+        }
+    })
+    paste0(unlist(res, use.names = FALSE), collapse = ", ")
 }
