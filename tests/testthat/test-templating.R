@@ -414,3 +414,30 @@ test_that("multi-root template IDs work", {
     )
   )
 })
+
+test_that("target works", {
+  tpl <- template(x, y, .id = function(x) x$id, {
+    div(.part = "foo")
+  })
+
+  expect_identical(
+    target(tpl, x = list(id = 1)),
+    "#1"
+  )
+
+
+
+
+  tpl <- template(x, y, .id = function(x) x$id, {
+    htmltools::tagList(
+      div(.part = "foo"),
+      span(.part = "bar")
+    )
+  })
+
+  expect_identical(
+    target(tpl, list(id = 1L), .part = "foo"),
+    "[data-fw-part=\"1-foo\"]"
+  )
+
+})
