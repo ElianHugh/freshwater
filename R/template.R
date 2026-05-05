@@ -844,3 +844,77 @@ targets <- function(...) {
     })
     paste0(unlist(res, use.names = FALSE), collapse = ", ")
 }
+
+#' Apply template function to each element of a vector
+#'
+#' @description
+#' `map_tags()` returns a type-safe tag list,
+#' where each element is resolved by applying `.f` to each
+#' element of `.x`. If an element in `.x` is a falsey value
+#' (i.e. `NA`, `NaN`, `FALSE`, or `NULL`), the fallback value
+#' from `.empty` is used.
+#'
+#' Additional arguments should be passed
+#' with an anonymous function.
+#'
+#' @details
+#' Element values are evaluated prior to returning the tag list:
+#' - NULL values are removed from the final tag list.
+#'  The return length of `map_tags()` is therefore less
+#'  than or equal to the length of `.x`
+#' - All return values must be either a "shiny.tag",
+#'   "shiny.tag.list", or "character" vector. An
+#'   error is raised if an unexpected value is encountered.
+#' @param .x list or atomic vector
+#' @param .f a function that takes a single argument returns a character
+#' vector, tag, or tagList.
+#' @param .empty fallback value for falsey elements
+#' @seealso [template], [base::lapply], [htmltools::tagList]
+#' @examples
+#' tpl <- template(x, {p(x)})
+#' map_tags(seq(5L), tpl)
+#'
+#' # falsey values are removed
+#' map_tags(c(TRUE, FALSE, TRUE), tpl)
+#' @export
+map_tags <- function(.x, .f, .empty = NULL) {
+    res <- lapply(.x, function(x) {
+        if (is.null(x) || isFALSE(x) || is.na(x)) return(.empty)
+        .f(x)
+    })
+
+    hits <- vapply(
+        res,
+        function(x) {
+            inherits(x, c("shiny.tag.list", "shiny.tag")) ||
+                is.character(x) ||
+                is.null(x)
+        },
+        logical(1L),
+        USE.NAMES = FALSE
+    )
+
+    if (!all(hits)) {
+        bad <- which(!hits)
+        bad_cls <- vapply(
+            res[bad],
+            function(x) paste(class(x), collapse = "/"),
+            character(1L)
+        ) |>
+            unlist(use.names = FALSE)
+
+        rlang::abort(
+            c(
+                "Bad value returned from `.f`.",
+                i = "Expected either `NULL`, `character`, `shiny.tag` or `shiny.tag.list`.",
+                x = sprintf("Bad indices: %s", paste0(bad, collapse = ", ")),
+                x = sprintf("Bad classes: %s", paste0(bad_cls, collapse = ", "))
+            ),
+            class = "freshwater_template_error"
+        )
+    }
+
+    res <- Filter(Negate(is.null), res)
+
+    htmltools::as.tags(res)
+}

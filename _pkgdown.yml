@@ -24,6 +24,7 @@ reference:
       - fragment
       - document
       - form
+      - map_tags
       - target
       - targets
       - csrf_token
