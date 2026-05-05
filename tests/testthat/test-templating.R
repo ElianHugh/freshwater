@@ -478,3 +478,47 @@ test_that("target works", {
   )
 
 })
+
+
+test_that("map_tags works", {
+  tpl <- template(x, {p(x)})
+  out <- map_tags(seq(3L), tpl)
+  expect_s3_class(out, "shiny.tag.list")
+
+  expect_identical_when_rendered(
+    out,
+    htmltools::tagList(
+      htmltools::p(1L),
+      htmltools::p(2L),
+      htmltools::p(3L),
+    )
+  )
+
+  out <- map_tags(c("a", "b"), function(x) x)
+  expect_s3_class(out, "shiny.tag.list")
+  expect_identical_when_rendered(
+    out,
+    htmltools::tagList("a", "b")
+  )
+
+  out <- map_tags(c(TRUE, FALSE, TRUE), tpl)
+  expect_s3_class(out, "shiny.tag.list")
+  expect_identical_when_rendered(
+    out,
+    htmltools::tagList(
+      htmltools::p(TRUE),
+      htmltools::p(TRUE)
+    )
+  )
+
+  out <- map_tags(c(TRUE, FALSE, TRUE), tpl, .empty = tpl(TRUE))
+  expect_s3_class(out, "shiny.tag.list")
+  expect_identical_when_rendered(
+    out,
+    htmltools::tagList(
+      htmltools::p(TRUE),
+      htmltools::p(TRUE),
+      htmltools::p(TRUE)
+    )
+  )
+})
