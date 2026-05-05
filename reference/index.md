@@ -9,6 +9,8 @@
   : HTML Document Root
 - [`form()`](https://elianhugh.github.io/freshwater/reference/form.md) :
   Form
+- [`map_tags()`](https://elianhugh.github.io/freshwater/reference/map_tags.md)
+  : Apply template function to each element of a vector
 - [`target()`](https://elianhugh.github.io/freshwater/reference/target.md)
   : Resolve a template's target selector
 - [`targets()`](https://elianhugh.github.io/freshwater/reference/targets.md)
