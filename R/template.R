@@ -290,18 +290,17 @@ template <- function(..., .id = NULL, .envir = rlang::caller_env()) {
 }
 
 format_template_tree <- function(stack) {
-    if (!length(stack)) {
-        return(character())
-    }
+    if (!length(stack)) return(character())
 
     els <- paste0(stack, "()")
-
-    lapply(seq_along(els), \(i) {
-        indent <- strrep(" ", i * 3L)
-        branch <- if (i == length(els)) "" else "\u2514\u2500>"
-        paste0(els[[i]], "\n", indent, branch)
-    }) |>
-        paste0(collapse = "")
+    data <- data.frame(
+        id = els,
+        dependencies = I(lapply(seq_along(els), function(i) {
+            if ((i + 1L) > length(els)) return(character(0))
+            els[[i + 1L]]
+        }))
+    )
+    cli::tree(data) |> paste0(collapse="\n")
 }
 
 new_template_error <- function(template_name, error, call, this, bottom) {
@@ -314,10 +313,7 @@ new_template_error <- function(template_name, error, call, this, bottom) {
         msg <- "Error while rendering template:"
     } else {
         tree <- format_template_tree(stack)
-        msg <- c(
-            "Error while rendering template(s):",
-            tree
-        )
+        msg <-  sprintf("Error while rendering template(s):\n%s", tree)
     }
 
     bt <- tryCatch(
