@@ -71,6 +71,14 @@ attributes. You may use double underscores, which will be converted to
 single underscores e.g. `htmltools::div(data__foo="bar")` which is
 converted to `htmltools::div(data_foo="bar")`.
 
+## Template IDs
+
+Templates can define an `.id` string, or a function that resolves a
+stable HTML `id` based on parameters passed to the template. Default
+template arguments are provided to the id. See
+[`target()`](https://elianhugh.github.io/freshwater/reference/target.md)
+for more information.
+
 ## Built-in Helpers
 
 Template bodies are evaluated in a freshwater environment that provides

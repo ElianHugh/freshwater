@@ -286,7 +286,13 @@ function(api) {
 > Provide pretty error-pages for common HTTP error codes (403, 404, and
 > 500)
 
-\`\`\`r function(api) { api \|\> api_error_pages(debug=TRUE) }
+``` r
+
+function(api) {
+  api |>
+    api_error_pages(debug=TRUE)
+}
+```
 
 [^1]: differs to base plumber2 implementation in that we render the
     entire tag tree, allowing for emitting head tags amongst others.

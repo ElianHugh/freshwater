@@ -138,6 +138,13 @@ e.g.
 converted to <code>htmltools::div(data_foo="bar")</code>.</p>
     </div>
     <div class="section level2">
+    <h2 id="template-ids">Template IDs<a class="anchor" aria-label="anchor" href="#template-ids"></a></h2>
+    <p>Templates can define an <code>.id</code> string, or a function that resolves
+a stable HTML <code>id</code> based on parameters passed to the template.
+Default template arguments are provided to the id. See <code><a href="target.html">target()</a></code> for
+more information.</p>
+    </div>
+    <div class="section level2">
     <h2 id="built-in-helpers">Built-in Helpers<a class="anchor" aria-label="anchor" href="#built-in-helpers"></a></h2>
     <p>Template bodies are evaluated in a freshwater environment that provides
 the following helpers:</p><ul><li><p><code><a href="form.html">form()</a></code> — form helper with optional CSRF injection and method spoofing.</p></li>

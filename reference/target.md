@@ -66,6 +66,6 @@ user_table <- template(users = list(), .id = "my-table", {
         )
    )
 })
-target(user_table)
-#> [1] "#my-table"
+target(user_table, .part = "body")
+#> [1] "[data-fw-part=\"my-table-body\"]"
 ```
