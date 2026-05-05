@@ -879,7 +879,7 @@ targets <- function(...) {
 #' @export
 map_tags <- function(.x, .f, .empty = NULL) {
     res <- lapply(.x, function(x) {
-        if (is.na(x) || is.null(x) || isFALSE(x)) return(.empty)
+        if (is.null(x) || isFALSE(x) || is.na(x)) return(.empty)
         .f(x)
     })
 
