@@ -37,6 +37,13 @@
 #' `htmltools::div(data__foo="bar")` which is
 #' converted to `htmltools::div(data_foo="bar")`.
 #'
+#' # Template IDs
+#'
+#' Templates can define an `.id` string, or a function that resolves
+#' a stable HTML `id` based on parameters passed to the template.
+#' Default template arguments are provided to the id. See [target()] for
+#' more information.
+#'
 #' # Built-in Helpers
 #'
 #' Template bodies are evaluated in a freshwater environment that provides
@@ -175,13 +182,28 @@ template <- function(..., .id = NULL, .envir = rlang::caller_env()) {
     e$csrf_token <- .csrf_token_impl
     id <- paste0("tpl_", sprintf("%08x", sample.int(2^31 - 1L, 1L)))
 
+    if (is.function(.id)) {
+        id_fmls <- formals(.id)
+        id_fml_nms <- names(id_fmls)
+        tpl_nms <- names(formals_pl)
+        unknown <- setdiff(id_fml_nms, tpl_nms)
+        if (length(unknown)) {
+            rlang::abort(
+                sprintf(".id function refers to unknown template argument/s: %s", paste0(unknown, collapse = ", "))
+            )
+        }
+        for (nm in id_fml_nms) {
+            id_has_default <- !identical(id_fmls[[nm]], quote(expr = ))
+            template_has_default <- !identical(formals_pl[[nm]], quote(expr = ))
+            if (!id_has_default && template_has_default) {
+                id_fmls[[nm]] <- formals_pl[[nm]]
+            }
+        }
+        formals(.id) <- id_fmls
+    }
+
     f_body <- substitute(
         {
-
-            .fw_call <- match.call(expand.dots = FALSE)
-            .fw_args <- as.list(.fw_call)[-1L]
-            # .fw_args <- as.list(environment())
-            .fw_args <- .fw_args[setdiff(names(.fw_args), c("...", "fragment"))]
 
             .fw_call_ <- rlang::caller_call()
             .fw_bottom <- rlang::current_env()
@@ -200,33 +222,39 @@ template <- function(..., .id = NULL, .envir = rlang::caller_env()) {
                     )
                     on.exit(rm(".freshwater_ctx", envir = .fw_runtime), add = TRUE)
 
-                    x <- BODY
+                    .fw_template_body <- BODY
 
 
                     .fw_id_resolved <- NULL
                     if (!is.null(.fw_id_resolver)) {
+
                          if (is.character(.fw_id_resolver)) {
                             .fw_id_resolved <- .fw_id_resolver
                         } else if (is.function(.fw_id_resolver)) {
-                            .fw_args <- .fw_args[names(formals(.fw_id_resolver))]
-                            .fw_id_resolved <- do.call(.fw_id_resolver, .fw_args)
+                            .fw_id_names <- names(formals(.fw_id_resolver))
+                            .fw_id_args <- mget(
+                                .fw_id_names,
+                                envir = environment(),
+                                inherits = FALSE
+                            )
+                            .fw_id_resolved <- do.call(.fw_id_resolver, .fw_id_args)
                         }
-                        if (inherits(x, "shiny.tag")) {
-                            x <- htmltools::tagAppendAttributes(
-                                x,
+                        if (inherits(.fw_template_body, "shiny.tag")) {
+                            .fw_template_body <- htmltools::tagAppendAttributes(
+                                .fw_template_body,
                                 id = .fw_id_resolved
                             )
                         }
                     }
 
                     if (!is.null(fragment)) {
-                        x <- .fw_walk_nodes(x, fragment, .fw_nm)
-                        if (is.null(x)) {
+                        .fw_template_body <- .fw_walk_nodes(.fw_template_body, fragment, .fw_nm)
+                        if (is.null(.fw_template_body)) {
                             .fw_error_missing_fragment(fragment, .fw_nm)
                         }
                     }
 
-                    .fw_rewrite_attrs(x, .fw_id_resolved)
+                    .fw_rewrite_attrs(.fw_template_body, .fw_id_resolved)
                 },
                 error = function(e) {
                     .fw_new_template_error(
@@ -356,7 +384,7 @@ rewrite_attrs <- function(tag, resolved_id) {
 
     if (inherits(tag, "shiny.tag.list") || inherits(tag, "list")) {
         for (i in seq_along(tag)) {
-            tag[[i]] <- list(rewrite_attrs(tag[[i]], resolved_id))
+            tag[i] <- list(rewrite_attrs(tag[[i]], resolved_id))
         }
         return(tag)
     }
@@ -746,7 +774,7 @@ current_template <- function(
 #'         )
 #'    )
 #' })
-#' target(user_table)
+#' target(user_table, .part = "body")
 #' @seealso [targets], [template]
 #' @export
 target <- function(tpl, ..., .part = NULL) {

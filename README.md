@@ -285,3 +285,4 @@ function(api) {
   api |>
     api_error_pages(debug=TRUE)
 }
+```

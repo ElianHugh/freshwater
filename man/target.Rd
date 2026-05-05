@@ -51,7 +51,7 @@ user_table <- template(users = list(), .id = "my-table", {
         )
    )
 })
-target(user_table)
+target(user_table, .part = "body")
 }
 \seealso{
 \link{targets}, \link{template}

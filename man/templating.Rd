@@ -63,6 +63,13 @@ e.g.
 converted to \code{htmltools::div(data_foo="bar")}.
 }
 
+\section{Template IDs}{
+Templates can define an \code{.id} string, or a function that resolves
+a stable HTML \code{id} based on parameters passed to the template.
+Default template arguments are provided to the id. See \code{\link[=target]{target()}} for
+more information.
+}
+
 \section{Built-in Helpers}{
 Template bodies are evaluated in a freshwater environment that provides
 the following helpers:

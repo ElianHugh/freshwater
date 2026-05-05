@@ -368,6 +368,17 @@ test_that("single root template IDs work", {
     tpl(x = list(id = 1)),
     htmltools::div(id = 1, `data-fw-part`="1-foo")
   )
+
+
+  # default args
+  tpl <- template(x = list(id = 1L), y, .id = function(x) x$id, {
+    div(.part = "foo")
+  })
+
+  expect_identical_when_rendered(
+      tpl(),
+      htmltools::div(id = 1, `data-fw-part` = "1-foo")
+  )
 })
 
 test_that("multi-root template IDs work", {
@@ -413,6 +424,20 @@ test_that("multi-root template IDs work", {
       htmltools::span(`data-fw-part` = "1-bar")
     )
   )
+
+  tpl <- template(x = list(id = 1L), y, .id = function(x) x$id, {
+    htmltools::tagList(
+      div(.part = "foo"),
+      span(.part = "bar")
+    )
+  })
+  expect_identical_when_rendered(
+    tpl(),
+    htmltools::tagList(
+      htmltools::div(`data-fw-part` = "1-foo"),
+      htmltools::span(`data-fw-part` = "1-bar")
+    )
+  )
 })
 
 test_that("target works", {
@@ -425,9 +450,6 @@ test_that("target works", {
     "#1"
   )
 
-
-
-
   tpl <- template(x, y, .id = function(x) x$id, {
     htmltools::tagList(
       div(.part = "foo"),
@@ -437,6 +459,21 @@ test_that("target works", {
 
   expect_identical(
     target(tpl, list(id = 1L), .part = "foo"),
+    "[data-fw-part=\"1-foo\"]"
+  )
+
+  # default args
+  tpl <- template(x = list(id = 1L), y, .id = function(x) x$id, {
+    div(.part = "foo")
+  })
+
+  expect_identical(
+    target(tpl),
+    "#1"
+  )
+
+  expect_identical(
+    target(tpl, .part = "foo"),
     "[data-fw-part=\"1-foo\"]"
   )
 
