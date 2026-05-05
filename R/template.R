@@ -878,8 +878,12 @@ targets <- function(...) {
 #' map_tags(c(TRUE, FALSE, TRUE), tpl)
 #' @export
 map_tags <- function(.x, .f, .empty = NULL) {
+    if (length(.x) == 0L) return(htmltools::tagList(.empty))
+
     res <- lapply(.x, function(x) {
-        if (is.null(x) || isFALSE(x) || is.na(x)) return(.empty)
+        if (is.null(x) || isFALSE(x) || length(x) == 0L || is.na(x)) {
+            return(.empty)
+        }
         .f(x)
     })
 
