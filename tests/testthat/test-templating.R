@@ -522,3 +522,15 @@ test_that("map_tags works", {
     )
   )
 })
+
+test_that("map_tags errors on unsupported values", {
+  expect_snapshot(
+    error = TRUE,
+    map_tags(seq(3L), identity)
+  )
+
+  expect_error(
+    map_tags(seq(3L), identity),
+    class = "freshwater_template_error"
+  )
+})
