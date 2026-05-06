@@ -236,4 +236,31 @@ test_that("method spoofing works", {
                 if (method %in% allowed) toupper(method) else ""
             )
         }
+
+
+
+        # repeated _method should be invalid
+        req <- faux_request(
+            api,
+            "foo",
+            method = "post",
+            content = "_method=trace&_method=delete&foo=foo",
+            accept = "text/html; charset=utf-8",
+            `Content-Type` = "application/x-www-form-urlencoded"
+        )
+        expect_identical(req$status, 404L)
+        expect_identical(req$body, "")
+
+
+        # ignore JSON bodies
+        req <- faux_request(
+            api,
+            "foo",
+            method = "post",
+            content = '{"_method":"delete","foo":"foo"}',
+            accept = "application/json",
+            `Content-Type` = "application/json"
+        )
+        expect_identical(req$status, 404L)
+        expect_identical(req$body, "")
 })

@@ -19,11 +19,11 @@ Imports:
     waysign,
     stats,
     utils,
-    stringi
+    stringi,
+    cli
 Suggests:
     fiery,
     openssl,
-    cli,
     testthat (>= 3.0.0),
     promises,
     later,

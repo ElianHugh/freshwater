@@ -7,9 +7,8 @@
 ---
 
     Error while rendering template(s):
-    * tmpl_parent()
-       └─>tmpl()
-          
+    tmpl_parent()
+    \-tmpl()
     Caused by error in `dots_list()`:
     ! error
 

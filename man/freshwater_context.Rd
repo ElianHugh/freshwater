@@ -16,7 +16,9 @@ Context is created automatically when
 \code{\link[=api_freshwater]{api_freshwater()}}, \code{\link[=api_csrf]{api_csrf()}}, or \code{\link[=api_error_pages]{api_error_pages()}} is installed.
 
 Method spoofing is applied during the \code{before-request} phase by rewriting
-\code{REQUEST_METHOD} when a hidden \verb{_method} field is present.
+\code{REQUEST_METHOD} when a hidden \verb{_method} field is present. This only applies
+to browser form busmissions (i.e. Content-Type \code{application/x-www-form-urlencoded}
+or \code{multipart/form-data}).
 }
 \section{Lifecycle}{
 

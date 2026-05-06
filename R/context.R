@@ -14,7 +14,9 @@
 #' [api_freshwater()], [api_csrf()], or [api_error_pages()] is installed.
 #'
 #' Method spoofing is applied during the `before-request` phase by rewriting
-#' `REQUEST_METHOD` when a hidden `_method` field is present.
+#' `REQUEST_METHOD` when a hidden `_method` field is present. This only applies
+#' to browser form busmissions (i.e. Content-Type `application/x-www-form-urlencoded`
+#' or `multipart/form-data`).
 #'
 #' @section Lifecycle:
 #' The context exists only during an active HTTP request.
@@ -160,6 +162,19 @@ api_context <- function(api) {
                 return(TRUE)
             }
             if (request$method == "post") {
+                ctype <- request$get_header("content-type") %||% ""
+                ctype <- trimws(strsplit(ctype, ";", fixed = TRUE)[[1]][1])
+                ctype <- tolower(ctype)
+
+                if (!ctype %in% c(
+                        "application/x-www-form-urlencoded",
+                        "multipart/form-data"
+                    )
+                ) {
+                    return(TRUE)
+                }
+
+
                 try(request$parse(plumber2::get_parsers()))
                 req_body <- request$body
                 if (!is.null(req_body) && "_method" %in% names(req_body)) {

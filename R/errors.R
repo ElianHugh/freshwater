@@ -39,10 +39,6 @@ api_error_pages <- function(
     handlers = NULL,
     debug = plumber2::get_opts("fw_debug", default = interactive())
 ) {
-    if (!requireNamespace("cli", quietly = TRUE)) {
-        rlang::abort("cli is required to enable error pages.")
-    }
-
     fw_env <- get_freshwater_env(api)
 
     if (!is.null(handlers)) {
@@ -351,9 +347,6 @@ error_page <- template(
 #' @rdname freshwater_error_templates
 #' @export
 default_error_500_template <- template(error = NULL, request = NULL, is_debug = FALSE, {
-    if (!requireNamespace("cli", quietly = TRUE)) {
-        rlang::abort("cli is required to enable error pages.")
-    }
 
     if (isTRUE(is_debug)) {
         old <- options(cli.num_colors = 256)
