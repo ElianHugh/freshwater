@@ -209,6 +209,7 @@ test_that("method spoofing works", {
         api <- suppressMessages(
             plumber2::api() |>
             api_freshwater(csrf = FALSE, error_pages = FALSE) |>
+            plumber2::api_get("/foo", function() "GET") |>
             plumber2::api_put("/foo", function() "PUT") |>
             plumber2::api_patch("/foo", function() "PATCH") |>
             plumber2::api_trace("/foo", function() "TRACE") |>
@@ -217,7 +218,7 @@ test_that("method spoofing works", {
         api$trigger("freshwater::hook")
 
         allowed <- c("put", "patch", "delete")
-        blocked <- c("trace", "connect", "options")
+        blocked <- c("get", "trace", "connect", "options")
 
         for (method in c(allowed, blocked)) {
             req <- faux_request(
@@ -236,8 +237,6 @@ test_that("method spoofing works", {
                 if (method %in% allowed) toupper(method) else ""
             )
         }
-
-
 
         # repeated _method should be invalid
         req <- faux_request(
