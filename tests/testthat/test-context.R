@@ -204,3 +204,36 @@ test_that("current_* helpers work under fw async", {
             as.character()
     )
 })
+
+test_that("method spoofing works", {
+        api <- suppressMessages(
+            plumber2::api() |>
+            api_freshwater(csrf = FALSE, error_pages = FALSE) |>
+            plumber2::api_put("/foo", function() "PUT") |>
+            plumber2::api_patch("/foo", function() "PATCH") |>
+            plumber2::api_trace("/foo", function() "TRACE") |>
+            plumber2::api_delete("/foo", function() "DELETE")
+        )
+        api$trigger("freshwater::hook")
+
+        allowed <- c("put", "patch", "delete")
+        blocked <- c("trace", "connect", "options")
+
+        for (method in c(allowed, blocked)) {
+            req <- faux_request(
+                api,
+                "foo",
+                method = "post",
+                content = sprintf("_method=%s&foo=foo", method),
+                accept = "text/html; charset=utf-8",
+                `Content-Type` = "application/x-www-form-urlencoded"
+            )
+            expect_identical(
+                req$status, if (method %in% allowed) 200L else 404L
+            )
+            expect_identical(
+                req$body,
+                if (method %in% allowed) toupper(method) else ""
+            )
+        }
+})

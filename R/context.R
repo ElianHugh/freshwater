@@ -164,6 +164,9 @@ api_context <- function(api) {
                 req_body <- request$body
                 if (!is.null(req_body) && "_method" %in% names(req_body)) {
                     method <- req_body[["_method"]]
+                    if (!is.character(method) || length(method) != 1L) {
+                        return(TRUE)
+                    }
                     if (tolower(method) %in% c("delete", "patch", "put")) {
                         origin <- request$origin
                         origin$REQUEST_METHOD <- toupper(method)
