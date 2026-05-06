@@ -1,28 +1,5 @@
 library(freshwater)
-
-async <- function(expr, ...) {
-    ctx <- create_portable_context() |>
-        mori::share()
-    nm <- mori::shared_name(ctx)
-
-    body <- substitute(
-        {
-            .fw_ctx <- mori::map_shared(nm)
-            freshwater:::set_fw_context(.fw_ctx)
-            expr
-        },
-        list(
-            expr = expr
-        )
-    )
-
-    mirai::mirai(
-        .expr = body,
-        environment(),
-        ...
-    ) |>
-        promises::as.promise()
-}
+options(plumber2.rejectMissingMethods = TRUE)
 
 #' @plumber
 function(api) {
