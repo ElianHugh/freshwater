@@ -53,11 +53,11 @@ contact_card <- template(contact, {
 })
 
 contact_cards <- template(contacts, {
-    htmltools::tagList(
-        lapply(contacts, function(contact) contact_card(contact))
+    map_tags(
+        contacts,
+        function(contact) contact_card(contact)
     )
 })
-
 
 page <- template(contacts, {
     body(

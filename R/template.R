@@ -877,7 +877,7 @@ map_tags <- function(.x, .f, .empty = NULL) {
     if (length(.x) == 0L) return(htmltools::tagList(.empty))
 
     res <- lapply(.x, function(x) {
-        if (is.null(x) || isFALSE(x) || length(x) == 0L || is.na(x)) {
+        if (is.null(x) || isFALSE(x) || length(x) == 0L || (is.atomic(x) && is.na(x))) {
             return(.empty)
         }
         .f(x)

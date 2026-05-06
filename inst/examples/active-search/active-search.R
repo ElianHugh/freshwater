@@ -46,11 +46,10 @@ layout <- template(title = "App", {
     )
 })
 
-search_page <- template(query = "", {
+search_page <- template(query = "", .id = "table", {
     rows <- search_cars(query)
 
-    layout(
-        title = "Search Cars",
+    htmltools::tagList(
         h3(
             "Search Cars ",
             span(
@@ -67,7 +66,7 @@ search_page <- template(query = "", {
             placeholder = "Begin typing to search cars...",
             hx_post = endpoints("active-search")$search$post(),
             hx_trigger = "input changed delay:100ms, load",
-            hx_target = "#search-results",
+            hx_target = target(search_page, .part = "search-results"),
             hx_indicator = ".htmx-indicator"
         ),
 
@@ -82,23 +81,23 @@ search_page <- template(query = "", {
             ),
             tbody(
                 id = "search-results",
+                .part = "search-results",
                 cache(
                     name = "car_rows",
                     vary = query,
+                    ttl = NULL,
                     fragment(
                         name = "rows",
-                        htmltools::tagList(
-                            if (!length(rows)) {
-                                tr(td(colspan = 3, em("No results")))
-                            } else {
-                                lapply(rows, \(r) {
-                                    tr(
-                                        td(r$model),
-                                        td(r$mpg),
-                                        td(r$cyl)
-                                    )
-                                })
-                            }
+                        map_tags(
+                            rows,
+                            function(r) {
+                                tr(
+                                    td(r$model),
+                                    td(r$mpg),
+                                    td(r$cyl)
+                                )
+                            },
+                            .empty = tr(td(colspan = 3, em("No results")))
                         )
                     )
                 )
@@ -112,10 +111,18 @@ search_page <- template(query = "", {
 # Routes #
 # ~~~~~~ #
 
+#' @get /
+function(response) {
+    redirect(response, "/cars")
+}
+
 #' @get /cars
 #' @serializer html
 function() {
-    search_page()
+    layout(
+        title = "Search Cars",
+        search_page()
+    )
 }
 
 #' @post /search
