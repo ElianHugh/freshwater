@@ -1,28 +1,5 @@
 library(freshwater)
-
-async <- function(expr, ...) {
-    ctx <- create_portable_context() |>
-        mori::share()
-    nm <- mori::shared_name(ctx)
-
-    body <- substitute(
-        {
-            .fw_ctx <- mori::map_shared(nm)
-            freshwater:::set_fw_context(.fw_ctx)
-            expr
-        },
-        list(
-            expr = expr
-        )
-    )
-
-    mirai::mirai(
-        .expr = body,
-        environment(),
-        ...
-    ) |>
-        promises::as.promise()
-}
+options(plumber2.rejectMissingMethods = TRUE)
 
 #' @plumber
 function(api) {
@@ -53,11 +30,11 @@ contact_card <- template(contact, {
 })
 
 contact_cards <- template(contacts, {
-    htmltools::tagList(
-        lapply(contacts, function(contact) contact_card(contact))
+    map_tags(
+        contacts,
+        function(contact) contact_card(contact)
     )
 })
-
 
 page <- template(contacts, {
     body(
@@ -101,54 +78,14 @@ function() {
 
 #' @get /forbidden
 function() {
-    async(contact_card(contacts[[3L]])) |>
-        promises::as.promise()
-    # plumber2::abort_http_problem(
-    #     code = 403L,
-    #     detail = "Not allowed"
-    # )
+    plumber2::abort_http_problem(
+        code = 403L,
+        detail = "Not allowed"
+    )
 }
-
 
 #' @post /post_only
 #' @serializer html
 function() {
     1L
-}
-
-
-mirai::daemons(2L)
-
-mirai::everywhere({
-    unlockBinding("freshwater", asNamespace("freshwater"))
-    fw_env <- get("freshwater", envir = asNamespace("freshwater"))
-})[]
-
-
-#' @get /test
-#' @serializer html
-function() {
-    ctx <- create_portable_context() |>
-        mori::share()
-
-    x <- microbenchmark::microbenchmark(
-        worker = {
-            mirai::mirai(
-                {
-                    ctx <- mori::map_shared(nm)
-                    fw_env$request_context <- ctx
-                    freshwater::current_path()
-                },
-                nm = mori::shared_name(ctx)
-            )[]
-        },
-        no_worker = {
-            freshwater::current_path()
-        },
-        times = 100L
-    )
-
-    print(x)
-    htmltools::HTML(capture.output(print(xtable::xtable(summary(x)), type = "html")))
-
 }

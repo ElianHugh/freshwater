@@ -2,6 +2,7 @@ faux_request <- function(
     api,
     path = "",
     method = "get",
+    content = "",
     accept = "text/plain; charset=utf-8",
     ...
 ) {
@@ -11,6 +12,7 @@ faux_request <- function(
             accept = accept,
             ...
         ),
+        content = content,
         method = method
     ) |>
         api$test_request()

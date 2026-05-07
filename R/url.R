@@ -366,9 +366,14 @@ print.freshwater_endpoint_method <- function(x, ...) {
 #' instructing the browser to navigate to `location` after the specified number
 #' of seconds.
 #'
+#' By default, absolute and cross-origin locations result in an error.
+#' If you wish to intentionally redirect outside the current origin,
+#' specify `external=TRUE`.
+#'
 #' @param response [reqres::Response] object
 #' @param location path or url to redirect to
 #' @param after optional number of seconds to wait before redirection
+#' @param external whether to permit off-site redirects
 #'
 #' @details
 #' The delayed redirect uses the non-standard "Refresh" HTTP header which is
@@ -398,15 +403,40 @@ print.freshwater_endpoint_method <- function(x, ...) {
 #'   paste("n =", n)
 #' }
 #' @export
-redirect <- function(response, location, after = NULL) {
+redirect <- function(response, location, after = NULL, external = FALSE) {
+    if (!is.character(location) || length(location) != 1L || is.na(location)) {
+        rlang::abort(
+            "`location` must be a character vector of length 1L.",
+            class = "freshwater_redirect_error"
+        )
+    }
+
     location <- gsub("[\r\n]", "", location)
+
+    if (!external) {
+        loc <- trimws(location)
+        is_external <- startsWith(loc, "//") ||
+            startsWith(loc, "\\\\") ||
+            startsWith(loc, "/\\") ||
+            grepl("^[A-Za-z][A-Za-z0-9+.-]*:", loc)
+        if (is_external) {
+            rlang::abort(
+                c(
+                    "`location` must be a relative same-origin path.",
+                    i = "Use `external=TRUE` to redirect off-site."
+                ),
+                class = "freshwater_redirect_error"
+            )
+        }
+    }
+
     if (is.null(after)) {
         response$status <- 303L
         response$set_header("Location", location)
         return(plumber2::Break)
     } else {
         after <- as.integer(after)
-        (!is.na(after) && after > 0L) ||
+        (!is.na(after) && after > 0L && is.finite(after)) ||
             rlang::abort(
                 c(
                     "`after` should be a number greater than 0L.",

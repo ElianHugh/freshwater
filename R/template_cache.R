@@ -5,9 +5,13 @@ ensure_cache_state <- function() {
   if (is.null(freshwater$cache$backend)) {
     freshwater$cache$backend <- cachem::cache_mem(max_size = 1024 * 1024^2)
   }
+  if (is.null(freshwater$cache$ttl_buckets)) {
+    freshwater$cache$ttl_buckets <- new.env(parent = emptyenv())
+  }
   if (is.null(freshwater$cache$store)) {
     set_cache_backend(freshwater$cache$backend)
   }
+  invisible(TRUE)
 }
 
 #' @keywords internal
@@ -53,6 +57,7 @@ set_cache_backend <- function(backend) {
   )
   freshwater$cache$has_store <- memoise::has_cache(freshwater$cache$store)
   freshwater$cache$drop_store <- memoise::drop_cache(freshwater$cache$store)
+  freshwater$cache$ttl_buckets <- new.env(parent = emptyenv())
 
   invisible(NULL)
 }
@@ -158,7 +163,7 @@ get_cache_backend <- function() {
 #' @seealso [template], [set_cache_backend], [get_cache_backend], [api_cget], [memoise::memoise]
 #' @rdname template-caching
 cache <- function(name, vary = NULL, ttl = NULL, ...) {
-  if (!is.null(ttl) && (!is.numeric(ttl) || length(ttl) != 1L)) {
+  if (!is.null(ttl) && (!is.numeric(ttl) || length(ttl) != 1L || is.na(ttl) || !is.finite(ttl) || ttl <= 0L)) {
     rlang::abort("ttl must be either NULL or a numeric scalar.")
   }
 
@@ -183,10 +188,6 @@ cache <- function(name, vary = NULL, ttl = NULL, ...) {
     context$id,
     context$fragment
   )
-
-  if (is.null(freshwater$cache$ttl_buckets)) {
-    freshwater$cache$ttl_buckets <- new.env(parent = emptyenv())
-  }
 
   if (!is.null(ttl)) {
     bucket_now <- memoise::timeout(ttl)
@@ -244,6 +245,7 @@ cache <- function(name, vary = NULL, ttl = NULL, ...) {
 #' @export
 #' @rdname template-caching
 clear_cache <- function() {
+  ensure_cache_state()
   memoise::forget(freshwater$cache$store)
   freshwater$cache$ttl_buckets <- new.env(parent = emptyenv())
   invisible(TRUE)
@@ -279,8 +281,9 @@ invalidate_cache <- function(tpl, name, vary = NULL, fragment = NULL) {
     if (exists(key, envir = freshwater$cache$ttl_buckets, inherits = FALSE)) {
       rm(list = key, envir = freshwater$cache$ttl_buckets)
     }
+    invisible(TRUE)
   } else {
-    FALSE
+    invisible(FALSE)
   }
 }
 
@@ -334,8 +337,9 @@ invalidate_cache_here <- function(name, vary = NULL, fragment = NULL) {
     if (exists(key, envir = freshwater$cache$ttl_buckets, inherits = FALSE)) {
       rm(list = key, envir = freshwater$cache$ttl_buckets)
     }
+    invisible(TRUE)
   } else {
-    FALSE
+    invisible(FALSE)
   }
 }
 

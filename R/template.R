@@ -290,18 +290,17 @@ template <- function(..., .id = NULL, .envir = rlang::caller_env()) {
 }
 
 format_template_tree <- function(stack) {
-    if (!length(stack)) {
-        return(character())
-    }
+    if (!length(stack)) return(character())
 
     els <- paste0(stack, "()")
-
-    lapply(seq_along(els), \(i) {
-        indent <- strrep(" ", i * 3L)
-        branch <- if (i == length(els)) "" else "\u2514\u2500>"
-        paste0(els[[i]], "\n", indent, branch)
-    }) |>
-        paste0(collapse = "")
+    data <- data.frame(
+        id = els,
+        dependencies = I(lapply(seq_along(els), function(i) {
+            if ((i + 1L) > length(els)) return(character(0))
+            els[[i + 1L]]
+        }))
+    )
+    cli::tree(data) |> paste0(collapse="\n")
 }
 
 new_template_error <- function(template_name, error, call, this, bottom) {
@@ -314,10 +313,7 @@ new_template_error <- function(template_name, error, call, this, bottom) {
         msg <- "Error while rendering template:"
     } else {
         tree <- format_template_tree(stack)
-        msg <- c(
-            "Error while rendering template(s):",
-            tree
-        )
+        msg <-  sprintf("Error while rendering template(s):\n%s", tree)
     }
 
     bt <- tryCatch(
@@ -357,6 +353,12 @@ rewrite_attrs <- function(tag, resolved_id) {
 
 
             if (".part" %in% nms) {
+                if ((!is.numeric(resolved_id) && !is.character(resolved_id)) || length(resolved_id) != 1L || is.na(resolved_id)) {
+                    rlang::abort(
+                        "Cannot create a part ID for a template without an ID defined.",
+                        class = "freshwater_template_error"
+                    )
+                }
                 val <- attribs[[".part"]]
                 attribs[["data-fw-part"]] <- sprintf("%s-%s", resolved_id, val)
                 attribs[[".part"]] <- NULL
@@ -736,7 +738,7 @@ current_template <- function(
 #' Resolve a template's target selector
 #'
 #' `target()` returns a CSS selector for a template instance. For normal
-#' targets, this is an id selector of the form `#<TEMPLATE_ID>`, where
+#' targets, this is an id selector of the form `[id="<TEMPLATE_ID>"]`, where
 #' the id is resolved from the template's id function.
 #'
 #' In order to support multi-root template selection,
@@ -778,16 +780,27 @@ current_template <- function(
 #' @seealso [targets], [template]
 #' @export
 target <- function(tpl, ..., .part = NULL) {
+    css_escape <- function(x) {
+        stopifnot(
+            is.character(x) || is.numeric(x),
+            length(x) == 1L,
+            !is.na(x)
+        )
+        x <- gsub("\\\\", "\\\\\\\\", x)
+        x <- gsub('"', '\\"', x, fixed = TRUE)
+        as.character(x)
+    }
+
     tpl_id <- attr(tpl, "template_id_resolver", exact = TRUE)
     if (is.null(tpl_id)) {
         fw_nm <- deparse(substitute(tpl), width.cutoff = 500L)
         msg <- sprintf("No instance # defined for template `%s`.", fw_nm)
         rlang::abort(msg, class = "freshwater_template_error")
     }
-    if (is.character(tpl_id)) {
-        res <- tpl_id
+    res <- if (is.character(tpl_id)) {
+        tpl_id
     } else if (is.function(tpl_id)) {
-        res <- tryCatch(
+        tryCatch(
             tpl_id(...),
             error = function(e) {
                 fw_nm <- deparse(substitute(tpl), width.cutoff = 500L)
@@ -810,11 +823,21 @@ target <- function(tpl, ..., .part = NULL) {
         )
     }
 
-    if (!is.null(.part)) {
-        return(sprintf('[data-fw-part="%s-%s"]', res, .part))
+    res <- css_escape(res)
+
+    if (!is.character(res) || length(res) != 1L || is.na(res)) {
+        rlang::abort("Bad template ID", class = "freshwater_template_error")
     }
 
-    sprintf("#%s", res)
+    if (!is.null(.part)) {
+        return(sprintf(
+            '[data-fw-part="%s-%s"]',
+            res,
+            css_escape(.part)
+        ))
+    }
+
+    sprintf('[id="%s"]', res)
 }
 
 #' Combine multiple target selectors
@@ -881,7 +904,7 @@ map_tags <- function(.x, .f, .empty = NULL) {
     if (length(.x) == 0L) return(htmltools::tagList(.empty))
 
     res <- lapply(.x, function(x) {
-        if (is.null(x) || isFALSE(x) || length(x) == 0L || is.na(x)) {
+        if (is.null(x) || isFALSE(x) || length(x) == 0L || (is.atomic(x) && is.na(x))) {
             return(.empty)
         }
         .f(x)
