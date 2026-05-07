@@ -52,7 +52,7 @@ form submissions.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">redirect</span><span class="op">(</span><span class="va">response</span>, <span class="va">location</span>, after <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">redirect</span><span class="op">(</span><span class="va">response</span>, <span class="va">location</span>, after <span class="op">=</span> <span class="cn">NULL</span>, external <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -70,6 +70,10 @@ form submissions.</p>
 <dt id="arg-after">after<a class="anchor" aria-label="anchor" href="#arg-after"></a></dt>
 <dd><p>optional number of seconds to wait before redirection</p></dd>
 
+
+<dt id="arg-external">external<a class="anchor" aria-label="anchor" href="#arg-external"></a></dt>
+<dd><p>whether to permit off-site redirects</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -82,6 +86,9 @@ form submissions.</p>
     <p>If after is a numeric, a "Refresh" header is attached to the response,
 instructing the browser to navigate to <code>location</code> after the specified number
 of seconds.</p>
+<p>By default, absolute and cross-origin locations result in an error.
+If you wish to intentionally redirect outside the current origin,
+specify <code>external=TRUE</code>.</p>
 <p>The delayed redirect uses the non-standard "Refresh" HTTP header which is
 widely supported by browsers but is not part of the official HTTP specification.
 It should not be relied on for API &amp; non-browser clients.</p>
@@ -102,7 +109,7 @@ It should not be relied on for API &amp; non-browser clients.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     print("Hello!")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     redirect(response, "/foo")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55713f916078&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56133d5b9dc0&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Delayed redirect after rendering content</span></span></span>
 <span class="r-in"><span><span class="co">#* @get /count/&lt;n&gt;</span></span></span>
@@ -115,7 +122,7 @@ It should not be relied on for API &amp; non-browser clients.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     redirect(response, "/", after = 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     paste("n =", n)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55713f916078&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56133d5b9dc0&gt;</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

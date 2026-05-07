@@ -8,7 +8,7 @@ following form submissions.
 ## Usage
 
 ``` r
-redirect(response, location, after = NULL)
+redirect(response, location, after = NULL, external = FALSE)
 ```
 
 ## Arguments
@@ -26,6 +26,10 @@ redirect(response, location, after = NULL)
 
   optional number of seconds to wait before redirection
 
+- external:
+
+  whether to permit off-site redirects
+
 ## Value
 
 - [plumber2::Break](https://plumber2.posit.co/reference/Next.html) when
@@ -39,6 +43,10 @@ redirect(response, location, after = NULL)
 If after is a numeric, a "Refresh" header is attached to the response,
 instructing the browser to navigate to `location` after the specified
 number of seconds.
+
+By default, absolute and cross-origin locations result in an error. If
+you wish to intentionally redirect outside the current origin, specify
+`external=TRUE`.
 
 The delayed redirect uses the non-standard "Refresh" HTTP header which
 is widely supported by browsers but is not part of the official HTTP
@@ -64,7 +72,7 @@ function(response) {
 #>     print("Hello!")
 #>     redirect(response, "/foo")
 #> }
-#> <environment: 0x55713f916078>
+#> <environment: 0x56133d5b9dc0>
 
 # Delayed redirect after rendering content
 #* @get /count/<n>
@@ -77,5 +85,5 @@ function(n, response) {
 #>     redirect(response, "/", after = 1)
 #>     paste("n =", n)
 #> }
-#> <environment: 0x55713f916078>
+#> <environment: 0x56133d5b9dc0>
 ```

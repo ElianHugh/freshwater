@@ -9,7 +9,9 @@ requests are only active during synchronous execution.
 Context is created automatically when
 api_freshwater(), api_csrf(), or api_error_pages() is installed.
 Method spoofing is applied during the before-request phase by rewriting
-REQUEST_METHOD when a hidden _method field is present."><meta property="og:description" content="freshwater installs a per-request execution context that allows
+REQUEST_METHOD when a hidden _method field is present. This only applies
+to browser form busmissions (i.e. Content-Type application/x-www-form-urlencoded
+or multipart/form-data)."><meta property="og:description" content="freshwater installs a per-request execution context that allows
 current_path(), csrf_token(), and template()
 helpers to access the active HTTP request.
 The context itself is stored in freshwater's internal state and is
@@ -19,7 +21,9 @@ requests are only active during synchronous execution.
 Context is created automatically when
 api_freshwater(), api_csrf(), or api_error_pages() is installed.
 Method spoofing is applied during the before-request phase by rewriting
-REQUEST_METHOD when a hidden _method field is present."></head><body>
+REQUEST_METHOD when a hidden _method field is present. This only applies
+to browser form busmissions (i.e. Content-Type application/x-www-form-urlencoded
+or multipart/form-data)."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -68,7 +72,9 @@ requests are only active during <em>synchronous execution</em>.</p>
 <p>Context is created automatically when
 <code><a href="api_freshwater.html">api_freshwater()</a></code>, <code><a href="api_csrf.html">api_csrf()</a></code>, or <code><a href="error_pages.html">api_error_pages()</a></code> is installed.</p>
 <p>Method spoofing is applied during the <code>before-request</code> phase by rewriting
-<code>REQUEST_METHOD</code> when a hidden <code>_method</code> field is present.</p>
+<code>REQUEST_METHOD</code> when a hidden <code>_method</code> field is present. This only applies
+to browser form busmissions (i.e. Content-Type <code>application/x-www-form-urlencoded</code>
+or <code>multipart/form-data</code>).</p>
     </div>
 
 

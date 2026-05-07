@@ -48,7 +48,7 @@ card <- template(
     }
 )
 target(card, list(id = 1234L))
-#> [1] "#user-1234"
+#> [1] "[id=\"user-1234\"]"
 
 user_table <- template(users = list(), .id = "my-table", {
     table(

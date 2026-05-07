@@ -20,6 +20,8 @@ is installed.
 
 Method spoofing is applied during the `before-request` phase by
 rewriting `REQUEST_METHOD` when a hidden `_method` field is present.
+This only applies to browser form busmissions (i.e. Content-Type
+`application/x-www-form-urlencoded` or `multipart/form-data`).
 
 ## Lifecycle
 

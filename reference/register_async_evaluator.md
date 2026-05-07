@@ -65,5 +65,5 @@ function() {
 #> {
 #>     current_path()
 #> }
-#> <environment: 0x5571396acd68>
+#> <environment: 0x561336f8dce8>
 ```

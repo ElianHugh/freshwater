@@ -23,15 +23,5 @@ has not yet been initialised.
 
 ``` r
 get_cache_backend()
-#> <cache_mem> <cachem>
-#>   Methods:
-#>     get(key, missing = missing_)
-#>     set(key, value)
-#>     exists(key)
-#>     keys()
-#>     remove(key)
-#>     reset()
-#>     prune()
-#>     size()
-#>     info()
+#> NULL
 ```

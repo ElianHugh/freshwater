@@ -32,5 +32,5 @@ targets(
     tpl,
    target(tpl2, x = "bar")
 )
-#> [1] "#foo, #bar"
+#> [1] "[id=\"foo\"], [id=\"bar\"]"
 ```
