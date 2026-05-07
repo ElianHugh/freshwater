@@ -366,10 +366,14 @@ print.freshwater_endpoint_method <- function(x, ...) {
 #' instructing the browser to navigate to `location` after the specified number
 #' of seconds.
 #'
+#' By default, absolute and cross-origin locations result in an error.
+#' If you wish to intentionally redirect outside the current origin,
+#' specify `external=TRUE`.
+#'
 #' @param response [reqres::Response] object
 #' @param location path or url to redirect to
 #' @param after optional number of seconds to wait before redirection
-#' @param external whether to restrict redirects to the same origin
+#' @param external whether to permit off-site redirects
 #'
 #' @details
 #' The delayed redirect uses the non-standard "Refresh" HTTP header which is

@@ -13,7 +13,7 @@ redirect(response, location, after = NULL, external = FALSE)
 
 \item{after}{optional number of seconds to wait before redirection}
 
-\item{external}{whether to restrict redirects to the same origin}
+\item{external}{whether to permit off-site redirects}
 }
 \value{
 \itemize{
@@ -31,6 +31,10 @@ form submissions.
 If after is a numeric, a "Refresh" header is attached to the response,
 instructing the browser to navigate to \code{location} after the specified number
 of seconds.
+
+By default, absolute and cross-origin locations result in an error.
+If you wish to intentionally redirect outside the current origin,
+specify \code{external=TRUE}.
 
 The delayed redirect uses the non-standard "Refresh" HTTP header which is
 widely supported by browsers but is not part of the official HTTP specification.

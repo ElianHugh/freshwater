@@ -31,6 +31,9 @@ test_that("redirect after works", {
             }) |>
             plumber2::api_get("/foo", function() {
                 "Hello world!"
+            }) |>
+            plumber2::api_get("/bad", function(response) {
+                redirect(response, "http://www.google.com", after = 3L)
             })
     })
 
@@ -38,6 +41,11 @@ test_that("redirect after works", {
 
     expect_identical(res$status, 200L)
     expect_identical(res$headers$refresh, "3; url=/foo")
+
+
+    res <- faux_request(api, path = "bad")
+    expect_identical(res$status, 500L)
+    expect_identical(res$headers$refresh, NULL)
 
 })
 
