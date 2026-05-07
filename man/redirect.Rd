@@ -4,7 +4,7 @@
 \alias{redirect}
 \title{Redirect to another resource}
 \usage{
-redirect(response, location, after = NULL)
+redirect(response, location, after = NULL, external = FALSE)
 }
 \arguments{
 \item{response}{\link[reqres:Response]{reqres::Response} object}
@@ -12,6 +12,8 @@ redirect(response, location, after = NULL)
 \item{location}{path or url to redirect to}
 
 \item{after}{optional number of seconds to wait before redirection}
+
+\item{external}{whether to restrict redirects to the same origin}
 }
 \value{
 \itemize{
