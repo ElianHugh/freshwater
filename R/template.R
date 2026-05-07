@@ -353,6 +353,12 @@ rewrite_attrs <- function(tag, resolved_id) {
 
 
             if (".part" %in% nms) {
+                if ((!is.numeric(resolved_id) && !is.character(resolved_id)) || length(resolved_id) != 1L || is.na(resolved_id)) {
+                    rlang::abort(
+                        "Cannot create a part ID for a template without an ID defined.",
+                        class = "freshwater_template_error"
+                    )
+                }
                 val <- attribs[[".part"]]
                 attribs[["data-fw-part"]] <- sprintf("%s-%s", resolved_id, val)
                 attribs[[".part"]] <- NULL
@@ -774,16 +780,27 @@ current_template <- function(
 #' @seealso [targets], [template]
 #' @export
 target <- function(tpl, ..., .part = NULL) {
+    css_escape <- function(x) {
+        stopifnot(
+            is.character(x) || is.numeric(x),
+            length(x) == 1L,
+            !is.na(x)
+        )
+        x <- gsub("\\\\", "\\\\\\\\", x)
+        x <- gsub('"', '\\"', x, fixed = TRUE)
+        as.character(x)
+    }
+
     tpl_id <- attr(tpl, "template_id_resolver", exact = TRUE)
     if (is.null(tpl_id)) {
         fw_nm <- deparse(substitute(tpl), width.cutoff = 500L)
         msg <- sprintf("No instance # defined for template `%s`.", fw_nm)
         rlang::abort(msg, class = "freshwater_template_error")
     }
-    if (is.character(tpl_id)) {
-        res <- tpl_id
+    res <- if (is.character(tpl_id)) {
+        tpl_id
     } else if (is.function(tpl_id)) {
-        res <- tryCatch(
+        tryCatch(
             tpl_id(...),
             error = function(e) {
                 fw_nm <- deparse(substitute(tpl), width.cutoff = 500L)
@@ -806,11 +823,21 @@ target <- function(tpl, ..., .part = NULL) {
         )
     }
 
-    if (!is.null(.part)) {
-        return(sprintf('[data-fw-part="%s-%s"]', res, .part))
+    res <- css_escape(res)
+
+    if (!is.character(res) || length(res) != 1L || is.na(res)) {
+        rlang::abort("Bad template ID", class = "freshwater_template_error")
     }
 
-    sprintf("#%s", res)
+    if (!is.null(.part)) {
+        return(sprintf(
+            '[data-fw-part="%s-%s"]',
+            res,
+            css_escape(.part)
+        ))
+    }
+
+    sprintf('[id="%s"]', res)
 }
 
 #' Combine multiple target selectors

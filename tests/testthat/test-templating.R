@@ -379,6 +379,10 @@ test_that("single root template IDs work", {
       tpl(),
       htmltools::div(id = 1, `data-fw-part` = "1-foo")
   )
+
+  # error when missing id
+  tpl <- template({div(.part = "foo")})
+  expect_error(tpl(), class = "freshwater_template_error")
 })
 
 test_that("multi-root template IDs work", {
@@ -447,7 +451,7 @@ test_that("target works", {
 
   expect_identical(
     target(tpl, x = list(id = 1)),
-    "#1"
+    "[id=\"1\"]"
   )
 
   tpl <- template(x, y, .id = function(x) x$id, {
@@ -469,7 +473,7 @@ test_that("target works", {
 
   expect_identical(
     target(tpl),
-    "#1"
+    "[id=\"1\"]"
   )
 
   expect_identical(
@@ -477,6 +481,17 @@ test_that("target works", {
     "[data-fw-part=\"1-foo\"]"
   )
 
+
+  # edge cases
+  tpl <- template(.id = 'user"] [data-fw-part="admin', {div()})
+  expect_identical(
+    target(tpl),
+    "[id=\"user\\\"] [data-fw-part=\\\"admin\"]"
+  )
+  expect_identical(
+    target(tpl, .part = "foo"),
+    "[data-fw-part=\"user\\\"] [data-fw-part=\\\"admin-foo\"]"
+  )
 })
 
 
