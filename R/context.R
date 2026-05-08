@@ -64,7 +64,8 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
     all_fml_names <- names(c(
         formals(api_csrf),
         formals(api_error_pages),
-        formals(register_html_serialiser)
+        formals(register_html_serialiser),
+        formals(register_async_evaluator)
     ))
 
     if (any(!names(dots) %in% all_fml_names)) {
