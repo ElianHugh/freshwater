@@ -266,7 +266,7 @@ clear_cache <- function() {
 invalidate_cache <- function(tpl, name, vary = NULL, fragment = NULL) {
   id <- attr(tpl, "template_id")
   if (is.null(id)) {
-    rlang::abort("Not a freshwater template. Missing id attribute.")
+    rlang::abort("Not a freshwater template. Missing internal identifier attribute.")
   }
 
   key <- cache_key(

@@ -13,8 +13,8 @@ api_freshwater(api, csrf = TRUE, error_pages = TRUE, ...)
 
 \item{error_pages}{whether to enable error pages}
 
-\item{...}{args passed to either \code{\link[=api_csrf]{api_csrf()}} or
-\code{\link[=api_error_pages]{api_error_pages()}}}
+\item{...}{args passed to \code{\link[=api_csrf]{api_csrf()}}, \code{\link[=api_error_pages]{api_error_pages()}},
+\code{\link[=register_html_serialiser]{register_html_serialiser()}}, or \code{\link[=register_async_evaluator]{register_async_evaluator()}}}
 }
 \description{
 Installs freshwater defaults onto a plumber2 API.
@@ -22,6 +22,7 @@ Installs freshwater defaults onto a plumber2 API.
 This is a convenience wrapper:
 \itemize{
 \item Registers freshwater's HTML serialiser
+\item Registers freshwater's async evaluator
 \item Installs freshwater request context
 \item Optionally enables CSRF protection
 \item Optionally installs HTML error page handlers
@@ -32,5 +33,5 @@ Arguments in \code{...} are selectively forwarded to
 based on matching formal parameters.
 }
 \seealso{
-\link{api_csrf}, \link{api_error_pages}, \link{register_html_serialiser}
+\link{api_csrf}, \link{api_error_pages}, \link{register_html_serialiser}, \link{register_async_evaluator}
 }

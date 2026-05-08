@@ -11,6 +11,12 @@
 #' to the default plumber2 implementation for other
 #' classes of inputs.
 #'
+#' Specifically, if an input inherits `shiny.tag`,
+#' `shiny.tag.list` or `html`, it will be serialised via
+#' [htmltools::as.tags()] and [htmltools::doRenderTags()].
+#' Otherwise, the default HTML serialiser will be used. If missing,
+#' the input will be coerced via [as.character()].
+#'
 #' @param force bypass checks and re-register
 #' the freshwater serialiser
 #'
@@ -33,7 +39,7 @@ register_html_serialiser <- function(force = FALSE) {
         "html",
         function(...) {
             function(x) {
-                if (inherits(x, c("shiny.tag", "shiny.tag.list", "list", "html"))) {
+                if (inherits(x, c("shiny.tag", "shiny.tag.list", "html"))) {
                     htmltools::as.tags(x) |>
                         htmltools::doRenderTags() |>
                         as.character()

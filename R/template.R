@@ -239,6 +239,17 @@ template <- function(..., .id = NULL, .envir = rlang::caller_env()) {
                             )
                             .fw_id_resolved <- do.call(.fw_id_resolver, .fw_id_args)
                         }
+                        if (
+                            (!is.character(.fw_id_resolved) && !is.numeric(.fw_id_resolved)) ||
+                            length(.fw_id_resolved) != 1L ||
+                            is.na(.fw_id_resolved)) {
+                                rlang::abort(
+                                    c(
+                                        "template `.id` resolved to an invalid value.",
+                                        sprintf("Got `%s`, but expected a character scalar.", .fw_id_resolved)
+                                    )
+                                )
+                            }
                         if (inherits(.fw_template_body, "shiny.tag")) {
                             .fw_template_body <- htmltools::tagAppendAttributes(
                                 .fw_template_body,
@@ -360,7 +371,17 @@ rewrite_attrs <- function(tag, resolved_id) {
                     )
                 }
                 val <- attribs[[".part"]]
-                attribs[["data-fw-part"]] <- sprintf("%s-%s", resolved_id, val)
+                # todo, extract the validation into a helper, we repeat this a lot
+                if ((!is.numeric(val) && !is.character(val)) || length(val) != 1L || is.na(val)) {
+                    rlang::abort(
+                        c(
+                            ".part resolved to an unexpected value.",
+                            sprintf("Got `%s`, expected a character scalar.", val)
+                        )
+                    )
+                }
+                data_fw_part <- sprintf("%s-%s", resolved_id, val)
+                attribs[["data-fw-part"]] <- data_fw_part
                 attribs[[".part"]] <- NULL
             }
 

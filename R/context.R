@@ -35,6 +35,7 @@ NULL
 #'
 #' This is a convenience wrapper:
 #' - Registers freshwater's HTML serialiser
+#' - Registers freshwater's async evaluator
 #' - Installs freshwater request context
 #' - Optionally enables CSRF protection
 #' - Optionally installs HTML error page handlers
@@ -46,10 +47,10 @@ NULL
 #' @param api a [plumber2] api object.
 #' @param csrf whether to enable CSRF protection
 #' @param error_pages whether to enable error pages
-#' @param ... args passed to either [api_csrf()] or
-#' [api_error_pages()]
+#' @param ... args passed to [api_csrf()], [api_error_pages()],
+#' [register_html_serialiser()], or [register_async_evaluator()]
 #'
-#' @seealso [api_csrf], [api_error_pages], [register_html_serialiser]
+#' @seealso [api_csrf], [api_error_pages], [register_html_serialiser], [register_async_evaluator]
 #' @export
 api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
     args_from_fmls <- function(fn, dots) {
@@ -81,7 +82,7 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
             c(
                 "Unexpected argument passed.",
                 sprintf(
-                    "%s invalid to pass to `api_csrf`, `api_error_pages`, and `register_html_serialiser`.",
+                    "%s invalid to pass to `api_csrf`, `api_error_pages`, `register_async_evaluator`, and `register_html_serialiser`.",
                     fmls
                 )
             )
@@ -90,6 +91,9 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
 
     serialiser_args <- args_from_fmls(register_html_serialiser, dots)
     do.call(register_html_serialiser, args = serialiser_args)
+
+    async_args <- args_from_fmls(register_async_evaluator, dots)
+    do.call(register_async_evaluator, args = async_args)
 
     api <- api_context(api)
 
@@ -416,7 +420,9 @@ print.freshwater_api <- function(x, ...) {
 #'
 #' Hooks are *not* applied to the async route, but may be provided to any associated
 #' `then` handlers. If error pages are installed on the main process, errors from
-#' the worker will be appropriately converted into freshwater error pages.
+#' the worker will be appropriately converted into freshwater error pages. If CSRF
+#' protection is enabled, tokens will be propagated to the worker, ensuring async
+#' routes are still protected.
 #'
 #' Requires the [promises], [mirai], and [mori] packages.
 #'
