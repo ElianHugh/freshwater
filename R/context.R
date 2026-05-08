@@ -468,7 +468,7 @@ register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
             ctx$request <- get("request", envir = parent)
             ctx$api <- get("server", envir = parent)
 
-            with_fw_context(ctx, {
+            .fw_async <- function() {
                 portable_ctx <- create_portable_context() |>
                     mori::share()
 
@@ -538,7 +538,34 @@ register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
                     },
                     tee = FALSE
                 )
-            })
+            }
+
+            fw_env <- get_freshwater_env(ctx$api)
+
+            # todo, it would be nice if we could use the actual hooks here and not force it
+            if (isTRUE(fw_env$csrf$installed)) {
+                with_fw_context(ctx, {
+                    ensure_csrf_token(
+                        api = ctx$api,
+                        request = ctx$request,
+                        response = ctx$request$response,
+                        body = ctx$request$body,
+                        fw_env = fw_env,
+                        is_worker = TRUE,
+                        next_call = function() {
+                            csrf_context(
+                                api = ctx$api,
+                                request = ctx$request,
+                                response = ctx$request$response,
+                                fw_env = fw_env,
+                                next_call = .fw_async
+                            )
+                        }
+                    )
+                })
+            } else {
+                with_fw_context(ctx, { .fw_async() })
+            }
         }
     })
 
@@ -574,7 +601,8 @@ create_portable_context <- function() {
                 method = ctx$request$method,
                 path = ctx$request$path,
                 headers = ctx$request$headers
-            )
+            ),
+            csrf_token = ctx$csrf_token
         ),
         class = c("fw_portable_context", "list")
     )

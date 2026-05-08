@@ -172,3 +172,110 @@ test_that("csrf token is available during first page render", {
     expect_match(res$body, csrf_token)
 })
 
+test_that("csrf works with async", {
+    testthat::skip_if_not_installed("mori")
+    testthat::skip_if_not_installed("mirai")
+    testthat::skip_if_not_installed("promises")
+
+    register_async_evaluator()
+    register_html_serialiser()
+
+    tpl <- template({
+        htmltools::tags$html(
+            head(
+                meta(name = "csrf-token", content = csrf_token())
+            ),
+            body(
+                form(
+                    action = "/bar",
+                    method = "post",
+                    input(type = "submit", value = "OK")
+                )
+            )
+        )
+    })
+
+    api <- suppressMessages(
+        plumber2::api() |>
+        api_csrf(secure = FALSE) |>
+            plumber2::api_get(
+                "/foo",
+                function() {
+                    tpl()
+                },
+                async = "freshwater"
+            ) |>
+           plumber2::api_post("/bar", function() "bar")
+    )
+
+    api$trigger("freshwater::hook")
+
+    res <- faux_request(
+        api,
+        "foo",
+        method = "get",
+        accept = "text/html; charset=utf-8"
+    ) |>
+        wait_for_resolve()
+
+    expect_identical(res$status, 200L)
+    headers <- unname(unlist(res$headers, use.names = FALSE))
+    csrf_header_idx <- grepl("^csrf=", headers) |> which()
+    expect_true(length(csrf_header_idx) >= 1)
+
+    csrf_header <- headers[[csrf_header_idx[[1]]]]
+    csrf_token <- sub("^csrf=([^;]+).*$", "\\1", csrf_header)
+    expect_match(res$body, csrf_token)
+})
+
+
+test_that("csrf rejects unsafe async", {
+    # for some reason, these tests always fail when run interactively
+    testthat::skip_if_not_installed("mori")
+    testthat::skip_if_not_installed("mirai")
+    testthat::skip_if_not_installed("promises")
+
+    register_async_evaluator()
+    register_html_serialiser()
+
+    api <- suppressMessages(
+        plumber2::api() |>
+            api_csrf(secure = FALSE) |>
+            plumber2::api_post(
+                "/bar",
+                function() {
+                    "ok"
+                },
+                async = "freshwater"
+            )
+    )
+    api$trigger("freshwater::hook")
+
+    res <- faux_request(api, "bar", method = "post") |>
+        wait_for_resolve()
+
+    expect_identical(res$status, 403L)
+
+    token <- "abc123"
+    res <- faux_request(
+        api,
+        "bar",
+        method = "post",
+        cookie = paste0("csrf=", token),
+        "x-csrf-token" = token
+    ) |>
+        wait_for_resolve()
+     expect_identical(res$status, 200L)
+
+
+    res <- faux_request(
+        api,
+        "bar",
+        method = "post",
+        cookie = "csrf=real-token",
+        "x-csrf-token" = "wrong-token"
+    ) |>
+        wait_for_resolve()
+
+    expect_identical(res$status, 403L)
+})
