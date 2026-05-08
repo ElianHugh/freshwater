@@ -155,6 +155,8 @@ test_that("current_* helpers work under fw async", {
     testthat::skip_if_not_installed("promises")
 
     register_async_evaluator()
+    register_html_serialiser()
+
     tpl <- template(
         cookie = NULL,
         header = NULL,

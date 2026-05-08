@@ -20,6 +20,9 @@ faux_request <- function(
 
 wait_for_resolve <- function(promise) {
     private <- attr(promise, "promise_impl")$.__enclos_env__$private
+    if (is.null(private)) {
+        return(promise)
+    }
     while (private$state == "pending") {
         later::run_now(Inf, all = FALSE, loop = later::current_loop())
     }

@@ -20,16 +20,16 @@ Imports:
     stats,
     utils,
     stringi,
-    cli
+    cli,
+    mirai,
+    mori,
+    promises
 Suggests:
     fiery,
     openssl,
     testthat (>= 3.0.0),
-    promises,
     later,
-    otel,
-    mori,
-    mirai
+    otel
 Config/testthat/edition: 3
 URL: https://elianhugh.github.io/freshwater/
 Collate:

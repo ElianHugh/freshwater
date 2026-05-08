@@ -87,6 +87,9 @@ api_csrf <- function(api, secure = TRUE, exemptions = character()) {
     cookie_name <- if (isTRUE(secure)) "__Host-csrf" else "csrf"
 
     fw_env$csrf$cookie_name <- cookie_name
+    fw_env$csrf$secure <- isTRUE(secure)
+    fw_env$csrf$safe_methods <- safe_methods
+    fw_env$csrf$unsafe_methods <- unsafe_methods
 
     api <- api_hooks(
         api,
@@ -97,60 +100,14 @@ api_csrf <- function(api, secure = TRUE, exemptions = character()) {
                     request <- args$request
                     response <- args$response
                     body <- args$body
-
-                    if (is.null(request)) {
-                        return(next_call())
-                    }
-
-                    if (!is.null(fw_env$csrf$exempt)) {
-                        match <- fw_env$csrf$exempt$find_object(
-                            request$path
-                        )
-                        if (!is.null(match)) return(next_call())
-                    }
-
-                    cookie_token <- request$cookies[[cookie_name]] %||% ""
-
-                    if (
-                        request$method %in%
-                            safe_methods &&
-                            !nzchar(cookie_token)
-                    ) {
-                        cookie_token <- csrf_new_token()
-                        response$set_cookie(
-                            name = cookie_name,
-                            value = cookie_token,
-                            path = "/",
-                            http_only = FALSE,
-                            secure = secure,
-                            same_site = "Lax"
-                        )
-                        response$set_data(cookie_name, cookie_token)
-                    }
-
-                    if (request$method %in% unsafe_methods) {
-                        token <- request$get_header("x-csrf-token") %||%
-                            body$csrf_token
-                        if (
-                            is.null(token) ||
-                            !constant_time_identical(token, cookie_token)
-                        ) {
-                            response$status <- 403L
-                            response$body <- "Invalid CSRF token"
-
-                            api$trigger(
-                                "error_code",
-                                status = 403L,
-                                request = request,
-                                response = response,
-                                message = NULL
-                            )
-
-                            return(plumber2::Break)
-                        }
-                    }
-
-                    next_call()
+                    ensure_csrf_token(
+                        api,
+                        request,
+                        response,
+                        body,
+                        fw_env,
+                        next_call
+                    )
                 }
             ),
             hook(
@@ -158,20 +115,7 @@ api_csrf <- function(api, secure = TRUE, exemptions = character()) {
                 function(api, args, next_call) {
                     request <- args$request
                     response <- args$response
-
-                    if (is.null(request)) {
-                        return(next_call())
-                    }
-
-                    cookie_name <- fw_env$csrf$cookie_name %||% "csrf"
-                    token <- request$cookies[[cookie_name]] %||%
-                        try(response$get_data(cookie_name)) %||% ""
-
-                    ctx <- get_fw_context()
-                    ctx$csrf_token <- function() token
-                    ctx$request <- request
-
-                    next_call()
+                    csrf_context(api, request, response, fw_env, next_call)
                 }
             )
         ),
@@ -179,6 +123,102 @@ api_csrf <- function(api, secure = TRUE, exemptions = character()) {
     )
 
     api
+}
+
+
+ensure_csrf_token <- function(api, request, response, body, fw_env, next_call, is_worker = FALSE) {
+    if (is.null(request)) {
+        return(next_call())
+    }
+
+    if (!is.null(fw_env$csrf$exempt)) {
+        match <- fw_env$csrf$exempt$find_object(
+            request$path
+        )
+        if (!is.null(match)) return(next_call())
+    }
+
+    cookie_name <- fw_env$csrf$cookie_name
+    secure <- fw_env$csrf$secure
+    safe_methods <- fw_env$csrf$safe_methods
+    unsafe_methods <- fw_env$csrf$unsafe_methods
+
+    cookie_token <- request$cookies[[cookie_name]] %||%
+        ""
+    if (
+        request$method %in%
+            safe_methods &&
+            !nzchar(cookie_token)
+    ) {
+        cookie_token <- csrf_new_token()
+        response$set_cookie(
+            name = cookie_name,
+            value = cookie_token,
+            path = "/",
+            http_only = FALSE,
+            secure = secure,
+            same_site = "Lax"
+        )
+        response$set_data(cookie_name, cookie_token)
+    }
+
+    if (request$method %in% unsafe_methods) {
+        token <- request$get_header("x-csrf-token") %||%
+            body$csrf_token
+        if (
+            is.null(token) ||
+                !constant_time_identical(
+                    token,
+                    cookie_token
+                )
+        ) {
+            response$status <- 403L
+            response$body <- "Invalid CSRF token"
+
+            api$trigger(
+                "error_code",
+                status = 403L,
+                request = request,
+                response = response,
+                message = NULL
+            )
+
+            if (isTRUE(is_worker)) {
+                return(
+                    promises::promise(function(resolve, reject) {
+                        resolve(
+                            list(
+                                result = "",
+                                continue = plumber2::Break
+                            )
+                        )
+
+                    })
+                )
+            } else {
+                return(plumber2::Break)
+            }
+        }
+    }
+
+    next_call()
+}
+
+csrf_context <- function(api, request, response, fw_env, next_call) {
+    if (is.null(request)) {
+        return(next_call())
+    }
+
+    cookie_name <- fw_env$csrf$cookie_name %||% "csrf"
+    token <- request$cookies[[cookie_name]] %||%
+        try(response$get_data(cookie_name)) %||%
+        ""
+
+    ctx <- get_fw_context()
+    ctx$csrf_token <- function() token
+    ctx$request <- request
+
+    next_call()
 }
 
 ensure_csrf_exempt_router <- function(api) {

@@ -22,4 +22,12 @@ to hide for shiny usecases.
 The freshwater serialiser safely falls back
 to the default plumber2 implementation for other
 classes of inputs.
+
+Specifically, if an input inherits \code{shiny.tag},
+\code{shiny.tag.list} or \code{html}, it will be serialised via
+\code{\link[htmltools:as.tags]{htmltools::as.tags()}} and \code{\link[htmltools:renderTags]{htmltools::doRenderTags()}}.
+Otherwise, the default HTML serialiser will be used. If missing,
+the input will be coerced via \code{\link[=as.character]{as.character()}}.
+
+\strong{Registration affects global process state, not just the current API process.}
 }

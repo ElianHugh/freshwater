@@ -15,7 +15,7 @@ target(tpl, ..., .part = NULL)
 }
 \description{
 \code{target()} returns a CSS selector for a template instance. For normal
-targets, this is an id selector of the form \verb{#<TEMPLATE_ID>}, where
+targets, this is an id selector of the form \verb{[id="<TEMPLATE_ID>"]}, where
 the id is resolved from the template's id function.
 }
 \details{

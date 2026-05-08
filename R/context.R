@@ -35,6 +35,7 @@ NULL
 #'
 #' This is a convenience wrapper:
 #' - Registers freshwater's HTML serialiser
+#' - Registers freshwater's async evaluator
 #' - Installs freshwater request context
 #' - Optionally enables CSRF protection
 #' - Optionally installs HTML error page handlers
@@ -46,10 +47,10 @@ NULL
 #' @param api a [plumber2] api object.
 #' @param csrf whether to enable CSRF protection
 #' @param error_pages whether to enable error pages
-#' @param ... args passed to either [api_csrf()] or
-#' [api_error_pages()]
+#' @param ... args passed to [api_csrf()], [api_error_pages()],
+#' [register_html_serialiser()], or [register_async_evaluator()]
 #'
-#' @seealso [api_csrf], [api_error_pages], [register_html_serialiser]
+#' @seealso [api_csrf], [api_error_pages], [register_html_serialiser], [register_async_evaluator]
 #' @export
 api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
     args_from_fmls <- function(fn, dots) {
@@ -81,7 +82,7 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
             c(
                 "Unexpected argument passed.",
                 sprintf(
-                    "%s invalid to pass to `api_csrf`, `api_error_pages`, and `register_html_serialiser`.",
+                    "%s invalid to pass to `api_csrf`, `api_error_pages`, `register_async_evaluator`, and `register_html_serialiser`.",
                     fmls
                 )
             )
@@ -90,6 +91,9 @@ api_freshwater <- function(api, csrf = TRUE, error_pages = TRUE, ...) {
 
     serialiser_args <- args_from_fmls(register_html_serialiser, dots)
     do.call(register_html_serialiser, args = serialiser_args)
+
+    async_args <- args_from_fmls(register_async_evaluator, dots)
+    do.call(register_async_evaluator, args = async_args)
 
     api <- api_context(api)
 
@@ -410,13 +414,25 @@ print.freshwater_api <- function(x, ...) {
 #' be propagated to [mirai::mirai] workers. This means that contextful helpers such as [current_method],
 #' [current_path], and [current_query] (among others) will work in async routes.
 #'
+#' **Registration affects global plumber2 state, not just the current API process.**
+#'
 #' @details
-#' Context is not inherently portable across asynchronous contexts, this function
-#' creates a portable snapshot of the current context that is passed to a mirai worker.
+#' Context is not inherently portable across asynchronous request contexts,
+#' this function creates a portable snapshot of the current context that
+#' is passed to a mirai worker.
 #'
 #' Hooks are *not* applied to the async route, but may be provided to any associated
 #' `then` handlers. If error pages are installed on the main process, errors from
-#' the worker will be appropriately converted into freshwater error pages.
+#' the worker will be appropriately converted into freshwater error pages. If CSRF
+#' protection is enabled, tokens will be propagated to the worker, ensuring async
+#' routes are still protected.
+#'
+#' As [cache()] is process-local by default, memoised functions are *not* ported
+#' to workers. Likewise, [clear_cache()] and [invalidate_cache()] will only impact
+#' the local process' cache. If a shared cache is desired, consider configuring
+#' [cachem::cache_disk()] for caching, which will allow all process to
+#' utilise a shared cache. Note that TTL is process-local regardless of backend
+#' strategy used.
 #'
 #' Requires the [promises], [mirai], and [mori] packages.
 #'
@@ -429,34 +445,17 @@ print.freshwater_api <- function(x, ...) {
 #' }
 #' @seealso [api_freshwater], [api_error_pages], [api_hooks], [mirai::mirai], [current_method]
 #'
-#' @param force whether to register the evaluator regardless of if it has been
-#' registered already
 #' @param set_default whether to set the default async evaluator to `"freshwater"`
 #' @export
-register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
-    if (!requireNamespace("mori", quietly = TRUE)) {
-        rlang::abort(
-            "{mori} is required to register a freshwater async evaluator."
-        )
-    }
-    if (!requireNamespace("promises", quietly = TRUE)) {
-        rlang::abort(
-            "{promises} is required to register a freshwater async evaluator."
-        )
-    }
-    if (!requireNamespace("mirai", quietly = TRUE)) {
-        rlang::abort(
-            "{mirai} is required to register a freshwater async evaluator."
-        )
-    }
+register_async_evaluator <- function(set_default = TRUE) {
 
-    if (!force && isTRUE(freshwater$async_registered)) {
+    if (isTRUE(freshwater$async_registered)) {
         return(invisible(NULL))
     }
 
     current <- getOption("plumber2.async")
     if (isTRUE(set_default)) {
-        if (is.null(current) || force) {
+        if (is.null(current)) {
             options(plumber2.async = "freshwater")
         }
     }
@@ -468,7 +467,7 @@ register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
             ctx$request <- get("request", envir = parent)
             ctx$api <- get("server", envir = parent)
 
-            with_fw_context(ctx, {
+            .fw_async <- function() {
                 portable_ctx <- create_portable_context() |>
                     mori::share()
 
@@ -538,7 +537,34 @@ register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
                     },
                     tee = FALSE
                 )
-            })
+            }
+
+            fw_env <- get_freshwater_env(ctx$api)
+
+            # todo, it would be nice if we could use the actual hooks here and not force it
+            if (isTRUE(fw_env$csrf$installed)) {
+                with_fw_context(ctx, {
+                    ensure_csrf_token(
+                        api = ctx$api,
+                        request = ctx$request,
+                        response = ctx$request$response,
+                        body = ctx$request$body,
+                        fw_env = fw_env,
+                        is_worker = TRUE,
+                        next_call = function() {
+                            csrf_context(
+                                api = ctx$api,
+                                request = ctx$request,
+                                response = ctx$request$response,
+                                fw_env = fw_env,
+                                next_call = .fw_async
+                            )
+                        }
+                    )
+                })
+            } else {
+                with_fw_context(ctx, { .fw_async() })
+            }
         }
     })
 
@@ -574,7 +600,8 @@ create_portable_context <- function() {
                 method = ctx$request$method,
                 path = ctx$request$path,
                 headers = ctx$request$headers
-            )
+            ),
+            csrf_token = ctx$csrf_token
         ),
         class = c("fw_portable_context", "list")
     )
