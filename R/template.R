@@ -265,7 +265,10 @@ template <- function(..., .id = NULL, .envir = rlang::caller_env()) {
                         }
                     }
 
-                    .fw_rewrite_attrs(.fw_template_body, .fw_id_resolved)
+                    structure(
+                        .fw_rewrite_attrs(.fw_template_body, .fw_id_resolved),
+                        class = c("freshwater_html", class(.fw_template_body))
+                    )
                 },
                 error = function(e) {
                     .fw_new_template_error(
@@ -965,4 +968,10 @@ map_tags <- function(.x, .f, .empty = NULL) {
     res <- Filter(Negate(is.null), res)
 
     htmltools::as.tags(res)
+}
+
+#' @export
+print.freshwater_html <- function(x, ...) {
+    print(htmltools::doRenderTags(x))
+    invisible(x)
 }

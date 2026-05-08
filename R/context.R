@@ -414,15 +414,25 @@ print.freshwater_api <- function(x, ...) {
 #' be propagated to [mirai::mirai] workers. This means that contextful helpers such as [current_method],
 #' [current_path], and [current_query] (among others) will work in async routes.
 #'
+#' **Registration affects global plumber2 state, not just the current API process.**
+#'
 #' @details
-#' Context is not inherently portable across asynchronous contexts, this function
-#' creates a portable snapshot of the current context that is passed to a mirai worker.
+#' Context is not inherently portable across asynchronous request contexts,
+#' this function creates a portable snapshot of the current context that
+#' is passed to a mirai worker.
 #'
 #' Hooks are *not* applied to the async route, but may be provided to any associated
 #' `then` handlers. If error pages are installed on the main process, errors from
 #' the worker will be appropriately converted into freshwater error pages. If CSRF
 #' protection is enabled, tokens will be propagated to the worker, ensuring async
 #' routes are still protected.
+#'
+#' As [cache()] is process-local by default, memoised functions are *not* ported
+#' to workers. Likewise, [clear_cache()] and [invalidate_cache()] will only impact
+#' the local process' cache. If a shared cache is desired, consider configuring
+#' [cachem::cache_disk()] for caching, which will allow all process to
+#' utilise a shared cache. Note that TTL is process-local regardless of backend
+#' strategy used.
 #'
 #' Requires the [promises], [mirai], and [mori] packages.
 #'
@@ -435,11 +445,9 @@ print.freshwater_api <- function(x, ...) {
 #' }
 #' @seealso [api_freshwater], [api_error_pages], [api_hooks], [mirai::mirai], [current_method]
 #'
-#' @param force whether to register the evaluator regardless of if it has been
-#' registered already
 #' @param set_default whether to set the default async evaluator to `"freshwater"`
 #' @export
-register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
+register_async_evaluator <- function(set_default = TRUE) {
     if (!requireNamespace("mori", quietly = TRUE)) {
         rlang::abort(
             "{mori} is required to register a freshwater async evaluator."
@@ -456,13 +464,13 @@ register_async_evaluator <- function(force = FALSE, set_default = TRUE) {
         )
     }
 
-    if (!force && isTRUE(freshwater$async_registered)) {
+    if (isTRUE(freshwater$async_registered)) {
         return(invisible(NULL))
     }
 
     current <- getOption("plumber2.async")
     if (isTRUE(set_default)) {
-        if (is.null(current) || force) {
+        if (is.null(current)) {
             options(plumber2.async = "freshwater")
         }
     }

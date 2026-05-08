@@ -4,12 +4,9 @@
 \alias{register_async_evaluator}
 \title{Register context-safe async evaluator}
 \usage{
-register_async_evaluator(force = FALSE, set_default = TRUE)
+register_async_evaluator(set_default = TRUE)
 }
 \arguments{
-\item{force}{whether to register the evaluator regardless of if it has been
-registered already}
-
 \item{set_default}{whether to set the default async evaluator to \code{"freshwater"}}
 }
 \description{
@@ -18,12 +15,24 @@ be propagated to \link[mirai:mirai]{mirai::mirai} workers. This means that conte
 \link{current_path}, and \link{current_query} (among others) will work in async routes.
 }
 \details{
-Context is not inherently portable across asynchronous contexts, this function
-creates a portable snapshot of the current context that is passed to a mirai worker.
+\strong{Registration affects global plumber2 state, not just the current API process.}
+
+Context is not inherently portable across asynchronous request contexts,
+this function creates a portable snapshot of the current context that
+is passed to a mirai worker.
 
 Hooks are \emph{not} applied to the async route, but may be provided to any associated
 \code{then} handlers. If error pages are installed on the main process, errors from
-the worker will be appropriately converted into freshwater error pages.
+the worker will be appropriately converted into freshwater error pages. If CSRF
+protection is enabled, tokens will be propagated to the worker, ensuring async
+routes are still protected.
+
+As \code{\link[=cache]{cache()}} is process-local by default, memoised functions are \emph{not} ported
+to workers. Likewise, \code{\link[=clear_cache]{clear_cache()}} and \code{\link[=invalidate_cache]{invalidate_cache()}} will only impact
+the local process' cache. If a shared cache is desired, consider configuring
+\code{\link[cachem:cache_disk]{cachem::cache_disk()}} for caching, which will allow all process to
+utilise a shared cache. Note that TTL is process-local regardless of backend
+strategy used.
 
 Requires the \link[promises:promises-package]{promises::promises}, \link[mirai:mirai]{mirai::mirai}, and \link[mori:mori-package]{mori::mori} packages.
 }

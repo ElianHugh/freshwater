@@ -17,6 +17,8 @@
 #' Otherwise, the default HTML serialiser will be used. If missing,
 #' the input will be coerced via [as.character()].
 #'
+#' **Registration affects global process state, not just the current API process.**
+#'
 #' @param force bypass checks and re-register
 #' the freshwater serialiser
 #'

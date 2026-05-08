@@ -28,4 +28,6 @@ Specifically, if an input inherits \code{shiny.tag},
 \code{\link[htmltools:as.tags]{htmltools::as.tags()}} and \code{\link[htmltools:renderTags]{htmltools::doRenderTags()}}.
 Otherwise, the default HTML serialiser will be used. If missing,
 the input will be coerced via \code{\link[=as.character]{as.character()}}.
+
+\strong{Registration affects global process state, not just the current API process.}
 }
