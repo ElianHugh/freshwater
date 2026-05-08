@@ -36,6 +36,9 @@ page <- template({
 })
 page()
 #> <html>
+#>   <head>
+#>     <meta name="csrf-token" content=""/>
+#>   </head>
 #>   <body>
 #>     <div>App content</div>
 #>   </body>

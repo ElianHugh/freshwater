@@ -72,7 +72,7 @@ function(response) {
 #>     print("Hello!")
 #>     redirect(response, "/foo")
 #> }
-#> <environment: 0x56133d5b9dc0>
+#> <environment: 0x55ca46060f68>
 
 # Delayed redirect after rendering content
 #* @get /count/<n>
@@ -85,5 +85,5 @@ function(n, response) {
 #>     redirect(response, "/", after = 1)
 #>     paste("n =", n)
 #> }
-#> <environment: 0x56133d5b9dc0>
+#> <environment: 0x55ca46060f68>
 ```

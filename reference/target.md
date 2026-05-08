@@ -1,8 +1,8 @@
 # Resolve a template's target selector
 
 `target()` returns a CSS selector for a template instance. For normal
-targets, this is an id selector of the form `#<TEMPLATE_ID>`, where the
-id is resolved from the template's id function.
+targets, this is an id selector of the form `[id="<TEMPLATE_ID>"]`,
+where the id is resolved from the template's id function.
 
 ## Usage
 

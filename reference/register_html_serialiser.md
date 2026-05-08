@@ -26,3 +26,15 @@ register_html_serialiser(force = FALSE)
 
 The freshwater serialiser safely falls back to the default plumber2
 implementation for other classes of inputs.
+
+Specifically, if an input inherits `shiny.tag`, `shiny.tag.list` or
+`html`, it will be serialised via
+[`htmltools::as.tags()`](https://rstudio.github.io/htmltools/reference/as.tags.html)
+and
+[`htmltools::doRenderTags()`](https://rstudio.github.io/htmltools/reference/renderTags.html).
+Otherwise, the default HTML serialiser will be used. If missing, the
+input will be coerced via
+[`as.character()`](https://rdrr.io/r/base/character.html).
+
+**Registration affects global process state, not just the current API
+process.**

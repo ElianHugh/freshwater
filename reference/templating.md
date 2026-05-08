@@ -177,6 +177,9 @@ layout <- template({
 })
 
 layout(htmltools::div("content"))
+#> <head>
+#>   <meta title="foo"/>
+#> </head>
 #> <body>
 #>   <div>content</div>
 #> </body>

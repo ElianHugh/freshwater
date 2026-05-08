@@ -13,15 +13,10 @@ and
 ## Usage
 
 ``` r
-register_async_evaluator(force = FALSE, set_default = TRUE)
+register_async_evaluator(set_default = TRUE)
 ```
 
 ## Arguments
-
-- force:
-
-  whether to register the evaluator regardless of if it has been
-  registered already
 
 - set_default:
 
@@ -29,14 +24,31 @@ register_async_evaluator(force = FALSE, set_default = TRUE)
 
 ## Details
 
-Context is not inherently portable across asynchronous contexts, this
-function creates a portable snapshot of the current context that is
+**Registration affects global plumber2 state, not just the current API
+process.**
+
+Context is not inherently portable across asynchronous request contexts,
+this function creates a portable snapshot of the current context that is
 passed to a mirai worker.
 
 Hooks are *not* applied to the async route, but may be provided to any
 associated `then` handlers. If error pages are installed on the main
 process, errors from the worker will be appropriately converted into
-freshwater error pages.
+freshwater error pages. If CSRF protection is enabled, tokens will be
+propagated to the worker, ensuring async routes are still protected.
+
+As
+[`cache()`](https://elianhugh.github.io/freshwater/reference/template-caching.md)
+is process-local by default, memoised functions are *not* ported to
+workers. Likewise,
+[`clear_cache()`](https://elianhugh.github.io/freshwater/reference/template-caching.md)
+and
+[`invalidate_cache()`](https://elianhugh.github.io/freshwater/reference/template-caching.md)
+will only impact the local process' cache. If a shared cache is desired,
+consider configuring
+[`cachem::cache_disk()`](https://cachem.r-lib.org/reference/cache_disk.html)
+for caching, which will allow all process to utilise a shared cache.
+Note that TTL is process-local regardless of backend strategy used.
 
 Requires the
 [promises::promises](https://rstudio.github.io/promises/reference/promises-package.html),
@@ -65,5 +77,5 @@ function() {
 #> {
 #>     current_path()
 #> }
-#> <environment: 0x561336f8dce8>
+#> <environment: 0x55ca44f4dd10>
 ```

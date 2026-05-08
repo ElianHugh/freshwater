@@ -6,6 +6,8 @@ This is a convenience wrapper:
 
 - Registers freshwater's HTML serialiser
 
+- Registers freshwater's async evaluator
+
 - Installs freshwater request context
 
 - Optionally enables CSRF protection
@@ -43,13 +45,16 @@ api_freshwater(api, csrf = TRUE, error_pages = TRUE, ...)
 
 - ...:
 
-  args passed to either
-  [`api_csrf()`](https://elianhugh.github.io/freshwater/reference/api_csrf.md)
+  args passed to
+  [`api_csrf()`](https://elianhugh.github.io/freshwater/reference/api_csrf.md),
+  [`api_error_pages()`](https://elianhugh.github.io/freshwater/reference/error_pages.md),
+  [`register_html_serialiser()`](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md),
   or
-  [`api_error_pages()`](https://elianhugh.github.io/freshwater/reference/error_pages.md)
+  [`register_async_evaluator()`](https://elianhugh.github.io/freshwater/reference/register_async_evaluator.md)
 
 ## See also
 
 [api_csrf](https://elianhugh.github.io/freshwater/reference/api_csrf.md),
 [api_error_pages](https://elianhugh.github.io/freshwater/reference/error_pages.md),
-[register_html_serialiser](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md)
+[register_html_serialiser](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md),
+[register_async_evaluator](https://elianhugh.github.io/freshwater/reference/register_async_evaluator.md)
