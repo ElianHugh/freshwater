@@ -448,21 +448,6 @@ print.freshwater_api <- function(x, ...) {
 #' @param set_default whether to set the default async evaluator to `"freshwater"`
 #' @export
 register_async_evaluator <- function(set_default = TRUE) {
-    if (!requireNamespace("mori", quietly = TRUE)) {
-        rlang::abort(
-            "{mori} is required to register a freshwater async evaluator."
-        )
-    }
-    if (!requireNamespace("promises", quietly = TRUE)) {
-        rlang::abort(
-            "{promises} is required to register a freshwater async evaluator."
-        )
-    }
-    if (!requireNamespace("mirai", quietly = TRUE)) {
-        rlang::abort(
-            "{mirai} is required to register a freshwater async evaluator."
-        )
-    }
 
     if (isTRUE(freshwater$async_registered)) {
         return(invisible(NULL))
