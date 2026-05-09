@@ -66,12 +66,25 @@ test_that("endpoints work", {
     expect_identical(eps$baz$delete(id = 1L), "/baz/1")
     expect_identical(eps$baz(name = "foo"), "/baz/foo")
 
-
     # queries & anchors work
-    expect_identical(eps$baz(name = "foo", .query=list(a = "foo")), "/baz/foo?a=foo")
+    expect_identical(
+        eps$baz(name = "foo", .query = list(a = "foo")),
+        "/baz/foo?a=foo"
+    )
     expect_identical(
         eps$baz(name = "foo", .query = list(a = "foo"), .anchor = "baz"),
         "/baz/foo?a=foo#baz"
     )
 
+    # collision
+    suppressMessages({
+        api <- plumber2::api() |>
+            plumber2::api_get("/foo/:id/bar", function() "foo") |>
+            plumber2::api_get("/foo/bar/:id", function() "foo2")
+    })
+
+    expect_error(
+        endpoints("default", api = api, refresh = TRUE),
+        class = "freshwater_endpoint_error"
+    )
 })

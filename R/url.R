@@ -52,6 +52,7 @@ register_endpoints <- function(api) {
 
         r$remap_handlers(function(method, path, handler) {
             alias <- endpoint_alias(path)
+
             params <- waysign::path_params(path)
             candidate <- list(
                 method = method,
@@ -59,6 +60,42 @@ register_endpoints <- function(api) {
                 keys = params$keys,
                 glue = params$glue
             )
+
+            # check if there is a collision
+            collisions <- Filter(
+                function(x) {
+                    all(
+                        c(
+                            identical(x$method, candidate$method),
+                            identical(x$keys, candidate$keys)
+                        )
+                    )
+                },
+                fw_env$endpoints[[route]][[alias]]
+            )
+
+            if (!is.null(collisions) && length(collisions) > 0L) {
+                r$add_handler(method, path, handler)
+                rlang::abort(
+                    c(
+                        "Ambiguous endpoint alias detected.",
+                        sprintf(
+                            "`endpoints()` cannot differentiate between %s",
+                            paste0(
+                                sprintf(
+                                    "`%s`", c(
+                                        candidate$path,
+                                        lapply(collisions, function(x) x$path)
+                                    )
+                                ),
+                                collapse = ", "
+                            )
+                        )
+                    ),
+                    class = "freshwater_endpoint_error"
+                )
+            }
+
 
             fw_env$endpoints[[route]][[alias]][[
                 length(fw_env$endpoints[[route]][[alias]]) + 1L
