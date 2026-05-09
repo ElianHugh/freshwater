@@ -304,6 +304,13 @@ make_anchor <- function(.anchor) {
 #' - `DELETE /users/:id` -> `users$delete(id = 1)`
 #' - `DELETE /users/:name` -> `users$delete(name = "Jim")`
 #'
+#' Ambiguous endpoint shapes will result in an error. It is recommended to ensure endpoints
+#' have different shapes. For example, the following cannot be disambiguated by `endpoints()`
+#' and thus results in an error:
+#'
+#' - `GET /foo/:id/bar` -> `foo_bar(id = _)`
+#' - `GET /foo/bar/:id` -> `foo_bar(id = _)`
+#'
 #' @examples
 #' #* @plumber
 #' function(api) {
