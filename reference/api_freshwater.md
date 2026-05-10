@@ -17,8 +17,9 @@ This is a convenience wrapper:
 Arguments in `...` are selectively forwarded to
 [`api_csrf()`](https://elianhugh.github.io/freshwater/reference/api_csrf.md),
 [`api_error_pages()`](https://elianhugh.github.io/freshwater/reference/error_pages.md),
+[`register_async_evaluator()`](https://elianhugh.github.io/freshwater/reference/register_async_evaluator.md),
 and
-[register_html_serialiser](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md)
+[`register_html_serialiser()`](https://elianhugh.github.io/freshwater/reference/register_html_serialiser.md)
 based on matching formal parameters.
 
 ## Usage

@@ -70,6 +70,14 @@ For example:
 
 - `DELETE /users/:name` -\> `users$delete(name = "Jim")`
 
+Ambiguous endpoint shapes will result in an error. It is recommended to
+ensure endpoints have different shapes. For example, the following
+cannot be disambiguated by `endpoints()` and thus results in an error:
+
+- `GET /foo/:id/bar` -\> `foo_bar(id = _)`
+
+- `GET /foo/bar/:id` -\> `foo_bar(id = _)`
+
 ## Examples
 
 ``` r
@@ -82,7 +90,7 @@ function(api) {
 #> {
 #>     api_freshwater(api)
 #> }
-#> <environment: 0x56405cddb3f0>
+#> <environment: 0x564eac4ac7f8>
 
 #* @get /
 #* @serializer html
@@ -94,5 +102,5 @@ function() {
 #> {
 #>     endpoints("user")$index()
 #> }
-#> <environment: 0x56405cddb3f0>
+#> <environment: 0x564eac4ac7f8>
 ```

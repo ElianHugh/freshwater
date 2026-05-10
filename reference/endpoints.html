@@ -85,6 +85,10 @@ function args</p></li>
 <li><p><code>GET /users/:id</code> -&gt; <code>users(id = 1, .query = list(page = 2), .anchor = "details")</code></p></li>
 <li><p><code>DELETE /users/:id</code> -&gt; <code>users$delete(id = 1)</code></p></li>
 <li><p><code>DELETE /users/:name</code> -&gt; <code>users$delete(name = "Jim")</code></p></li>
+</ul><p>Ambiguous endpoint shapes will result in an error. It is recommended to ensure endpoints
+have different shapes. For example, the following cannot be disambiguated by <code>endpoints()</code>
+and thus results in an error:</p><ul><li><p><code>GET /foo/:id/bar</code> -&gt; <code>foo_bar(id = _)</code></p></li>
+<li><p><code>GET /foo/bar/:id</code> -&gt; <code>foo_bar(id = _)</code></p></li>
 </ul></div>
 
     <div class="section level2">
@@ -98,7 +102,7 @@ function args</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     api_freshwater(api)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56405cddb3f0&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x564eac4ac7f8&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#* @get /</span></span></span>
 <span class="r-in"><span><span class="co">#* @serializer html</span></span></span>
@@ -110,7 +114,7 @@ function args</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     endpoints("user")$index()</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56405cddb3f0&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x564eac4ac7f8&gt;</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
