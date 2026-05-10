@@ -306,3 +306,34 @@ test_that("errors work under async", {
 		expect_match(res$body, "Not Found", fixed = TRUE)
 	})
 })
+
+test_that("custom error pages work", {
+	suppressMessages({
+		api <- plumber2::api()
+		api <- plumber2::api_get(api, "/foo", function() {
+			"foo"
+		})
+		api <- plumber2::api_get(api, "/bar", function() {
+			stop("bar")
+		})
+	})
+
+	api <- api_freshwater(api, debug = TRUE, csrf = FALSE, handlers = list(
+		"500" = template(error = NULL, request = NULL, is_debug = FALSE, {
+			div(
+				"Error 500",
+				p(paste0(current_path(), " threw an error!"))
+			)
+		})
+	))
+	api$trigger("freshwater::hook")
+
+	res <- faux_request(
+		api,
+		"bar",
+		accept = "text/html; charset=utf-8"
+	)
+
+	expect_identical(res$status, 500L)
+	expect_match(res$body, "/bar threw an error!")
+})
