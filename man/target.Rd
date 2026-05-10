@@ -16,12 +16,14 @@ target(tpl, ..., .part = NULL)
 \description{
 \code{target()} returns a CSS selector for a template instance. For normal
 targets, this is an id selector of the form \verb{[id="<TEMPLATE_ID>"]}, where
-the id is resolved from the template's id function.
+the id is resolved from the template's id function. Root target
+assumes single-root output. Use \code{.part} for multi-root templates.
 }
 \details{
 In order to support multi-root template selection,
 supplying \code{.part} will return a data attribute selector of the form:
 \verb{[data-fw-part="<TEMPLATE_ID>-<PART_NAME>"]}
+
 Part names are automatically scoped against the template's \code{.id}, ensuring
 unique data attributes across templates.
 }

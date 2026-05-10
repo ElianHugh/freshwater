@@ -763,13 +763,16 @@ current_template <- function(
 #'
 #' `target()` returns a CSS selector for a template instance. For normal
 #' targets, this is an id selector of the form `[id="<TEMPLATE_ID>"]`, where
-#' the id is resolved from the template's id function.
+#' the id is resolved from the template's id function. Root target
+#' assumes single-root output. Use `.part` for multi-root templates.
 #'
 #' In order to support multi-root template selection,
 #' supplying `.part` will return a data attribute selector of the form:
 #' `[data-fw-part="<TEMPLATE_ID>-<PART_NAME>"]`
+#'
 #' Part names are automatically scoped against the template's `.id`, ensuring
 #' unique data attributes across templates.
+#'
 #'
 #' @param tpl a freshwater template
 #' @param ... arguments passed to the template id function

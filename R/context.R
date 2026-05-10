@@ -15,7 +15,7 @@
 #'
 #' Method spoofing is applied during the `before-request` phase by rewriting
 #' `REQUEST_METHOD` when a hidden `_method` field is present. This only applies
-#' to browser form busmissions (i.e. Content-Type `application/x-www-form-urlencoded`
+#' to browser form submissions (i.e. Content-Type `application/x-www-form-urlencoded`
 #' or `multipart/form-data`).
 #'
 #' @section Lifecycle:
@@ -41,7 +41,8 @@ NULL
 #' - Optionally installs HTML error page handlers
 #'
 #' Arguments in `...` are selectively forwarded to
-#' [api_csrf()], [api_error_pages()], and [register_html_serialiser]
+#' [api_csrf()], [api_error_pages()], [register_async_evaluator()],
+#'  and [register_html_serialiser()]
 #' based on matching formal parameters.
 #'
 #' @param api a [plumber2] api object.

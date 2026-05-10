@@ -44,6 +44,14 @@ For example:
 \item \verb{DELETE /users/:id} -> \code{users$delete(id = 1)}
 \item \verb{DELETE /users/:name} -> \code{users$delete(name = "Jim")}
 }
+
+Ambiguous endpoint shapes will result in an error. It is recommended to ensure endpoints
+have different shapes. For example, the following cannot be disambiguated by \code{endpoints()}
+and thus results in an error:
+\itemize{
+\item \verb{GET /foo/:id/bar} -> \verb{foo_bar(id = _)}
+\item \verb{GET /foo/bar/:id} -> \verb{foo_bar(id = _)}
+}
 }
 \examples{
 #* @plumber

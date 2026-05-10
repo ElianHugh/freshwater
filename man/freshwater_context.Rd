@@ -17,7 +17,7 @@ Context is created automatically when
 
 Method spoofing is applied during the \code{before-request} phase by rewriting
 \code{REQUEST_METHOD} when a hidden \verb{_method} field is present. This only applies
-to browser form busmissions (i.e. Content-Type \code{application/x-www-form-urlencoded}
+to browser form submissions (i.e. Content-Type \code{application/x-www-form-urlencoded}
 or \code{multipart/form-data}).
 }
 \section{Lifecycle}{

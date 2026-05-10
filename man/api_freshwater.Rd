@@ -29,7 +29,8 @@ This is a convenience wrapper:
 }
 
 Arguments in \code{...} are selectively forwarded to
-\code{\link[=api_csrf]{api_csrf()}}, \code{\link[=api_error_pages]{api_error_pages()}}, and \link{register_html_serialiser}
+\code{\link[=api_csrf]{api_csrf()}}, \code{\link[=api_error_pages]{api_error_pages()}}, \code{\link[=register_async_evaluator]{register_async_evaluator()}},
+and \code{\link[=register_html_serialiser]{register_html_serialiser()}}
 based on matching formal parameters.
 }
 \seealso{
