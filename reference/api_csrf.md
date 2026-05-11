@@ -48,7 +48,7 @@ api_csrf(api, secure = TRUE, exemptions = character())
 
 ## Annotation Reference
 
-CSRF exemptions can be specified by `@csrf`:
+Method-scoped CSRF exemptions can be specified by `@csrf`:
 
 - `"on"`: (default) CSRF checks are enforced
 
@@ -88,6 +88,6 @@ function(api) {
 #> {
 #>     api_csrf(api, secure = FALSE, exemptions = c("/foo/*", "/bar"))
 #> }
-#> <environment: 0x55e97c502cc0>
+#> <environment: 0x55b175f1d988>
 
 ```
