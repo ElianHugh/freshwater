@@ -67,6 +67,42 @@ test_that("csrf works", {
     }
 })
 
+test_that("CSRF gives 403 even with malformed tokens", {
+    suppressMessages({
+        api <- plumber2::api()
+
+        api <- plumber2::api_get(api, "/", function() {
+            "foo"
+        })
+        api <- plumber2::api_post(api, "/bar", function() {
+            "bar"
+        })
+        api <- plumber2::api_delete(api, "/bar", function() {
+            "bar"
+        })
+        api <- api_csrf(api, secure = FALSE)
+        api <- plumber2::api_security_cors(api)
+        api <- plumber2::api_security_resource_isolation(api)
+    })
+
+
+    api$trigger("freshwater::hook")
+
+    res <- faux_request(
+        api,
+        "bar",
+        method = "post",
+        accept = "text/html; charset=utf-8",
+        content = "csrf_token=a&csrf_token=b",
+        `Content-Type` = "application/x-www-form-urlencoded",
+        Cookie = "csrf=a"
+    )
+
+    expect_identical(res$status, 403L)
+
+
+})
+
 
 test_that("404s still occur with CSRF on", {
     api <- plumber2::api()

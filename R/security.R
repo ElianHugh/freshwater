@@ -237,10 +237,23 @@ csrf_exempt_add <- function(api, pattern) {
 }
 
 constant_time_identical <- function(x, y) {
+    if (
+        !is.character(x) ||
+            !is.character(y) ||
+            length(x) != 1L ||
+            length(y) != 1L ||
+            is.na(x) ||
+            is.na(y)
+    ) {
+        return(FALSE)
+    }
+
     x <- charToRaw(x)
     y <- charToRaw(y)
 
-    if (length(x) != length(y)) return(FALSE)
+    if (length(x) != length(y)) {
+        return(FALSE)
+    }
 
     bits <- bitwXor(as.integer(x), as.integer(y))
     Reduce(bitwOr, bits, init = 0L) == 0L
