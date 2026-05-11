@@ -33,11 +33,6 @@ register_endpoints <- function(api) {
     routes <- rr$routes
     fw_env <- get_freshwater_env(api)
 
-    fw_env$endpoints <- structure(
-        list(),
-        class = c("freshwater_endpoints", "list")
-    )
-
     endpoints <- list()
     for (route in routes) {
         r <- rr$get_route(route)
@@ -46,8 +41,8 @@ register_endpoints <- function(api) {
         root <- r$root %||% "/"
         root <- sub("^\\^", "", root)
 
-        if (is.null(fw_env$endpoints[[route]])) {
-            fw_env$endpoints[[route]] <- list()
+        if (is.null(endpoints[[route]])) {
+            endpoints[[route]] <- list()
         }
 
         r$remap_handlers(function(method, path, handler) {
@@ -61,50 +56,53 @@ register_endpoints <- function(api) {
                 glue = params$glue
             )
 
+
+            bucket <- endpoints[[route]][[alias]]
+            if (is.null(bucket)) {
+                bucket <- list()
+            }
+
             # check if there is a collision
             collisions <- Filter(
                 function(x) {
-                    all(
-                        c(
-                            identical(x$method, candidate$method),
-                            identical(x$keys, candidate$keys)
-                        )
-                    )
+                    identical(x$method, candidate$method) &&
+                        identical(x$keys, candidate$keys)
                 },
-                fw_env$endpoints[[route]][[alias]]
+                bucket
             )
 
-            if (!is.null(collisions) && length(collisions) > 0L) {
-                r$add_handler(method, path, handler)
-                rlang::abort(
-                    c(
-                        "Ambiguous endpoint alias detected.",
-                        sprintf(
-                            "`endpoints()` cannot differentiate between %s",
-                            paste0(
-                                sprintf(
-                                    "`%s`", c(
-                                        candidate$path,
-                                        lapply(collisions, function(x) x$path)
-                                    )
-                                ),
-                                collapse = ", "
+            if (length(collisions) > 0L) {
+                    rlang::abort(
+                        c(
+                            "Ambiguous endpoint alias detected.",
+                            sprintf(
+                                "`endpoints()` cannot differentiate between %s",
+                                paste0(
+                                    sprintf(
+                                        "`%s`",
+                                        c(
+                                            candidate$path,
+                                            lapply(collisions, function(x) {
+                                                x$path
+                                            })
+                                        )
+                                    ),
+                                    collapse = ", "
+                                )
                             )
-                        )
-                    ),
-                    class = "freshwater_endpoint_error"
-                )
+                        ),
+                        class = "freshwater_endpoint_error"
+                    )
             }
 
-
-            fw_env$endpoints[[route]][[alias]][[
-                length(fw_env$endpoints[[route]][[alias]]) + 1L
-            ]] <<- candidate
+            bucket[[length(bucket) + 1L]] <- candidate
+            endpoints[[route]][[alias]] <<- bucket
 
             r$add_handler(method, path, handler)
+
         })
     }
-    fw_env$endpoints <- compile_aliases(fw_env$endpoints)
+    fw_env$endpoints <- compile_aliases(endpoints)
     NULL
 }
 
