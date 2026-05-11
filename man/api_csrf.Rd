@@ -37,7 +37,7 @@ or a \code{csrf_token} field in the parsed request body matches the CSRF cookie.
 This middleware installs freshwater request context.
 }
 \section{Annotation Reference}{
-CSRF exemptions can be specified by \verb{@csrf}:
+Method-scoped CSRF exemptions can be specified by \verb{@csrf}:
 \itemize{
 \item \code{"on"}: (default) CSRF checks are enforced
 \item \code{"off"} or \code{"exempt"}: CSRF checks are skipped for the route
