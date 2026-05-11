@@ -21,7 +21,7 @@
 #' @details
 #' # Annotation Reference
 #'
-#' CSRF exemptions can be specified by `@csrf`:
+#' Method-scoped CSRF exemptions can be specified by `@csrf`:
 #' - `"on"`: (default) CSRF checks are enforced
 #' - `"off"` or `"exempt"`: CSRF checks are skipped for the route
 #'
@@ -132,10 +132,14 @@ ensure_csrf_token <- function(api, request, response, body, fw_env, next_call, i
     }
 
     if (!is.null(fw_env$csrf$exempt)) {
-        match <- fw_env$csrf$exempt$find_object(
-            request$path
-        )
-        if (!is.null(match)) return(next_call())
+        match <- fw_env$csrf$exempt$find_object(request$path)
+        if (
+            !is.null(match) &&
+                (identical(match$object, "*") ||
+                    identical(match$object, request$method))
+        ) {
+            return(next_call())
+        }
     }
 
     cookie_name <- fw_env$csrf$cookie_name
@@ -225,14 +229,14 @@ ensure_csrf_exempt_router <- function(api) {
     fw_env <- get_freshwater_env(api)
     if (is.null(fw_env$csrf$exempt)) {
         fw_env$csrf$exempt <- waysign::signpost()
-        fw_env$csrf$exempt$add_path("/__docs__/*", TRUE)
+        fw_env$csrf$exempt$add_path("/__docs__/*", "get")
     }
     fw_env$csrf$exempt
 }
 
-csrf_exempt_add <- function(api, pattern) {
+csrf_exempt_add <- function(api, pattern, method = "*") {
   router <- ensure_csrf_exempt_router(api)
-  router$add_path(pattern, TRUE)
+  router$add_path(pattern, method)
   invisible(TRUE)
 }
 
@@ -336,8 +340,10 @@ apply_plumber2_block.csrf <- function(
     NextMethod()
     for (i in seq_along(block$endpoints)) {
         for (path in block$endpoints[[i]]$path) {
-            if (identical(block$csrf_mode, "exempt")) {
-                csrf_exempt_add(api, paste0(root, path))
+            for (method in block$endpoints[[i]]$method) {
+                if (identical(block$csrf_mode, "exempt")) {
+                    csrf_exempt_add(api, paste0(root, path), method)
+                }
             }
         }
     }

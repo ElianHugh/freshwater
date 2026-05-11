@@ -1,5 +1,7 @@
 library(freshwater)
 
+register_html_serialiser()
+
 #' @plumber
 function(api) {
     api |>
@@ -122,7 +124,7 @@ demo <- template(result = "", {
             div(
                 class = "good_form",
                 h2("freshwater form(): Exempt Route"),
-                form(
+                htmltools::tags$form(
                     action = endpoints("csrf")$no_csrf$post(),
                     method = "post",
                     input(type = "submit", value = "Exempt OK")
@@ -180,6 +182,7 @@ function(response) {
 }
 
 #' @post /no_csrf
+#' @csrf off
 function(response) {
     result <<- "No authentication needed (POST)"
     redirect(
