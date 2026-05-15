@@ -58,7 +58,11 @@
 #'
 #' @seealso [form], [api_freshwater], [api_hooks]
 #' @export
-api_csrf <- function(api, secure = TRUE, exemptions = character()) {
+api_csrf <- function(
+    api,
+    secure = TRUE,
+    exemptions = character()
+    ) {
     if (!requireNamespace("openssl", quietly = TRUE)) {
         rlang::abort("openssl is required to enable CSRF protection.")
     }
@@ -131,15 +135,8 @@ ensure_csrf_token <- function(api, request, response, body, fw_env, next_call, i
         return(next_call())
     }
 
-    if (!is.null(fw_env$csrf$exempt)) {
-        match <- fw_env$csrf$exempt$find_object(request$path)
-        if (
-            !is.null(match) &&
-                (identical(match$object, "*") ||
-                    identical(match$object, request$method))
-        ) {
-            return(next_call())
-        }
+    if (csrf_is_exempt(request, fw_env)) {
+        return(next_call())
     }
 
     cookie_name <- fw_env$csrf$cookie_name
@@ -167,45 +164,64 @@ ensure_csrf_token <- function(api, request, response, body, fw_env, next_call, i
     }
 
     if (request$method %in% unsafe_methods) {
-        token <- request$get_header("x-csrf-token") %||%
-            body$csrf_token
-        if (
-            is.null(token) ||
-                !constant_time_identical(
-                    token,
-                    cookie_token
-                )
-        ) {
-            response$status <- 403L
-            response$body <- "Invalid CSRF token"
-
-            api$trigger(
-                "error_code",
-                status = 403L,
-                request = request,
-                response = response,
-                message = NULL
-            )
-
-            if (isTRUE(is_worker)) {
-                return(
-                    promises::promise(function(resolve, reject) {
-                        resolve(
-                            list(
-                                result = "",
-                                continue = plumber2::Break
-                            )
-                        )
-
-                    })
-                )
-            } else {
-                return(plumber2::Break)
-            }
+        if (!csrf_validate_token(request, fw_env, body)) {
+             return(csrf_reject(api, request, response, is_worker))
         }
     }
 
     next_call()
+}
+
+csrf_validate_token <- function(request, fw_env, body) {
+    cookie_name <- fw_env$csrf$cookie_name
+    cookie_token <- request$cookies[[cookie_name]] %||% ""
+    submitted_token <- request$get_header("x-csrf-token") %||%
+        body$csrf_token
+
+    is.character(submitted_token) &&
+        length(submitted_token) == 1L &&
+        nzchar(submitted_token) &&
+        constant_time_identical(submitted_token, cookie_token)
+}
+
+
+csrf_reject <- function(api, request, response, is_worker = FALSE) {
+    response$status <- 403L
+    response$body <- "Invalid CSRF token"
+
+    api$trigger(
+        "error_code",
+        status = 403L,
+        request = request,
+        response = response,
+        message = NULL
+    )
+
+    if (isTRUE(is_worker)) {
+        return(
+            promises::promise(function(resolve, reject) {
+                resolve(
+                    list(
+                        result = "",
+                        continue = plumber2::Break
+                    )
+                )
+            })
+        )
+    }
+    return(plumber2::Break)
+}
+
+csrf_is_exempt <- function(request, fw_env) {
+    exempt <- fw_env$csrf$exempt
+
+    if (is.null(exempt)) return(FALSE)
+
+    match <- fw_env$csrf$exempt$find_object(request$path)
+
+    !is.null(match) &&
+        (identical(match$object, "*") ||
+         identical(match$object, request$method))
 }
 
 csrf_context <- function(api, request, response, fw_env, next_call) {
